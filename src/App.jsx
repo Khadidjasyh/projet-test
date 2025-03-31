@@ -2,15 +2,21 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Home from "./Home";
 import Contact from "./Contact";
+import Dashboard from "./Dashboard";
+import Login from "./login";  // Import du composant Login
+import Register from "./Register";
+import AboutUs from "./AboutUs";
+import RapportAudit from "./RapportAudit";
+
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-white text-gray-900">
-        {/* Navbar */}
+        
         <nav className="bg-white shadow-md w-full">
           <div className="max-w-full mx-auto px-8 py-4 flex justify-between items-center">
-            {/* Logo */}
+            
             <div>
               <Link to="/">
                 <img
@@ -20,8 +26,6 @@ function App() {
                 />
               </Link>
             </div>
-
-            {/* Navigation */}
             <div className="space-x-8">
               <Link to="/" className="text-green-600 font-semibold hover:text-green-800">
                 Accueil
@@ -39,8 +43,6 @@ function App() {
                 About Us
               </Link>
             </div>
-
-            {/* Boutons Sign In / Sign Up */}
             <div className="space-x-4">
               <Link to="/login" className="px-4 py-2 border border-green-600 text-red-600 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition">
                 Sign In
@@ -52,17 +54,23 @@ function App() {
           </div>
         </nav>
 
-        {/* Définition des Routes */}
+        
         <div className="p-8">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/dashboard" element={<Dashboard />}/>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/aboutus" element={<AboutUs />} />
+            <Route path="/rapportaudit" element={<RapportAudit /> } />
           </Routes>
         </div>
       </div>
     </Router>
   );
 }
+
 
 export default App;
 
