@@ -198,7 +198,7 @@ import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Home from "./Home";
 import Contact from "./Contact";
 import Dashboard from "./Dashboard";
-import Login from "./login";  // Import du composant Login
+import Login from "./Login";  // Import du composant Login
 import Register from "./Register";
 import AboutUs from "./AboutUs";
 import RapportAudit from "./RapportAudit";
