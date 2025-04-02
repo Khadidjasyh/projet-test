@@ -169,7 +169,7 @@ export default function RapportAudit() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+       
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-green-600">Rapports d'Audit</h1>
@@ -181,7 +181,7 @@ export default function RapportAudit() {
           </button>
         </div>
 
-        {/* Filtres */}
+        
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
@@ -228,7 +228,7 @@ export default function RapportAudit() {
           </div>
         </div>
 
-        {/* Tableau des rapports */}
+       
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
@@ -323,7 +323,7 @@ export default function RapportAudit() {
           </div>
         )}
 
-        {/* Modal de détails */}
+       
         {selectedReport && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
