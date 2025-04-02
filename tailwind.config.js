@@ -1,21 +1,12 @@
-<<<<<<< HEAD
-module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
-=======
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}"
+    "./src/**/*.{js,jsx,ts,tsx}"
   ],
->>>>>>> 814f2ef (Premier commit de mon projet)
   theme: {
     extend: {},
   },
-  plugins: [],
-<<<<<<< HEAD
-};
-=======
+  plugins: []
 }
 
->>>>>>> 814f2ef (Premier commit de mon projet)

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Home from "./Home";
@@ -75,7 +75,6 @@ function App() {
 
 export default App;
 
-=======
 import { useState, useEffect } from "react";
 /*
 function App() {
@@ -171,10 +170,11 @@ function App() {
   );
 }
 */
+/*
 function Home() {
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Navbar */}
+    
       <nav className="bg-white shadow-md w-full">
         <div className="max-w-full mx-auto px-8 py-4 flex justify-between items-center">
           <div>
@@ -216,7 +216,7 @@ function Home() {
         </div>
       </nav>
 
-      {/* Main Content */}
+    
       <div className="flex items-center justify-center min-h-screen w-full">
         <div className="text-center p-10 w-full max-w-4xl">
           <h1 className="text-5xl font-extrabold text-green-600 mb-6">
@@ -266,8 +266,8 @@ function Home() {
   );
 }
 
-export default Home;
+export default Home;*/
 
 /*
 export default App;*/
->>>>>>> 814f2ef (Premier commit de mon projet)
+

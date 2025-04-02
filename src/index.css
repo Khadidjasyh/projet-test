@@ -1,17 +1,10 @@
-<<<<<<< HEAD
-=======
-/* Import Tailwind CSS directives */
->>>>>>> 814f2ef (Premier commit de mon projet)
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-<<<<<<< HEAD
-/* Custom styles can be added here */
 
-=======
 /* Styles globaux */
->>>>>>> 814f2ef (Premier commit de mon projet)
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
