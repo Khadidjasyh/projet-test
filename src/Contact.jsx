@@ -23,26 +23,29 @@ function Contact({ navigateTo }) {
     e.preventDefault();
     setIsLoading(true);
     setStatus("");
-
+  
     try {
       const response = await fetch("http://localhost:5177/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(formData),
       });
-
-      const data = await response.json();
-      console.log("📩 Réponse du serveur :", data);
-
-      if (response.ok) {
-        setStatus("✅ Message envoyé avec succès !");
-        setFormData({ name: "", email: "", message: "" });
-      } else {
-        setStatus(`❌ Erreur : ${data.error || "Erreur lors de l'envoi."}`);
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur serveur");
       }
+  
+      const data = await response.json();
+      setStatus("✅ Message envoyé avec succès !");
+      setFormData({ name: "", email: "", message: "" });
+      
     } catch (error) {
-      console.error("❌ Erreur d'envoi :", error);
-      setStatus("❌ Impossible de contacter le serveur.");
+      console.error("Erreur complète:", error);
+      setStatus(`❌ Erreur: ${error.message || "Échec de l'envoi"}`);
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /*
 require('dotenv').config();
 
@@ -109,7 +109,7 @@ app.get("/messages", (req, res) => {
 // Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
-});
+});*/
 
 
 
@@ -120,8 +120,10 @@ app.listen(PORT, () => {
 
 
 
-/*
+
 require('dotenv').config();
+// Charger les variables d'environnement
+
 
 // Importation des modules nécessaires
 const express = require("express");
@@ -130,26 +132,18 @@ const mysql = require("mysql2/promise");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-
-// Initialisation de l'application Express
-const app = express();
-const PORT = process.env.PORT || 5177;
-
-const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
-const mysql = require('mysql2/promise');
+dotenv.config(); 
 
-// Charger les variables d'environnement
-dotenv.config();
+
 
 const app = express();
->>>>>>> 814f2ef (Premier commit de mon projet)
+const PORT = process.env.PORT || 5177; // 5177 est la valeur par défaut
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-<<<<<<< HEAD
+
 app.use(express.urlencoded({ extended: true })); // Pour les formulaires
 
 // Votre route /register
@@ -369,7 +363,8 @@ app.get("/messages", authenticateToken, async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
-});*/
+});
+
 /*
 require('dotenv').config();
 
@@ -570,6 +565,7 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Serveur API en cours d'exécution sur http://localhost:${PORT}`);
 });*/
+/*
 require('dotenv').config();
 
 // Importation des modules nécessaires
@@ -679,6 +675,7 @@ function validateEmail(email) {
  **************************/
 
 // Route POST pour l'inscription
+/*
 app.post("/api/register", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -863,4 +860,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
 });
-
+*/
