@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+/*import React, { useState} from 'react';
 import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill } from 'react-icons/bs';
 import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload } from 'react-icons/fa';
 
@@ -38,7 +38,7 @@ const Dashboard = () => {
         <p className="text-gray-600">Supervision des configurations et détection d'anomalies</p>
       </div>
       
-      {/* Statistiques */}
+     
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -89,7 +89,7 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Carte du monde et alertes */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-lg font-semibold mb-4">Couverture des Partenaires Roaming</h2>
@@ -130,7 +130,7 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Actions rapides et audits récents */}
+  
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-lg font-semibold mb-4">Audits Récents</h2>
@@ -205,4 +205,28 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard;*/
+import React from "react";
+import TelechargementRapports from "./TelechargementRapports";
+import Alertes from "./Alertes";
+
+export default function Dashboard() {
+  return (
+    <div className="space-y-8 p-6">
+      <h1 className="text-2xl font-bold text-green-600">Dashboard</h1>
+
+      {/* Section Téléchargement Rapport */}
+      <section className="p-4 bg-gray-100 rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800">Téléchargement Rapport</h2>
+        <TelechargementRapport />
+      </section>
+
+      {/* Section Alertes */}
+      <section className="p-4 bg-gray-100 rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800">Alertes</h2>
+        <Alertes />
+      </section>
+    </div>
+  );
+}
+

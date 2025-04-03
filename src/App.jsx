@@ -1,10 +1,11 @@
 
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Home from "./Home";
 import Contact from "./Contact";
 import Dashboard from "./Dashboard";
-import Login from "./login";  // Import du composant Login
+import Login from "./login"
 import Register from "./Register";
 import AboutUs from "./AboutUs";
 import RapportAudit from "./RapportAudit";
@@ -67,6 +68,7 @@ function App() {
             <Route path="/rapportaudit" element={<RapportAudit /> } />
           </Routes>
         </div>
+        
       </div>
     </Router>
   );
@@ -75,7 +77,7 @@ function App() {
 
 export default App;
 
-import { useState, useEffect } from "react";
+
 /*
 function App() {
   const [users, setUsers] = useState([]); // Liste des utilisateurs
@@ -266,8 +268,8 @@ function Home() {
   );
 }
 
-export default Home;*/
+export default Home;
 
-/*
-export default App;*/
 
+export default App;
+*/

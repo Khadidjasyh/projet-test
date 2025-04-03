@@ -1,4 +1,4 @@
-/*import React from 'react';
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Register() {
@@ -83,7 +83,7 @@ export default function Register() {
       </div>
     </div>
   );
-}*/
+}
 /*
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -219,7 +219,7 @@ export default function Register() {
       </div>
     </div>
   );
-}*/
+}
 import React, { useState } from "react";
 import axios from "axios";
 
@@ -351,3 +351,4 @@ const Register = () => {
 
 export default Register;
 
+*/
