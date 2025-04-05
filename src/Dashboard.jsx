@@ -1,4 +1,4 @@
-/*import React, { useState} from 'react';
+import React, { useState} from 'react';
 import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill } from 'react-icons/bs';
 import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload } from 'react-icons/fa';
 
@@ -205,28 +205,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;*/
-import React from "react";
-import TelechargementRapports from "./TelechargementRapports";
-import Alertes from "./Alertes";
-
-export default function Dashboard() {
-  return (
-    <div className="space-y-8 p-6">
-      <h1 className="text-2xl font-bold text-green-600">Dashboard</h1>
-
-      {/* Section Téléchargement Rapport */}
-      <section className="p-4 bg-gray-100 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-gray-800">Téléchargement Rapport</h2>
-        <TelechargementRapport />
-      </section>
-
-      {/* Section Alertes */}
-      <section className="p-4 bg-gray-100 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-gray-800">Alertes</h2>
-        <Alertes />
-      </section>
-    </div>
-  );
-}
-
+export default Dashboard;

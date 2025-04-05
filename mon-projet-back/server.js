@@ -1,5 +1,7 @@
 /*
 require('dotenv').config();
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first"); 
 
 // Importation des modules nécessaires
 const express = require("express");
@@ -111,8 +113,8 @@ app.get("/messages", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
 });
-
 */
+
 /*
 
 la meilleur version contact fonctionne avec 
@@ -866,6 +868,7 @@ app.get("/messages", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
 });*/
+/*
 
 require('dotenv').config();
 
@@ -1003,4 +1006,175 @@ app.get("/protected", (req, res) => {
 // 📌 Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`🚀 Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
+});
+*/
+
+require('dotenv').config();
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first"); 
+
+// Importation des modules nécessaires
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const mysql = require("mysql2");
+const nodemailer = require("nodemailer");
+
+
+// Initialisation de l'application Express
+const app = express();
+const PORT = 5177;
+
+// Connexion à MySQL
+const connection = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "1234", // ⚠️ Remplace par ton vrai mot de passe
+  database: "mon_projet_db",
+});
+
+connection.connect((err) => {
+  if (err) {
+    console.error("❌ Erreur de connexion MySQL :", err);
+  } else {
+    console.log("✅ Connecté à MySQL");
+  }
+});
+
+// Configuration de Nodemailer pour Gmail
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER, // Utilisation de la variable d'environnement
+    pass: process.env.GMAIL_PASSWORD, // Utilisation de la variable d'environnement
+  },
+});
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Fonction de validation d'e-mail
+function validateEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+// Route pour gérer l'envoi du formulaire
+app.post("/send-email", (req, res) => {
+  const { name, email, message } = req.body;
+
+  // Validation des données
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Tous les champs sont obligatoires." });
+  }
+
+  if (!validateEmail(email)) {
+    return res.status(400).json({ error: "L'adresse e-mail est invalide." });
+  }
+
+  // Enregistrer le message dans MySQL
+  const query = "INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)";
+  connection.query(query, [name, email, message], (error, results) => {
+    if (error) {
+      console.error("Erreur MySQL :", error);
+      return res.status(500).json({ error: "Erreur lors de l'enregistrement du message dans la base de données." });
+    }
+
+    console.log("Message enregistré avec succès dans MySQL");
+
+    // Envoyer un e-mail via Gmail
+    const mailOptions = {
+      from: process.env.GMAIL_USER, // Utilisation de la variable d'environnement
+      to: "sayahkhadidja7@gmail.com", // Destinataire de l'e-mail
+      subject: "Nouveau message de contact",
+      text: `
+        Nom: ${name}
+        Email: ${email}
+        Message: ${message}
+      `,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Erreur Nodemailer :", error);
+        return res.status(500).json({ error: "Erreur lors de l'envoi de l'e-mail." });
+      }
+      console.log("E-mail envoyé :", info.response);
+      res.status(200).json({ message: "Message enregistré et e-mail envoyé avec succès." });
+    });
+  });
+});
+
+// Route pour récupérer tous les messages (optionnel)
+app.get("/messages", (req, res) => {
+  const query = "SELECT * FROM contacts ORDER BY created_at DESC";
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error("Erreur MySQL :", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération des messages." });
+    }
+    res.status(200).json(results);
+  });
+});
+
+const bcrypt = require("bcrypt");
+
+// Route REGISTER (inscription)
+app.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: "Tous les champs sont requis." });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const query = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+    connection.query(query, [name, email, hashedPassword], (err, results) => {
+      if (err) {
+        console.error("Erreur MySQL :", err);
+        return res.status(500).json({ error: "Erreur lors de l'inscription." });
+      }
+      return res.status(200).json({ message: "Utilisateur inscrit avec succès." });
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Erreur serveur." });
+  }
+});
+
+// Route LOGIN (connexion)
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return res.status(400).json({ error: "Tous les champs sont requis." });
+
+  const query = "SELECT * FROM users WHERE email = ?";
+  connection.query(query, [email], async (err, results) => {
+    if (err) {
+      console.error("Erreur MySQL :", err);
+      return res.status(500).json({ error: "Erreur serveur." });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Email non trouvé." });
+    }
+
+    const user = results[0];
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Mot de passe incorrect." });
+    }
+
+    res.status(200).json({ message: "Connexion réussie" });
+  });
+});
+
+
+// Démarrer le serveur
+app.listen(PORT, () => {
+  console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
 });
