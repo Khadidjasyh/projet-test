@@ -10,7 +10,12 @@ import {
   PencilSquareIcon as EditIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ClockIcon
+  ClockIcon,
+  XMarkIcon,
+  PaperClipIcon,
+  UserCircleIcon,
+  CheckBadgeIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
 // Service simulé pour les données d'audit
@@ -88,6 +93,43 @@ const AuditService = {
         ]
       }
     ];
+  },
+
+  async fetchTestResults() {
+    return [
+      {
+        test_id: 101,
+        partner_id: 1,
+        config_id: 201,
+        test_type: 'Inbound',
+        details: { 
+          missing_gt: ["306935226000"],
+          failed_checks: ['SCCP Route', 'IMSI Conversion']
+        },
+        passed: false,
+        error_count: 2,
+        warning_count: 1,
+        date: '2024-02-05T14:30:00',
+        ran_by: 1
+      },
+      // ... add more test results ...
+    ];
+  },
+
+  async getCurrentUser() {
+    return {
+      user_id: 1,
+      name: 'Admin User',
+      role: 'Admin',
+      permissions: [
+        { resource_type: 'Report', access_level: 'Admin' }
+      ]
+    };
+  },
+
+  async updateReport(updatedReport) {
+    console.log('Updating report:', updatedReport);
+    return updatedReport;
   }
 };
 
@@ -101,14 +143,33 @@ export default function RapportAudit() {
     dateRange: ''
   });
   const [selectedReport, setSelectedReport] = useState(null);
+  const [showNewReportModal, setShowNewReportModal] = useState(false);
+  const [newReport, setNewReport] = useState({
+    title: '',
+    type: 'Réseau',
+    description: '',
+    test_id: '',
+    correction_details: '',
+    attachments: [],
+    implemented_changes: null
+  });
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await AuditService.fetchAuditReports();
-        setReports(data);
+        const [reportsData, testsData, userData] = await Promise.all([
+          AuditService.fetchAuditReports(),
+          AuditService.fetchTestResults(),
+          AuditService.getCurrentUser()
+        ]);
+        setReports(reportsData);
+        setTests(testsData);
+        setCurrentUser(userData);
       } catch (error) {
-        console.error("Erreur de chargement des rapports:", error);
+        console.error("Erreur de chargement des données:", error);
       } finally {
         setLoading(false);
       }
@@ -166,22 +227,126 @@ export default function RapportAudit() {
     );
   };
 
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    const newFiles = files.map(file => ({
+      name: file.name,
+      type: file.type,
+      size: formatFileSize(file.size),
+      file: file
+    }));
+    setUploadedFiles([...uploadedFiles, ...newFiles]);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const removeFile = (index) => {
+    const newFiles = [...uploadedFiles];
+    newFiles.splice(index, 1);
+    setUploadedFiles(newFiles);
+  };
+
+  const handleCreateReport = async () => {
+    try {
+      if (!newReport.test_id || !newReport.correction_details) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      const selectedTest = tests.find(t => t.test_id === parseInt(newReport.test_id));
+      
+      const report = {
+        id: `AUD-${new Date().getFullYear()}-${String(reports.length + 1).padStart(3, '0')}`,
+        title: newReport.title,
+        date: new Date().toISOString().split('T')[0],
+        type: newReport.type,
+        status: 'En cours',
+        createdBy: currentUser.name,
+        validatedBy: null,
+        test_id: parseInt(newReport.test_id),
+        correction_details: newReport.correction_details,
+        findings: 0,
+        critical: 0,
+        medium: 0,
+        low: 0,
+        attachments: uploadedFiles.map(file => ({
+          name: file.name,
+          type: file.type,
+          size: file.size
+        })),
+        description: newReport.description,
+        implemented_changes: null
+      };
+
+      setReports([...reports, report]);
+      setShowNewReportModal(false);
+      setNewReport({
+        title: '',
+        type: 'Réseau',
+        description: '',
+        test_id: '',
+        correction_details: '',
+        attachments: [],
+        implemented_changes: null
+      });
+      setUploadedFiles([]);
+    } catch (error) {
+      console.error("Erreur lors de la création du rapport:", error);
+    }
+  };
+
+  const handleUpdateReport = async (updatedStatus) => {
+    if (!selectedReport) return;
+
+    const updatedReport = {
+      ...selectedReport,
+      status: updatedStatus,
+      validation_date: new Date().toISOString(),
+      validated_by: {
+        user_id: currentUser.user_id,
+        name: currentUser.name,
+        role: currentUser.role
+      }
+    };
+
+    if (updatedStatus === 'Validé' && !selectedReport.implemented_changes) {
+      updatedReport.implemented_changes = {
+        config_id: tests.find(t => t.test_id === selectedReport.test_id)?.config_id || 0,
+        changes: ['Changements implémentés selon correction proposée'],
+        validation_notes: 'Validé par ' + currentUser.name
+      };
+    }
+
+    const result = await AuditService.updateReport(updatedReport);
+    setReports(reports.map(r => r.id === result.id ? result : r));
+    setSelectedReport(result);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-       
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-green-600">Rapports d'Audit</h1>
             <p className="text-gray-600">Gestion et consultation des rapports d'audit technique</p>
           </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
+          <button 
+            onClick={() => setShowNewReportModal(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+          >
             <DocumentTextIcon className="h-5 w-5 mr-2" />
             Nouveau Rapport
           </button>
         </div>
 
-        
+        {/* Filtres */}
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
@@ -228,7 +393,7 @@ export default function RapportAudit() {
           </div>
         </div>
 
-       
+        {/* Tableau des rapports */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
@@ -323,7 +488,7 @@ export default function RapportAudit() {
           </div>
         )}
 
-       
+        {/* Modal de détails */}
         {selectedReport && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
@@ -351,6 +516,7 @@ export default function RapportAudit() {
                       {selectedReport.validatedBy && (
                         <p><span className="font-medium">Validé par:</span> {selectedReport.validatedBy}</p>
                       )}
+                      <p><span className="font-medium">Test associé:</span> Test #{selectedReport.test_id}</p>
                     </div>
                   </div>
                   
@@ -376,6 +542,32 @@ export default function RapportAudit() {
                     </div>
                   </div>
                 </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Détails de correction proposés</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="whitespace-pre-wrap">{selectedReport.correction_details}</p>
+                  </div>
+                </div>
+
+                {selectedReport.implemented_changes && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Changements implémentés</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <ul className="list-disc pl-5 space-y-1">
+                        {selectedReport.implemented_changes.changes.map((change, i) => (
+                          <li key={i}>{change}</li>
+                        ))}
+                      </ul>
+                      {selectedReport.implemented_changes.validation_notes && (
+                        <div className="mt-2 pt-2 border-t">
+                          <p className="font-semibold">Notes de validation :</p>
+                          <p>{selectedReport.implemented_changes.validation_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="mb-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Pièces Jointes</h3>
@@ -408,21 +600,171 @@ export default function RapportAudit() {
                   >
                     Fermer
                   </button>
-                  <button
-                    onClick={() => console.log(`Print ${selectedReport.id}`)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                  >
-                    <PrinterIcon className="h-5 w-5 mr-2" />
-                    Imprimer
-                  </button>
-                  <button
-                    onClick={() => console.log(`Export ${selectedReport.id}`)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                  >
-                    <DownloadIcon className="h-5 w-5 mr-2" />
-                    Exporter PDF
-                  </button>
+                  {currentUser?.role === 'Admin' && selectedReport.status === 'En cours' && (
+                    <>
+                      <button
+                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                        onClick={() => handleUpdateReport('Rejeté')}
+                      >
+                        Rejeter
+                      </button>
+                      <button
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                        onClick={() => handleUpdateReport('Validé')}
+                      >
+                        Valider
+                      </button>
+                    </>
+                  )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* New Report Modal */}
+        {showNewReportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Nouveau Rapport d'Audit</h2>
+                <button 
+                  onClick={() => setShowNewReportModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Test associé (obligatoire)</label>
+                  <select
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    value={newReport.test_id}
+                    onChange={(e) => setNewReport({...newReport, test_id: e.target.value})}
+                  >
+                    <option value="">Sélectionner un test</option>
+                    {tests.map(test => (
+                      <option key={test.test_id} value={test.test_id}>
+                        Test #{test.test_id} - {test.test_type} (Partenaire {test.partner_id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Titre</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    value={newReport.title}
+                    onChange={(e) => setNewReport({...newReport, title: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Type</label>
+                  <select
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    value={newReport.type}
+                    onChange={(e) => setNewReport({...newReport, type: e.target.value})}
+                  >
+                    <option value="Réseau">Réseau</option>
+                    <option value="Service">Service</option>
+                    <option value="Sécurité">Sécurité</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Détails de correction proposés (obligatoire)</label>
+                  <textarea
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    rows="4"
+                    value={newReport.correction_details}
+                    onChange={(e) => setNewReport({...newReport, correction_details: e.target.value})}
+                    placeholder="Décrire en détail les corrections proposées..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    rows="4"
+                    value={newReport.description}
+                    onChange={(e) => setNewReport({...newReport, description: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Pièces jointes</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="space-y-1 text-center">
+                      <PaperClipIcon className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="file-upload"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
+                        >
+                          <span>Télécharger des fichiers</span>
+                          <input
+                            id="file-upload"
+                            name="file-upload"
+                            type="file"
+                            className="sr-only"
+                            multiple
+                            onChange={handleFileUpload}
+                          />
+                        </label>
+                        <p className="pl-1">ou glisser-déposer</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        PDF, DOC, XLS, TXT, ou tout autre type de fichier
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {uploadedFiles.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                          <div className="flex items-center">
+                            <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-2" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                              <p className="text-xs text-gray-500">{file.type} • {file.size}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeFile(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowNewReportModal(false);
+                    setUploadedFiles([]);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCreateReport}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Créer
+                </button>
               </div>
             </div>
           </div>

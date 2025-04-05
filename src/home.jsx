@@ -1,13 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 function Home() {
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    message: ""
+  });
+
+  const [status, setStatus] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setStatus("");
+
+    try {
+      const response = await fetch("http://localhost:5177/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      console.log("📩 Réponse du serveur :", data);
+
+      if (response.ok) {
+        setStatus("✅ Message envoyé avec succès !");
+        setFormData({ name: "", phone: "", email: "", message: "" });
+      } else {
+        setStatus(`❌ Erreur : ${data.error || "Erreur lors de l'envoi."}`);
+      }
+    } catch (error) {
+      console.error("❌ Erreur d'envoi :", error);
+      setStatus("❌ Impossible de contacter le serveur.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-10">
       {/* Section avec texte et image */}
       <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 max-w-6xl w-full mb-20">
         <div className="text-left">
           <h1 className="text-5xl font-extrabold text-green-600">
-            Optimisez votre itinérance avec une solution d’audit intelligente et automatisée
+            Optimisez votre itinérance avec une solution d'audit intelligente et automatisée
           </h1>
         </div>
 
@@ -107,11 +153,11 @@ function Home() {
               Une Technologie Innovante pour une Performance Maximale
             </h2>
             <p className="text-gray-700 text-lg mt-2">
-              Contrairement aux méthodes traditionnelles encore largement basées sur des interventions manuelles, notre solution offre une <span className="font-semibold">automatisation complète de l’audit.</span> 
+              Contrairement aux méthodes traditionnelles encore largement basées sur des interventions manuelles, notre solution offre une <span className="font-semibold">automatisation complète de l'audit.</span> 
               Elle intègre un <span className="font-semibold">tableau de bord interactif</span> qui permet une visualisation en temps réel des résultats, un suivi détaillé des erreurs et des recommandations de correction.
             </p>
             <p className="text-gray-700 text-lg mt-2">
-              De plus, notre technologie est entièrement compatible avec InfoCenter et les formats standardisés (RAEX, XML), garantissant une intégration fluide et une gestion optimisée des accords d’itinérance.
+              De plus, notre technologie est entièrement compatible avec InfoCenter et les formats standardisés (RAEX, XML), garantissant une intégration fluide et une gestion optimisée des accords d'itinérance.
             </p>
           </div>
 
@@ -142,13 +188,13 @@ function Home() {
               Un Impact Concret sur la Qualité et la Rentabilité
             </h2>
             <p className="text-gray-700 text-lg mt-2">
-              Avant notre solution, l’audit manuel entraînait un risque accru d’erreurs, des délais de correction longs et des interruptions de service potentielles, impactant directement l’expérience utilisateur et la rentabilité des services d’itinérance.
+              Avant notre solution, l'audit manuel entraînait un risque accru d'erreurs, des délais de correction longs et des interruptions de service potentielles, impactant directement l'expérience utilisateur et la rentabilité des services d'itinérance.
             </p>
             <p className="text-gray-700 text-lg mt-2">
-              Grâce à notre approche automatisée, <span className="font-semibold">Mobilis bénéficie désormais d’un audit rapide et précis</span>, d’une détection préventive des incohérences et d’un suivi en temps réel via une interface intuitive.
+              Grâce à notre approche automatisée, <span className="font-semibold">Mobilis bénéficie désormais d'un audit rapide et précis</span>, d'une détection préventive des incohérences et d'un suivi en temps réel via une interface intuitive.
             </p>
             <p className="text-gray-700 text-lg mt-2">
-              En optimisant la gestion des accords d’itinérance et en minimisant les erreurs, nous aidons les opérateurs à maximiser leurs revenus et améliorer la satisfaction de leurs abonnés.
+              En optimisant la gestion des accords d'itinérance et en minimisant les erreurs, nous aidons les opérateurs à maximiser leurs revenus et améliorer la satisfaction de leurs abonnés.
             </p>
           </div>
         </div>
@@ -184,18 +230,62 @@ function Home() {
           <p className="text-gray-700">🕒 Lun-Ven : 08:00 - 19:00</p>
 
           {/* Formulaire de Contact */}
-          <form className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" placeholder="Nom" className="p-3 border rounded w-full" />
-              <input type="text" placeholder="Téléphone" className="p-3 border rounded w-full" />
+              <input 
+                type="text" 
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Nom" 
+                className="p-3 border rounded w-full" 
+                required
+              />
+              <input 
+                type="text" 
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Téléphone" 
+                className="p-3 border rounded w-full" 
+                required
+              />
             </div>
-            <input type="email" placeholder="Email" className="p-3 border rounded w-full" />
-            <textarea placeholder="Message" rows="4" className="p-3 border rounded w-full"></textarea>
+            <input 
+              type="email" 
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email" 
+              className="p-3 border rounded w-full" 
+              required
+            />
+            <textarea 
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              placeholder="Message" 
+              rows="4" 
+              className="p-3 border rounded w-full"
+              required
+            ></textarea>
             
-            <button className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition">
-              ENVOYER
+            <button 
+              type="submit"
+              className={`w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isLoading}
+            >
+              {isLoading ? "Envoi en cours..." : "ENVOYER"}
             </button>
           </form>
+
+          {status && (
+            <p className={`mt-4 ${status.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
+              {status}
+            </p>
+          )}
         </div>
       </div>
     </div>

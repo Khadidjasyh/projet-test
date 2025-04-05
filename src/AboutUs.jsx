@@ -1,136 +1,288 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Users, HeartHandshake, Lightbulb, UserCircle, Shield, Globe, Settings, BarChart } from "lucide-react";
+import { motion } from "framer-motion";
 
-function AboutUs() {
+export default function AboutUs() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-extrabold text-green-600 sm:text-5xl sm:tracking-tight lg:text-6xl">
-            À propos de Mobilis
-          </h1>
-          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
-            Découvrez notre mission, notre vision et notre équipe dédiée.
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative h-[600px] flex items-center justify-center overflow-hidden"
+      >
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: "url('/mobilis4.png')",
+            backgroundAttachment: 'fixed'
+          }}
+        />
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="relative w-full max-w-2xl p-8 bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl"
+        >
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 text-center">
+            Fiers de notre histoire, tournés vers l'avenir
+          </h2>
+          <p className="text-lg md:text-xl leading-relaxed text-gray-700 mt-6 text-center">
+            Nous nous engageons à transformer la manière dont chacun vit l'univers digital. 
+            Notre mission est de permettre à nos clients à travers le monde de profiter pleinement d'Internet, 
+            avec une expérience unique et personnalisée.
           </p>
-        </div>
+        </motion.div>
+      </motion.div>
 
-        {/* Mission Section */}
-        <div className="bg-white shadow-lg rounded-lg p-8 mb-12">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-8">
-            <div>
-              <h2 className="text-3xl font-bold text-green-600 mb-6">Notre Mission</h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Chez Mobilis, nous nous engageons à fournir des solutions innovantes pour 
-                simplifier la gestion des audits et optimiser les processus métiers de nos clients.
-              </p>
-              <p className="text-lg text-gray-600">
-                Notre plateforme permet une gestion transparente et efficace des rapports d'audit, 
-                offrant une visibilité en temps réel sur les performances.
-              </p>
-            </div>
-            <div className="mt-8 lg:mt-0">
-              <img
-                className="w-full rounded-lg shadow-xl"
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
-                alt="Équipe Mobilis"
-              />
-            </div>
+      {/* Stats Section */}
+      <div className="container mx-auto px-4 py-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+        >
+          {[
+            {
+              title: "Engageant",
+              text: "Nous contribuons activement à nos communautés en construisant des réseaux fiables et sécurisés.",
+              icon: <Users className="w-16 h-16 mx-auto mb-6 text-green-600" />
+            },
+            {
+              title: "Soutenant",
+              text: "Nous mettons un point d'honneur à rendre votre expérience fluide et transparente.",
+              icon: <HeartHandshake className="w-16 h-16 mx-auto mb-6 text-green-600" />
+            },
+            {
+              title: "Innovant",
+              text: "Nous relevons les défis avec un regard neuf, toujours en quête d'excellence et d'innovation.",
+              icon: <Lightbulb className="w-16 h-16 mx-auto mb-6 text-green-600" />
+            }
+          ].map((item, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-center border border-gray-100"
+            >
+              {item.icon}
+              <h3 className="text-2xl font-bold mb-4 text-gray-800">{item.title}</h3>
+              <p className="text-gray-600 leading-relaxed">{item.text}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Mobilis Section */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        viewport={{ once: true }}
+        className="relative py-20"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-green-50 to-blue-50" />
+        <div className="container mx-auto px-4 relative">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <motion.div 
+              initial={{ x: -50 }}
+              whileInView={{ x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="w-full md:w-[55%] h-[700px] rounded-3xl shadow-2xl overflow-hidden"
+              style={{ 
+                backgroundImage: "url('/mobilis6.png')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            />
+            
+            <motion.div 
+              initial={{ x: 50 }}
+              whileInView={{ x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="w-full md:w-[45%]"
+            >
+              <div className="bg-white/90 backdrop-blur-sm p-10 rounded-3xl shadow-xl">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6">Mobilis Algérie</h2>
+                <div className="space-y-6">
+                  <p className="text-gray-600 leading-relaxed">
+                    Filiale du Groupe Télécom Algérie, ATM Mobilis s'est imposé comme le premier opérateur mobile en Algérie depuis sa création en 2002. En août 2003, Mobilis a acquis son autonomie, lui permettant de se concentrer sur ses objectifs clés : la satisfaction et fidélisation des clients, l'innovation et le progrès technologique. Cette stratégie a porté ses fruits, avec une croissance fulgurante et l'acquisition de près de 23 millions d'abonnés en un temps record.
+                  </p>
+                  <p className="text-gray-600 leading-relaxed">
+                    Mobilis s'est résolument engagé dans une politique de développement et d'innovation. L'entreprise travaille constamment à améliorer son image de marque et à offrir à ses clients une expérience optimale. En déployant un réseau de haute qualité, en assurant un service client irréprochable et en proposant des produits et services innovants, Mobilis se positionne comme un opérateur proche de ses partenaires et de ses clients. Sa signature institutionnelle, « Together we make the future », résume parfaitement cet engagement.
+                  </p>
+                  <p className="text-gray-600 leading-relaxed">
+                    Mobilis est une entreprise qui embrasse la modernisation et la digitalisation. Nous nous engageons à développer notre image de marque et offrir le meilleur à nos clients grâce à un réseau de haute qualité, un service client exceptionnel et une gamme de produits et services innovants. Mobilis se positionne comme leader National du secteur de la téléphonie mobile.
+                  </p>
+                  <p className="text-gray-600 leading-relaxed">
+                    Notre engagement se traduit par le déploiement d'une grande couverture réseau sur l'ensemble du territoire national, ainsi que par un service client attentif et réactif. Mobilis est un opérateur garantissant une assistance technique à ses partenaires.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
+      </motion.div>
 
-        {/* Values Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-green-600 text-center mb-12">Nos Valeurs</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* Roaming Audit Section */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        viewport={{ once: true }}
+        className="py-20 bg-gray-50"
+      >
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <motion.div 
+              initial={{ y: 20 }}
+              whileInView={{ y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="bg-white p-10 rounded-3xl shadow-xl"
+            >
+              <h2 className="text-3xl font-bold text-gray-800 mb-8">Roaming Audit</h2>
+              <div className="space-y-6">
+                <p className="text-gray-600 leading-relaxed">
+                  L'audit de l'itinérance permet aux opérateurs de tirer pleinement parti de leur activité d'itinérance en maintenant à jour la configuration de l'itinérance. Des revenus sont perdus chaque jour en raison des modifications constantes des configurations des partenaires d'itinérance.
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  L'audit de l'itinérance est une suite d'outils permettant aux équipes en charge de l'itinérance de gérer, auditer et collaborer sur tous les aspects liés à l'itinérance.
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  L'audit de l'itinérance maintient une base de données des informations IR.21 provenant à la fois des opérateurs conformes RAEX et non conformes RAEX. Ces données peuvent ensuite être comparées à la configuration active du réseau pour signaler toute incohérence détectée.
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  L'audit de l'itinérance valide l'analyse des IMSI, des différents Global Titles, ainsi que des plages IP dans les nœuds passerelles et les pare-feux.
+                  Il s'agit d'un service web non intrusif que toute équipe d'itinérance peut utiliser.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Profile Section */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        viewport={{ once: true }}
+        className="py-20 bg-white"
+      >
+        <div className="container mx-auto px-4">
+          <motion.div 
+            initial={{ y: 20 }}
+            whileInView={{ y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="max-w-4xl mx-auto text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">Notre Équipe</h2>
+            <p className="text-lg text-gray-600">
+              Une équipe d'experts dédiés à l'excellence et à l'innovation
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                title: "Innovation",
-                description: "Nous repoussons constamment les limites technologiques pour offrir des solutions avant-gardistes.",
-                icon: "💡"
+                name: "Sayah Khadidja",
+                role: "Développeur Frontend",
+                image: "/profile1.jpg",
+                description: "Expert en développement d'interfaces utilisateur modernes et réactives."
               },
               {
-                title: "Transparence",
-                description: "Nos processus sont clairs et nos communications sans ambiguïté.",
-                icon: "🔍"
+                name: "Nemiri Lyna Ferial",
+                role: "Chef de Projet",
+                image: "/profile2.jpg",
+                description: "Gestionnaire de projets avec une expertise en déploiement de réseaux."
               },
               {
-                title: "Engagement",
-                description: "Nous nous engageons pleinement envers l'excellence et la satisfaction client.",
-                icon: "🤝"
+                name: "Bechafi Yasmine",
+                role: "Développeur Backend",
+                image: "/profile3.jpg",
+                description: "Expert en développement de services et d'API robustes."
+              },
+              {
+                name: "Khelif Hadil",
+                role: "Développeur Full Stack",
+                image: "/profile4.jpg",
+                description: "Spécialiste en développement d'applications web complètes."
               }
-            ].map((value, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
-                <div className="text-4xl mb-4">{value.icon}</div>
-                <h3 className="text-xl font-bold text-green-600 mb-2">{value.title}</h3>
-                <p className="text-gray-600">{value.description}</p>
-              </div>
+            ].map((member, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300"
+              >
+                <div className="h-48 bg-gray-200 relative">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
+                  <p className="text-green-600 font-medium mb-4">{member.role}</p>
+                  <p className="text-gray-600">{member.description}</p>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
 
-        {/* Team Section - Version mise à jour avec votre équipe */}
-        <div className="bg-white shadow-lg rounded-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-green-600 mb-8 text-center">Notre Équipe</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Sayah Khadidja */}
-            <div className="text-center p-6 bg-gray-50 rounded-lg hover:shadow-md transition">
-              <div className="mx-auto h-40 w-40 bg-green-100 rounded-full flex items-center justify-center text-5xl mb-4 font-bold text-green-600">
-                SK
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Sayah Khadidja</h3>
-              <p className="text-green-600 mb-2">Chef de Projet</p>
-              <p className="text-gray-600">20 ans d'expérience dans le secteur des télécommunications</p>
-            </div>
-
-            {/* Nemiri Lyna */}
-            <div className="text-center p-6 bg-gray-50 rounded-lg hover:shadow-md transition">
-              <div className="mx-auto h-40 w-40 bg-blue-100 rounded-full flex items-center justify-center text-5xl mb-4 font-bold text-blue-600">
-                NL
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Nemiri Lyna</h3>
-              <p className="text-green-600 mb-2">Développeuse Frontend</p>
-              <p className="text-gray-600">Spécialiste React et expérience utilisateur</p>
-            </div>
-
-            {/* Bechafi Yasmine */}
-            <div className="text-center p-6 bg-gray-50 rounded-lg hover:shadow-md transition">
-              <div className="mx-auto h-40 w-40 bg-yellow-100 rounded-full flex items-center justify-center text-5xl mb-4 font-bold text-yellow-600">
-                BY
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Bechafi Yasmine</h3>
-              <p className="text-green-600 mb-2">Responsable Qualité</p>
-              <p className="text-gray-600">Assurance qualité et tests utilisateurs</p>
-            </div>
-
-            {/* Hadil Khelif */}
-            <div className="text-center p-6 bg-gray-50 rounded-lg hover:shadow-md transition">
-              <div className="mx-auto h-40 w-40 bg-red-100 rounded-full flex items-center justify-center text-5xl mb-4 font-bold text-red-600">
-                HK
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">Hadil Khelif</h3>
-              <p className="text-green-600 mb-2">Développeuse Backend</p>
-              <p className="text-gray-600">Expert en bases de données et API</p>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="text-center bg-green-50 rounded-lg p-8">
-          <h2 className="text-2xl font-bold text-green-600 mb-4">Prêt à commencer ?</h2>
-          <p className="text-lg text-gray-600 mb-6">
-            Rejoignez les nombreuses entreprises qui nous font déjà confiance.
-          </p>
-          <Link
-            to="/contact"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="mt-20"
           >
-            Contactez-nous
-          </Link>
+            <h3 className="text-3xl font-bold text-gray-900 text-center mb-12">Nos Compétences</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  icon: <Globe className="h-12 w-12 text-green-600" />,
+                  title: "Réseaux",
+                  description: "Expertise en déploiement et maintenance de réseaux de télécommunications"
+                },
+                {
+                  icon: <Settings className="h-12 w-12 text-green-600" />,
+                  title: "Solutions",
+                  description: "Développement de solutions innovantes pour les opérateurs"
+                },
+                {
+                  icon: <Shield className="h-12 w-12 text-green-600" />,
+                  title: "Sécurité",
+                  description: "Protection et sécurisation des infrastructures réseau"
+                },
+                {
+                  icon: <BarChart className="h-12 w-12 text-green-600" />,
+                  title: "Performance",
+                  description: "Optimisation et monitoring des performances réseau"
+                }
+              ].map((skill, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-center"
+                >
+                  <div className="flex justify-center mb-6">
+                    {skill.icon}
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-4">{skill.title}</h4>
+                  <p className="text-gray-600">{skill.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
-
-export default AboutUs;

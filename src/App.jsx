@@ -9,6 +9,7 @@ import Login from "./login"
 import Register from "./Register";
 import AboutUs from "./AboutUs";
 import RapportAudit from "./RapportAudit";
+import Alertes from "./Alertes";
 
 
 function App() {
@@ -38,12 +39,16 @@ function App() {
               <Link to="/rapportaudit" className="text-green-600 font-semibold hover:text-green-800">
                 Rapport Audit
               </Link>
+              <Link to="/alertes" className="text-green-600 font-semibold hover:text-green-800">
+                  Alertes
+              </Link>
               <Link to="/contact" className="text-green-600 font-semibold hover:text-green-800">
                 Contact
               </Link>
               <Link to="/aboutus" className="text-green-600 font-semibold hover:text-green-800">
                 About Us
               </Link>
+
             </div>
             <div className="space-x-4">
               <Link to="/login" className="px-4 py-2 border border-green-600 text-red-600 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition">
@@ -66,6 +71,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/aboutus" element={<AboutUs />} />
             <Route path="/rapportaudit" element={<RapportAudit /> } />
+            <Route path="/alertes" element={<Alertes />} />
           </Routes>
         </div>
         
@@ -76,7 +82,6 @@ function App() {
 
 
 export default App;
-
 
 /*
 function App() {
