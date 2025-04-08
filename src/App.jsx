@@ -12,6 +12,7 @@ import Audits from "./Audits";
 import ConfigurationRoaming from "./ConfigurationRoaming";
 import RoamingPartners from './RoamingPartners';
 import SituationGlobale from './SituationGlobale';
+import NetworkNodes from "./NetworkNodes";
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
             <Route path="/partenaires" element={<RoamingPartners />} />
             <Route path="/roaming" element={<ConfigurationRoaming />} />
             <Route path="/situation-globale" element={<SituationGlobale />} />
+            <Route path="/network-nodes" element={<NetworkNodes />} />
           </Routes>
         </div>
       </div>

@@ -102,6 +102,7 @@ function Sidebar() {
     { id: "audits", label: "Audits", icon: <BsFileEarmarkText /> },
     { id: "partners", label: "Partenaires", icon: <BsPeople /> },
     { id: "roaming", label: "Configuration Roaming", icon: <BsArrowLeftRight /> },
+    { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }
