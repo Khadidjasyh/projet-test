@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight } from 'react-icons/bs';
+import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight, BsFileEarmarkPdf } from 'react-icons/bs';
 import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -96,6 +96,7 @@ function Sidebar() {
     { id: "audits", label: "Audits", icon: <BsFileEarmarkText /> },
     { id: "partners", label: "Partenaires", icon: <BsPeople /> },
     { id: "roaming", label: "Configuration Roaming", icon: <BsArrowLeftRight /> },
+    { id: "ir21", label: "Documents IR.21", icon: <BsFileEarmarkPdf /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }
@@ -193,42 +194,106 @@ const Dashboard = () => {
 
   // Fetch statistics from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/dashboard/stats")
-      .then((res) => res.json())
-      .then((data) => setStats(data))
-      .catch((err) => console.error("Error fetching stats:", err));
+    const fetchStats = async () => {
+      try {
+        console.log('Attempting to fetch stats from:', 'http://localhost:3000/api/dashboard/stats');
+        const response = await fetch("http://localhost:3000/api/dashboard/stats");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+        setStats({
+          totalAudits: 0,
+          errorsDetected: 0,
+          partnersConnected: 0,
+          pendingTasks: 0,
+        });
+      }
+    };
+    fetchStats();
   }, []);
 
   // Fetch roaming events from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/roaming-events")
-      .then((res) => res.json())
-      .then((data) => setRoamingEvents(data))
-      .catch((err) => console.error("Error fetching roaming events:", err));
+    const fetchRoamingEvents = async () => {
+      try {
+        console.log('Attempting to fetch roaming events from:', 'http://localhost:3000/api/roaming-events');
+        const response = await fetch("http://localhost:3000/api/roaming-events");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setRoamingEvents(data);
+      } catch (err) {
+        console.error("Error fetching roaming events:", err);
+        setRoamingEvents([]);
+      }
+    };
+    fetchRoamingEvents();
   }, []);
 
   // Fetch critical alerts from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/critical-alerts")
-      .then((res) => res.json())
-      .then((data) => setCriticalAlerts(data))
-      .catch((err) => console.error("Error fetching critical alerts:", err));
+    const fetchCriticalAlerts = async () => {
+      try {
+        console.log('Attempting to fetch critical alerts from:', 'http://localhost:3000/api/critical-alerts');
+        const response = await fetch("http://localhost:3000/api/critical-alerts");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCriticalAlerts(data);
+      } catch (err) {
+        console.error("Error fetching critical alerts:", err);
+        setCriticalAlerts([]);
+      }
+    };
+    fetchCriticalAlerts();
   }, []);
 
   // Fetch recent audits from backend
   useEffect(() => {
-    fetch('http://localhost:5000/api/audits')
-      .then(res => res.json())
-      .then(data => setRecentAudits(data))
-      .catch(err => console.error('Erreur de chargement des audits:', err));
+    const fetchAudits = async () => {
+      try {
+        console.log('Attempting to fetch audits from:', 'http://localhost:3000/api/audits');
+        const response = await fetch('http://localhost:3000/api/audits');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setRecentAudits(data);
+      } catch (err) {
+        console.error('Error loading audits:', err);
+        setRecentAudits([]);
+      }
+    };
+    fetchAudits();
   }, []);
 
   // Fetch coverage data from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/roaming-coverage")
-      .then((res) => res.json())
-      .then((data) => setCoverage(data))
-      .catch((err) => console.error("Error fetching data:", err));
+    const fetchCoverage = async () => {
+      try {
+        console.log('Attempting to fetch coverage data from:', 'http://localhost:3000/api/roaming-coverage');
+        const response = await fetch("http://localhost:3000/api/roaming-coverage");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCoverage(data);
+      } catch (err) {
+        console.error("Error fetching coverage data:", err);
+        setCoverage({
+          total_operators: 0,
+          total_countries: 0,
+          network_availability: 0,
+        });
+      }
+    };
+    fetchCoverage();
   }, []);
 
   const roamingIcon = new L.Icon({

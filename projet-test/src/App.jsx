@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Home from "./Home";
@@ -10,7 +8,9 @@ import Register from "./Register";
 import AboutUs from "./AboutUs";
 import RapportAudit from "./RapportAudit";
 import Alertes from "./Alertes";
-
+import IR21View from "./IR21View";
+import UploadIR21 from "./UploadIR21";
+import IR21DocumentView from "./IR21DocumentView";
 
 function App() {
   return (
@@ -72,6 +72,9 @@ function App() {
             <Route path="/aboutus" element={<AboutUs />} />
             <Route path="/rapportaudit" element={<RapportAudit /> } />
             <Route path="/alertes" element={<Alertes />} />
+            <Route path="/ir21" element={<IR21View />} />
+            <Route path="/upload-ir21" element={<UploadIR21 />} />
+            <Route path="/ir21/:documentId" element={<IR21DocumentView />} />
           </Routes>
         </div>
         
@@ -252,7 +255,7 @@ function Home() {
           <div className="bg-gray-100 p-8 rounded-lg">
             <h2 className="text-3xl font-bold text-green-600 mb-4">Offres Roaming Avantages :</h2>
             <p className="text-lg text-gray-700 mb-4">
-              Découvrez nos offres spéciales pour un roaming sans souci à l’étranger.
+              Découvrez nos offres spéciales pour un roaming sans souci à l'étranger.
             </p>
             <ul className="list-disc list-inside text-gray-700 space-y-2 text-left">
               <li>Tarifs compétitifs pour plus de 50 pays.</li>

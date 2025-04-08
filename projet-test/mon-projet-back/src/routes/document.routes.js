@@ -48,6 +48,10 @@ router.post('/ir21/upload',
     documentController.uploadIR21
 );
 
+router.get('/ir21/partner/all',
+    documentController.getAllDocuments
+);
+
 router.get('/ir21/partner/:partnerId',
     documentController.getDocumentsByPartner
 );

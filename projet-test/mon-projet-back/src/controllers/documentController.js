@@ -11,6 +11,7 @@ class DocumentController {
         this.getDocumentsByPartner = this.getDocumentsByPartner.bind(this);
         this.getDocumentById = this.getDocumentById.bind(this);
         this.deleteDocument = this.deleteDocument.bind(this);
+        this.getAllDocuments = this.getAllDocuments.bind(this);
     }
 
     async uploadIR21(req, res) {
@@ -73,10 +74,12 @@ class DocumentController {
     getDocumentById = async (req, res) => {
         try {
             const documentId = req.params.documentId;
-            const [documents] = await db.execute(
-                'SELECT * FROM ir21_documents WHERE document_id = ?',
-                [documentId]
-            );
+            const [documents] = await db.execute(`
+                SELECT d.*, p.name as partner_name, p.country 
+                FROM ir21_documents d
+                LEFT JOIN partners p ON d.partner_id = p.partner_id
+                WHERE d.document_id = ?
+            `, [documentId]);
 
             if (documents.length === 0) {
                 return res.status(404).json({
@@ -136,6 +139,28 @@ class DocumentController {
             res.status(500).json({
                 success: false,
                 message: 'Error deleting document',
+                error: error.message
+            });
+        }
+    }
+
+    getAllDocuments = async (req, res) => {
+        try {
+            console.log('Fetching all IR21 documents...');
+            const [documents] = await db.execute(
+                'SELECT * FROM ir21_documents ORDER BY created_at DESC'
+            );
+
+            console.log(`Found ${documents.length} documents`);
+            res.status(200).json({
+                success: true,
+                data: documents
+            });
+        } catch (error) {
+            console.error('Error fetching all documents:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching documents',
                 error: error.message
             });
         }
