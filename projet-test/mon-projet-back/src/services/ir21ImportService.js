@@ -16,11 +16,11 @@ class IR21ImportService {
             // Parse the IR.21 XML file
             const parsedData = await this.parser.parseXMLFile(filePath);
             
-            // Store the document
-            const documentId = await this.storeDocument(connection, filePath, parsedData, uploadedBy);
-            
-            // Create or update partner
+            // Create or update partner first
             const partnerId = await this.createOrUpdatePartner(connection, parsedData.basicInfo);
+            
+            // Store the document with the partner ID
+            const documentId = await this.storeDocument(connection, filePath, parsedData, uploadedBy, partnerId);
             
             // Store network configurations
             await this.storeNetworkConfigs(connection, partnerId, parsedData.networkConfigs);
@@ -42,7 +42,7 @@ class IR21ImportService {
         }
     }
 
-    async storeDocument(connection, filePath, parsedData, uploadedBy) {
+    async storeDocument(connection, filePath, parsedData, uploadedBy, partnerId) {
         const fileName = path.basename(filePath);
         const query = `
             INSERT INTO ir21_documents (
@@ -53,22 +53,35 @@ class IR21ImportService {
                 content,
                 uploaded_by,
                 status
-            ) VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
 
         const [result] = await connection.execute(query, [
-            null, // Will be updated after partner creation
+            partnerId,
             fileName,
             filePath,
             'RAEX',
             JSON.stringify(parsedData.rawData),
-            uploadedBy
+            uploadedBy,
+            'Pending'
         ]);
 
         return result.insertId;
     }
 
     async createOrUpdatePartner(connection, basicInfo) {
+        // If basicInfo is not provided, create a temporary partner
+        if (!basicInfo) {
+            const [result] = await connection.execute(`
+                INSERT INTO partners (
+                    name,
+                    status,
+                    created_at
+                ) VALUES (?, 'Testing', NOW())
+            `, ['Temporary Partner']);
+            return result.insertId;
+        }
+
         const checkQuery = 'SELECT partner_id FROM partners WHERE tadig_code = ?';
         const [existing] = await connection.execute(checkQuery, [basicInfo.tadigCode]);
 
@@ -78,13 +91,14 @@ class IR21ImportService {
                 UPDATE partners 
                 SET name = ?,
                     country = ?,
-                    status = ?
+                    status = ?,
+                    last_updated = NOW()
                 WHERE partner_id = ?
             `;
             await connection.execute(updateQuery, [
                 basicInfo.operatorName,
                 basicInfo.countryCode,
-                basicInfo.status,
+                'Active',
                 existing[0].partner_id
             ]);
             return existing[0].partner_id;
@@ -95,14 +109,14 @@ class IR21ImportService {
                     name,
                     country,
                     tadig_code,
-                    status
-                ) VALUES (?, ?, ?, ?)
+                    status,
+                    created_at
+                ) VALUES (?, ?, ?, 'Active', NOW())
             `;
             const [result] = await connection.execute(insertQuery, [
-                basicInfo.operatorName,
-                basicInfo.countryCode,
-                basicInfo.tadigCode,
-                basicInfo.status
+                basicInfo.operatorName || 'Unknown Operator',
+                basicInfo.countryCode || 'Unknown',
+                basicInfo.tadigCode || 'UNKNOWN'
             ]);
             return result.insertId;
         }

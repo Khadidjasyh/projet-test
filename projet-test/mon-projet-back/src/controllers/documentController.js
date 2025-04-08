@@ -6,10 +6,16 @@ const fs = require('fs').promises;
 class DocumentController {
     constructor() {
         this.ir21ImportService = new IR21ImportService();
+        // Bind all methods to this instance
+        this.uploadIR21 = this.uploadIR21.bind(this);
+        this.getDocumentsByPartner = this.getDocumentsByPartner.bind(this);
+        this.getDocumentById = this.getDocumentById.bind(this);
+        this.deleteDocument = this.deleteDocument.bind(this);
     }
 
-    uploadIR21 = async (req, res) => {
+    async uploadIR21(req, res) {
         try {
+            console.log('Starting upload process...');
             if (!req.file) {
                 return res.status(400).json({ 
                     success: false, 
@@ -17,7 +23,11 @@ class DocumentController {
                 });
             }
 
-            const uploadedBy = req.user.id;
+            console.log('File received:', req.file);
+            console.log('IR21ImportService instance:', this.ir21ImportService);
+
+            const uploadedBy = 1; // Default user ID for testing
+            
             const result = await this.ir21ImportService.importIR21Document(
                 req.file.path,
                 uploadedBy
@@ -29,7 +39,7 @@ class DocumentController {
                 data: result
             });
         } catch (error) {
-            console.error('Error processing IR.21 document:', error);
+            console.error('Error in uploadIR21:', error);
             res.status(500).json({
                 success: false,
                 message: 'Error processing IR.21 document',
@@ -132,5 +142,6 @@ class DocumentController {
     }
 }
 
-// Export a new instance of the controller
-module.exports = new DocumentController(); 
+// Create and export a single instance
+const documentController = new DocumentController();
+module.exports = documentController; 
