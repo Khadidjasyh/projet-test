@@ -39,7 +39,12 @@ const transporter = nodemailer.createTransport({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5181', 'http://localhost:5176'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 // Fonction de validation d'e-mail
@@ -132,18 +137,61 @@ app.get("/roaming-partners", (req, res) => {
 // Route pour récupérer les données de situation_globale
 app.get("/situation-globale", (req, res) => {
   console.log("Route /situation-globale appelée");
-  const query = "SELECT * FROM situation_globale ORDER BY Country";
   
-  connection.query(query, (error, results) => {
-    if (error) {
-      console.error("Erreur MySQL:", error);
+  // Vérifier si la connexion est active
+  if (!connection) {
+    console.error("❌ La connexion MySQL n'est pas initialisée");
+    return res.status(500).json({ 
+      error: "Erreur de connexion à la base de données",
+      details: "La connexion MySQL n'est pas initialisée"
+    });
+  }
+
+  // Vérifier si la connexion est toujours valide
+  connection.ping((err) => {
+    if (err) {
+      console.error("❌ La connexion MySQL n'est plus valide:", err);
       return res.status(500).json({ 
-        error: "Erreur lors de la récupération des données.",
-        details: error.message 
+        error: "Erreur de connexion à la base de données",
+        details: "La connexion MySQL n'est plus valide"
       });
     }
-    console.log(`${results.length} enregistrements trouvés dans situation_globale`);
-    res.status(200).json(results);
+
+    const query = "SELECT * FROM situation_globales ORDER BY id";
+    console.log("Exécution de la requête SQL:", query);
+    
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error("❌ Erreur MySQL:", error);
+        return res.status(500).json({ 
+          error: "Erreur lors de la récupération des données",
+          details: error.message,
+          sql: error.sql
+        });
+      }
+
+      console.log(`✅ Nombre d'enregistrements trouvés: ${results.length}`);
+      if (results.length > 0) {
+        console.log("Premier enregistrement:", results[0]);
+      }
+
+      // Vérifier si les résultats sont valides
+      if (!Array.isArray(results)) {
+        console.error("❌ Les résultats ne sont pas un tableau:", results);
+        return res.status(500).json({ 
+          error: "Format de données invalide",
+          details: "Les résultats ne sont pas un tableau"
+        });
+      }
+
+      // Vérifier la structure des données
+      if (results.length > 0) {
+        const firstRecord = results[0];
+        console.log("Structure du premier enregistrement:", Object.keys(firstRecord));
+      }
+
+      res.status(200).json(results);
+    });
   });
 });
 
