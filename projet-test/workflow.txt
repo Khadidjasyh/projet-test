@@ -1,0 +1,92 @@
+# Roaming Audit Application User Flow Summary
+
+## 1. Authentication Flow
+- User arrives at the application login page
+- User logs in with credentials (email/password)
+- System validates credentials and provides JWT token
+- On first login, user may need to complete profile information
+- User is redirected to the main dashboard based on role permissions
+
+## 2. Document Management Flow
+- User navigates to the Document Management section
+- User selects a partner or creates a new partner profile
+- User uploads IR.21/IR.85 files through the file upload component
+- System validates the file format:
+  - If RAEX format: System automatically parses the document
+  - If non-RAEX format: User is prompted to use manual conversion interface
+- System extracts network configurations from the documents
+- Extracted data is stored in the MySQL database
+- Document is linked to the respective partner profile
+- User can view all uploaded documents in a document library
+
+## 3. Network Configuration Management Flow
+- User navigates to Partner Management section
+- User selects a partner to view/edit configurations
+- User can manually input or modify network configurations:
+  - SCCP Routes
+  - IMSI Configuration
+  - CAMEL Configuration
+  - Data Configuration
+- System validates configuration entries
+- Configurations are saved to the database
+- User can compare configurations with IR.21/IR.85 data
+
+## 4. Audit Execution Flow
+- User navigates to Test Management section
+- User selects a partner or multiple partners for auditing
+- User selects test types to run:
+  - Inbound Roaming Tests
+  - Outbound Roaming Tests
+  - CAMEL Phase Services Tests
+  - Data Roaming Tests
+- User initiates audit (or schedules for later execution)
+- System retrieves partner configurations from database
+- System compares configurations with IR.21/IR.85 documents
+- System identifies inconsistencies and errors
+- System categorizes errors by severity
+- Test results and logs are stored in database
+- System creates alerts for critical issues
+- User is notified of completed audit
+
+## 5. Results Viewing Flow
+- User navigates to Test Results section or Dashboard
+- User views summary of audit results
+- User can filter results by:
+  - Partner
+  - Error type
+  - Severity
+  - Date range
+- User can drill down into specific errors for details
+- System displays configuration discrepancies with recommendations
+- User can export results in various formats (PDF, Excel)
+
+## 6. Error Correction Flow
+- User receives alert notification for critical issues
+- User reviews error details in dashboard
+- User makes necessary corrections in network systems
+- User submits correction report through the application
+- System verifies corrections (optional re-test)
+- Administrator validates the correction
+- System updates error status and closes alert
+- Dashboard reflects updated status
+
+## 7. Reporting Flow
+- User navigates to Reports section
+- User selects report type and parameters
+- System generates report based on selected criteria
+- User views report in the application
+- User can schedule periodic reports
+- User can export reports in various formats
+- Reports are stored for historical reference
+
+## 8. Dashboard Interaction Flow
+- User regularly monitors main dashboard
+- Dashboard displays key metrics:
+  - Roaming coverage status
+  - Recent test results
+  - Error statistics
+  - Pending alerts
+- User can customize dashboard widgets
+- User can drill down into specific areas of concern
+- Dashboard preferences are saved for future sessions
+

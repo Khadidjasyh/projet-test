@@ -1,0 +1,337 @@
+@startuml RoamingAudit_Database_Final
+
+' ==== Tables Principales ====
+
+class Partner {
+  + partner_id : INT (PK)
+  + name : VARCHAR(100)
+  + country : VARCHAR(50)
+  + tadig_code : VARCHAR(10) ' Identifiant TADIG du partenaire
+  + agreement_type : ENUM('Bilatéral', 'Unilatéral') ' AA.12, AA.13, AA.19
+  + services : JSON ('GSM': {'voix': bool, 'sms': bool}, 'DATA': {'2G/GPRS': bool, '3G': bool, 'LTE/4G': bool, '5G': bool})
+  + ir21_file_path : VARCHAR(255)
+  + created_at : DATETIME
+  + last_updated : DATETIME
+  + status : ENUM('Active', 'Inactive', 'Testing')
+}
+
+class NetworkConfig {
+  + config_id : INT (PK)
+  + partner_id : INT (FK)
+  + node_type : ENUM('MSC', 'HLR', 'HSS', 'SGSN', 'MME', 'GGSN', 'Firewall', 'STP')
+  + vendor : VARCHAR(50) ' Fournisseur de l'équipement
+  + imsi_prefix : VARCHAR(15)
+  + gt : VARCHAR(20)
+  + ip_range : VARCHAR(50)
+  + status : ENUM('Active', 'Inactive')
+  + last_verified : DATETIME
+}
+
+class SCCPRoute {
+  + route_id : INT (PK)
+  + partner_id : INT (FK)
+  + tt : INT (Translation Type)
+  + np : INT (Numbering Plan)
+  + na : INT (Nature of Address)
+  + ns : VARCHAR(20) ' MP1/MP7
+  + nsa : VARCHAR(20) ' Network Service Access
+  + gtrc : VARCHAR(20)
+  + css_present : BOOLEAN ' Pour test Inbound
+  + spc : VARCHAR(20)
+  + status : ENUM('Valid', 'Invalid')
+  + direction : ENUM('Inbound', 'Outbound', 'Both')
+}
+
+class IMSIConfig {
+  + imsi_id : INT (PK)
+  + partner_id : INT (FK)
+  + imsi_prefix : VARCHAR(15)
+  + mgt : VARCHAR(20) ' Mobile Global Title
+  + e214_data : JSON ' Table de routage E.214
+  + e164_data : JSON ' Plan de numérotation E.164
+  + conversion_rule : VARCHAR(100) ' Règle de conversion IMSI/MGT
+  + msisdn_range : VARCHAR(50)
+  + msrn_range : VARCHAR(50) ' Mobile Station Roaming Number
+}
+
+class CAMELConfig {
+  + camel_id : INT (PK)
+  + partner_id : INT (FK)
+  + phase : ENUM('Phase 1', 'Phase 2', 'Phase 3', 'Phase 4')
+  + service_key : VARCHAR(10) ' 202 (prépayé), 225 (postpayé)
+  + scp_gt : VARCHAR(20) ' Service Control Point GT
+  + trigger_points : JSON
+  + inbound_restrictions : JSON ' Pour tests Inbound
+  + outbound_gt_list : JSON ' Pour tests Outbound (VPLMN GT)
+  + in_platform_config : JSON ' Configuration plateforme IN
+  + status : ENUM('Active', 'Inactive')
+}
+
+class DataConfig {
+  + data_id : INT (PK)
+  + partner_id : INT (FK)
+  + services : JSON ' {"2G/GPRS": true, "3G": true, "LTE/4G": true, "5G": true}
+  + ip_dns_list : JSON ' Liste IP DNS pour tests Data
+  + backbone_vplmn : VARCHAR(50) ' Pour tests Data Inbound
+  + ip_ranges : JSON ' Plages IP
+  + technology : ENUM('2G', '3G', '4G', '5G')
+}
+
+class IR21Document {
+  + document_id : INT (PK)
+  + partner_id : INT (FK)
+  + file_name : VARCHAR(255)
+  + file_path : VARCHAR(255) ' Stockage S3/Cloud Storage
+  + file_format : ENUM('RAEX', 'PDF', 'Word', 'Excel', 'Other')
+  + converted : BOOLEAN ' Si document converti manuellement
+  + conversion_date : DATETIME
+  + upload_date : DATETIME
+  + uploaded_by : INT (FK -> User)
+  + content : LONGTEXT ' Contenu XML ou JSON structuré
+  + status : ENUM('Pending', 'Processed', 'Error')
+}
+
+class IR85Document {
+  + document_id : INT (PK)
+  + partner_id : INT (FK)
+  + file_name : VARCHAR(255)
+  + file_path : VARCHAR(255) ' Stockage S3/Cloud Storage
+  + file_format : ENUM('RAEX', 'PDF', 'Word', 'Excel', 'Other')
+  + upload_date : DATETIME
+  + uploaded_by : INT (FK -> User)
+  + content : LONGTEXT
+  + status : ENUM('Pending', 'Processed', 'Error')
+}
+
+class GSMAInfoCenter {
+  + id : INT (PK)
+  + last_sync : DATETIME
+  + sync_status : ENUM('Success', 'Partial', 'Failed')
+  + error_log : TEXT
+}
+
+class TestResult {
+  + test_id : INT (PK)
+  + partner_id : INT (FK)
+  + config_id : INT (FK) ' Lien vers NetworkConfig
+  + test_type : ENUM('Inbound', 'Outbound', 'CAMEL_Inbound', 'CAMEL_Outbound', 'Data_Inbound', 'Data_Outbound')
+  + details : JSON ' {"missing_gt": ["306935226000"]}
+  + passed : BOOLEAN
+  + error_count : INT
+  + warning_count : INT
+  + date : DATETIME
+  + ran_by : INT (FK -> User)
+}
+
+class TestError {
+  + error_id : INT (PK)
+  + test_id : INT (FK)
+  + error_code : VARCHAR(50)
+  + description : TEXT
+  + severity : ENUM('Critical', 'Warning', 'Info')
+}
+
+class TestLog {
+  + log_id : INT (PK)
+  + test_id : INT (FK)
+  + timestamp : DATETIME
+  + message : TEXT
+  + level : ENUM('Info', 'Warning', 'Error', 'Critical')
+}
+
+class Alert {
+  + alert_id : INT (PK)
+  + test_id : INT (FK) ' Lien vers TestResult
+  + severity : ENUM('Critique', 'Urgent', 'Info')
+  + description : TEXT
+  + auto_generated : BOOLEAN ' True si généré par un test
+  + resolved : BOOLEAN
+  + created_at : DATETIME
+  + assigned_to : INT (FK -> User)
+  + resolution_deadline : DATETIME ' Pour respecter les SLA
+}
+
+class Report {
+  + report_id : INT (PK)
+  + test_id : INT (FK)
+  + alert_id : INT (FK)
+  + user_id : INT (FK)
+  + correction_details : TEXT
+  + implemented_changes : JSON
+  + status : ENUM('Validé', 'En attente', 'Rejeté')
+  + creation_date : DATETIME
+  + validation_date : DATETIME
+  + validated_by : INT (FK -> User)
+  + attachments : JSON ' Fichiers joints (ex: captures IR.21)
+}
+
+class User {
+  + user_id : INT (PK)
+  + email : VARCHAR(100)
+  + password : VARCHAR(255) ' Hashé avec bcrypt ou Argon2
+  + role : ENUM('Admin', 'User')
+  + name : VARCHAR(100)
+  + surname : VARCHAR(100)
+  + employee_id : VARCHAR(20) ' Matricule professionnel
+  + position : VARCHAR(100) ' Poste occupé
+  + phone : VARCHAR(20)
+  + birth_date : DATE
+  + profile_picture : VARCHAR(255)
+  + active : BOOLEAN
+  + activation_link : VARCHAR(255)
+  + last_login : DATETIME
+  + created_by : INT (FK -> User)
+}
+
+class Permission {
+  + permission_id : INT (PK)
+  + user_id : INT (FK)
+  + resource_type : ENUM('Partner', 'NetworkConfig', 'Report', 'IR21', 'TestResult')
+  + access_level : ENUM('Read', 'Write', 'Admin')
+}
+
+class Dashboard {
+  + id : INT (PK)
+  + user_id : INT (FK)
+  + layout : JSON ' Configuration personnalisée du tableau de bord
+  + last_viewed : DATETIME
+}
+
+class DashboardWidget {
+  + widget_id : INT (PK)
+  + dashboard_id : INT (FK)
+  + widget_type : ENUM('CoverageMap', 'ErrorCount', 'TestStatus', 'LatestAlerts')
+  + position : JSON ' {"x": 0, "y": 0, "width": 2, "height": 2}
+  + config : JSON ' Configuration spécifique au widget
+}
+
+class AuditSchedule {
+  + schedule_id : INT (PK)
+  + name : VARCHAR(100)
+  + description : TEXT
+  + frequency : ENUM('Daily', 'Weekly', 'Monthly', 'OnDemand')
+  + test_types : JSON ' Types de tests à exécuter
+  + partners : JSON ' Liste des partenaires à auditer
+  + last_run : DATETIME
+  + next_run : DATETIME
+  + created_by : INT (FK -> User)
+  + active : BOOLEAN
+}
+
+' ==== Services ====
+
+class TestService {
+  + runInboundTest(partner_id: INT): TestResult
+  + runOutboundTest(partner_id: INT): TestResult
+  + runCAMELTest(partner_id: INT, phase: ENUM('Inbound', 'Outbound')): TestResult
+  + runDataTest(partner_id: INT): TestResult
+  + generateAlert(test_id: INT): Alert
+  + scheduleTests(schedule_id: INT): void
+  + compareWithIR21(partner_id: INT): JSON
+}
+
+class DocumentService {
+  + importFromGSMA(): boolean
+  + uploadDocument(file: File, partner_id: INT, type: ENUM('IR21', 'IR85')): IR21Document|IR85Document
+  + convertDocument(document_id: INT): boolean
+  + parseRAEXDocument(document_id: INT): JSON
+  + extractNetworkConfigs(document_id: INT): NetworkConfig[]
+}
+
+class ReportService {
+  + generateAutoReport(test_id: INT): Report
+  + submitManualReport(alert_id: INT, user_id: INT, details: TEXT): Report
+  + validateReport(report_id: INT, validator_id: INT): boolean
+  + generatePDFReport(report_id: INT): File
+}
+
+class DashboardService {
+  + getUserDashboard(user_id: INT): Dashboard
+  + updateWidget(widget_id: INT, config: JSON): boolean
+  + createWidget(dashboard_id: INT, type: ENUM): DashboardWidget
+  + getAuditOverview(): JSON
+  + getPartnerCoverage(): JSON
+}
+
+class UserService {
+  + createUser(userData: JSON): User
+  + activateAccount(activation_link: STRING): boolean
+  + assignPermissions(user_id: INT, permissions: JSON): boolean
+  + resetPassword(email: STRING): boolean
+  + authenticateUser(email: STRING, password: STRING): User|null
+}
+
+' ==== Relations ====
+
+Partner "1" -- "0..*" NetworkConfig : "a des configurations"
+Partner "1" -- "0..*" SCCPRoute : "a des routes"
+Partner "1" -- "0..*" IMSIConfig : "a des IMSI"
+Partner "1" -- "0..*" CAMELConfig : "a des règles CAMEL"
+Partner "1" -- "0..*" DataConfig : "a des configs données"
+Partner "1" -- "0..*" IR21Document : "a des documents IR.21"
+Partner "1" -- "0..*" IR85Document : "a des documents IR.85"
+
+NetworkConfig "1" -- "0..*" TestResult : "testé par"
+TestResult "1" -- "0..*" TestError : "génère des erreurs"
+TestResult "1" -- "0..*" TestLog : "génère des logs"
+TestResult "1" -- "0..*" Alert : "génère des alertes"
+Alert "1" -- "0..*" Report : "résolu par"
+
+User "1" -- "0..*" Report : "soumet"
+User "1" -- "0..*" Permission : "possède"
+User "1" -- "0..*" Dashboard : "personnalise"
+Dashboard "1" -- "0..*" DashboardWidget : "contient"
+
+User "1" -- "0..*" IR21Document : "télécharge"
+User "1" -- "0..*" IR85Document : "télécharge"
+User "1" -- "0..*" TestResult : "exécute"
+User "1" -- "0..*" AuditSchedule : "configure"
+
+' ==== Notes ====
+
+note top of User
+  Les mots de passe doivent etre hashes avec bcrypt ou Argon2
+  pour garantir la sécurité des comptes utilisateurs.
+end note
+
+note top of IR21Document
+  Stockage des documents dans un systeme cloud
+  pour optimiser la gestion des fichiers volumineux.
+
+  Format RAEX: format XML standardise par la GSMA
+  Conversion necessaire pour les formats non standard
+end note
+
+note top of Partner
+  Le code TADIG (TAD Identification Group) est
+  un identifiant unique pour chaque operateur mobile
+  utilise pour la facturation et les accords roaming
+end note
+
+note top of TestService
+  **Methodes de test**:
+  - runInboundTest: verifie routes SCCP, IMSI/MGT, tables E.214/E.164
+  - runOutboundTest: verifie routes SCCP, GT list, MSC/VLR GT
+  - runCAMELTest: verifie SCP GT, restrictions inbound/outbound
+  - runDataTest: verifie VPLMN IP, DNS, backbone, firewalls
+end note
+
+note top of DocumentService
+  **Gestion des documents**:
+  - importFromGSMA: recupération auto depuis InfoCenter
+  - convertDocument: conversion des formats non-RAEX
+  - parseRAEXDocument: extraction des donnees structurees
+end note
+
+note top of TestError
+  Detail des erreurs detectees lors des tests,
+  pour ameliorer la tracabilite des anomalies.
+end note
+
+note top of AuditSchedule
+  Permet dautomatiser les audits périodiques
+  et de garantir une surveillance constante
+  des configurations roaming
+end note
+
+@enduml
