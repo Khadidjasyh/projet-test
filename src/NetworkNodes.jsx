@@ -34,6 +34,31 @@ const NetworkNodes = () => {
     fetchNodes();
   }, []);
 
+  const handleFileImport = (type) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".log"; // Accepter uniquement les fichiers .log
+
+    input.onchange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          // Traitez le contenu du fichier ici
+          console.log(`Contenu du fichier importé (${type}) : ${content}`);
+          alert(`Fichier ${type} importé avec succès : ${file.name}`);
+        };
+        reader.onerror = (err) => {
+          alert(`Erreur lors de la lecture du fichier : ${err.message}`);
+        };
+        reader.readAsText(file); // Lire le fichier en tant que texte
+      }
+    };
+
+    input.click();
+  };
+
   const filteredNodes = nodes.filter(node => {
     const matchesSearch = 
       node.node_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,6 +192,18 @@ const NetworkNodes = () => {
             <h1 className="text-2xl font-bold text-gray-900">Nœuds Réseau</h1>
           </div>
           <div className="flex space-x-4">
+            <button
+              onClick={() => handleFileImport("MSS")}
+              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            >
+              Importer fichier MSS
+            </button>
+            <button
+              onClick={() => handleFileImport("MSC")}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Importer fichier MSC
+            </button>
             <button
               onClick={() => setShowStats(!showStats)}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -339,4 +376,4 @@ const NetworkNodes = () => {
   );
 };
 
-export default NetworkNodes; 
+export default NetworkNodes;  
