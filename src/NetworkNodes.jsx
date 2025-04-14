@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaServer, FaFilter, FaSearch, FaNetworkWired, FaSort, FaSortUp, FaSortDown, FaFileExport, FaChartPie } from "react-icons/fa";
+import { FaServer, FaFilter, FaSearch, FaNetworkWired, FaSort, FaSortUp, FaSortDown, FaFileExport, FaChartPie, FaTrash, FaPrint, FaFileDownload, FaFileImport } from "react-icons/fa";
 
 const NetworkNodes = () => {
   const [nodes, setNodes] = useState([]);
@@ -117,7 +117,7 @@ const NetworkNodes = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['ID', 'Nom', 'Type', 'Constructeur', 'IP', 'GT', 'Localisation', 'Statut'];
+    const headers = ['ID', 'Nom', 'Type', 'Constructeur', 'IMSI', 'MCC', 'MNC', 'Statut'];
     const csvContent = [
       headers.join(','),
       ...sortedNodes.map(node => [
@@ -125,9 +125,9 @@ const NetworkNodes = () => {
         node.node_name,
         node.node_type,
         node.vendor,
-        node.ip_address || '',
-        node.gt || '',
-        node.location || '',
+        node.imsi || '',
+        node.mcc || '',
+        node.mnc || '',
         node.active ? 'Actif' : 'Inactif'
       ].join(','))
     ].join('\n');
@@ -165,6 +165,70 @@ const NetworkNodes = () => {
     return colors[vendor] || 'bg-gray-100 text-gray-800';
   };
 
+  const handleDownload = (node) => {
+    // Logique pour télécharger les informations du nœud
+    console.log('Téléchargement des informations pour:', node.node_name);
+    alert(`Téléchargement des informations pour ${node.node_name}`);
+  };
+
+  const handleExport = (node) => {
+    // Logique pour exporter les informations du nœud
+    const data = [
+      ['ID', 'Nom', 'Type', 'Constructeur', 'Statut'],
+      [
+        node.id,
+        node.node_name,
+        node.node_type,
+        node.vendor,
+        node.active ? 'Actif' : 'Inactif'
+      ]
+    ].join('\n');
+
+    const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `node_${node.node_name}.csv`;
+    link.click();
+  };
+
+  const handleDelete = (node) => {
+    // Logique pour supprimer le nœud
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${node.node_name} ?`)) {
+      console.log('Suppression du nœud:', node.node_name);
+      alert(`Nœud ${node.node_name} supprimé`);
+    }
+  };
+
+  const handlePrint = (node) => {
+    // Logique pour imprimer les informations du nœud
+    console.log('Impression des informations pour:', node.node_name);
+    alert(`Impression des informations pour ${node.node_name}`);
+  };
+
+  const handleImport = (node) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".log"; // Accepter uniquement les fichiers .log
+
+    input.onchange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          console.log(`Contenu du fichier importé pour ${node.node_name}:`, content);
+          alert(`Fichier importé avec succès pour ${node.node_name}: ${file.name}`);
+        };
+        reader.onerror = (err) => {
+          alert(`Erreur lors de la lecture du fichier : ${err.message}`);
+        };
+        reader.readAsText(file);
+      }
+    };
+
+    input.click();
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -186,78 +250,49 @@ const NetworkNodes = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center">
           <div className="flex items-center space-x-4">
             <FaNetworkWired className="text-3xl text-blue-600" />
             <h1 className="text-2xl font-bold text-gray-900">Nœuds Réseau</h1>
           </div>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => handleFileImport("MSS")}
-              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            >
-              Importer fichier MSS
-            </button>
-            <button
-              onClick={() => handleFileImport("MSC")}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Importer fichier MSC
-            </button>
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <FaChartPie className="mr-2" />
-              Statistiques
-            </button>
-            <button
-              onClick={exportToCSV}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              <FaFileExport className="mr-2" />
-              Exporter CSV
-            </button>
-          </div>
         </div>
 
-        {showStats && (
-          <div className="mb-6 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Statistiques des Nœuds</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-blue-800">Total Nœuds</h3>
-                <p className="text-3xl font-bold text-blue-600">{stats.totalNodes}</p>
+        {/* Statistiques */}
+        <div className="mb-6 bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Statistiques des Nœuds</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-blue-800">Total Nœuds</h3>
+              <p className="text-3xl font-bold text-blue-600">{stats.totalNodes}</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-green-800">Nœuds Actifs</h3>
+              <p className="text-3xl font-bold text-green-600">{stats.activeNodes}</p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-purple-800">Types de Nœuds</h3>
+              <div className="mt-2">
+                {Object.entries(stats.nodeTypes).map(([type, count]) => (
+                  <div key={type} className="flex justify-between">
+                    <span className="text-purple-600">{type}:</span>
+                    <span className="font-bold">{count}</span>
+                  </div>
+                ))}
               </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-green-800">Nœuds Actifs</h3>
-                <p className="text-3xl font-bold text-green-600">{stats.activeNodes}</p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-purple-800">Types de Nœuds</h3>
-                <div className="mt-2">
-                  {Object.entries(stats.nodeTypes).map(([type, count]) => (
-                    <div key={type} className="flex justify-between">
-                      <span className="text-purple-600">{type}:</span>
-                      <span className="font-bold">{count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-yellow-800">Constructeurs</h3>
-                <div className="mt-2">
-                  {Object.entries(stats.vendors).map(([vendor, count]) => (
-                    <div key={vendor} className="flex justify-between">
-                      <span className="text-yellow-600">{vendor}:</span>
-                      <span className="font-bold">{count}</span>
-                    </div>
-                  ))}
-                </div>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-yellow-800">Constructeurs</h3>
+              <div className="mt-2">
+                {Object.entries(stats.vendors).map(([vendor, count]) => (
+                  <div key={vendor} className="flex justify-between">
+                    <span className="text-yellow-600">{vendor}:</span>
+                    <span className="font-bold">{count}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Barre de recherche et filtres */}
         <div className="mb-6 bg-white p-4 rounded-lg shadow">
@@ -309,7 +344,7 @@ const NetworkNodes = () => {
 
         {/* Tableau des nœuds */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full">
+          <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th 
@@ -330,17 +365,29 @@ const NetworkNodes = () => {
                 >
                   Constructeur {getSortIcon('vendor')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  IP
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => requestSort('imsi')}
+                >
+                  IMSI {getSortIcon('imsi')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  GT
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => requestSort('mcc')}
+                >
+                  MCC {getSortIcon('mcc')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Localisation
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => requestSort('mnc')}
+                >
+                  MNC {getSortIcon('mnc')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Statut
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -358,13 +405,52 @@ const NetworkNodes = () => {
                       {node.vendor}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{node.ip_address || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{node.gt || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{node.location || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{node.imsi || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{node.mcc || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{node.mnc || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${node.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {node.active ? 'Actif' : 'Inactif'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleImport(node)}
+                        className="text-indigo-600 hover:text-indigo-900"
+                        title="Importer"
+                      >
+                        <FaFileImport />
+                      </button>
+                      <button
+                        onClick={() => handleDownload(node)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Télécharger"
+                      >
+                        <FaFileExport />
+                      </button>
+                      <button
+                        onClick={() => handleExport(node)}
+                        className="text-yellow-600 hover:text-yellow-900"
+                        title="Exporter"
+                      >
+                        <FaFileDownload />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(node)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Supprimer"
+                      >
+                        <FaTrash />
+                      </button>
+                      <button
+                        onClick={() => handlePrint(node)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Imprimer"
+                      >
+                        <FaPrint />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

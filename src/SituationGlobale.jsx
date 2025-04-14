@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaGlobe, FaArrowLeft, FaExclamationTriangle, FaSearch, FaFilter, FaFileExport } from "react-icons/fa";
+import { FaGlobe, FaArrowLeft, FaExclamationTriangle, FaSearch, FaFilter, FaFileExport, FaSave, FaTimes, FaEdit } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const SituationGlobale = () => {
@@ -17,6 +17,13 @@ const SituationGlobale = () => {
     lte: ""
   });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    imsi: "",
+    mcc: "",
+    mnc: ""
+  });
+  const [modifiedItems, setModifiedItems] = useState({});
 
   const getStatusColor = (status) => {
     if (!status || status === "-") return "text-gray-500";
@@ -26,27 +33,31 @@ const SituationGlobale = () => {
     return "text-gray-600";
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5177/situation-globale');
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des données');
-        }
-        const result = await response.json();
-        console.log("Données reçues:", result);
-        setData(result);
-        setError(null);
-      } catch (err) {
-        console.error("Erreur lors de la récupération des données:", err);
-        setError("Erreur lors du chargement des données");
-        toast.error("Erreur lors du chargement des données");
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      console.log("Tentative de connexion à l'API...");
+      const response = await fetch('http://localhost:5177/situation-globale');
+      console.log("Réponse reçue:", response);
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des données');
       }
-    };
+      
+      const result = await response.json();
+      console.log("Données reçues:", result);
+      setData(result);
+      setError(null);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des données:", err);
+      setError("Erreur lors du chargement des données");
+      toast.error("Erreur lors du chargement des données");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -86,7 +97,7 @@ const SituationGlobale = () => {
   }, [filteredData, sortConfig]);
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'Pays', 'Opérateur', 'PLMN', 'GSM', 'CAMEL', 'GPRS', '3G', '4G/LTE'];
+    const headers = ['ID', 'Pays', 'Opérateur', 'PLMN', 'GSM', 'CAMEL', 'GPRS', '3G', '4G/LTE', 'IMSI', 'MCC', 'MNC'];
     const csvContent = [
       headers.join(','),
       ...sortedData.map(item => [
@@ -98,7 +109,10 @@ const SituationGlobale = () => {
         item.camel,
         item.gprs,
         item.troisg,
-        item.lte
+        item.lte,
+        item.imsi || '',
+        item.mcc || '',
+        item.mnc || ''
       ].join(','))
     ].join('\n');
 
@@ -107,6 +121,73 @@ const SituationGlobale = () => {
     link.href = URL.createObjectURL(blob);
     link.download = 'situation_globale.csv';
     link.click();
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item.id);
+    setEditForm({
+      imsi: item.imsi || "",
+      mcc: item.mcc || "",
+      mnc: item.mnc || ""
+    });
+  };
+
+  const handleInputChange = (e, itemId) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Ajouter l'élément modifié à la liste
+    setModifiedItems(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [name]: value
+      }
+    }));
+  };
+
+  const handleSaveAll = async () => {
+    try {
+      console.log("Sauvegarde de toutes les modifications:", modifiedItems);
+      
+      // Envoyer chaque modification à l'API
+      for (const [id, data] of Object.entries(modifiedItems)) {
+        const response = await fetch(`http://localhost:5177/situation-globale/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur lors de la mise à jour de l'élément ${id}`);
+        }
+      }
+
+      // Réinitialiser les états
+      setModifiedItems({});
+      setEditingId(null);
+      toast.success('Toutes les modifications ont été enregistrées');
+      
+      // Rafraîchir les données
+      await fetchData();
+      
+    } catch (err) {
+      console.error("Erreur lors de la sauvegarde:", err);
+      toast.error(err.message || "Erreur lors de la sauvegarde des modifications");
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditForm({
+      imsi: "",
+      mcc: "",
+      mnc: ""
+    });
   };
 
   if (loading) {
@@ -244,45 +325,171 @@ const SituationGlobale = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     4G/LTE
                   </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('imsi')}
+                  >
+                    IMSI {sortConfig.key === 'imsi' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('mcc')}
+                  >
+                    MCC {sortConfig.key === 'mcc' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => handleSort('mnc')}
+                  >
+                    MNC {sortConfig.key === 'mnc' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sortedData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.pays || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.operateur || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.plmn || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.gsm)}`}>
-                      {item.gsm || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.camel)}`}>
-                      {item.camel || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.gprs)}`}>
-                      {item.gprs || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.troisg)}`}>
-                      {item.troisg || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.lte)}`}>
-                      {item.lte || "-"}
+                {sortedData.length > 0 ? (
+                  sortedData.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.pays || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.operateur || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.plmn || "-"}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.gsm)}`}>
+                        {item.gsm || "-"}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.camel)}`}>
+                        {item.camel || "-"}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.gprs)}`}>
+                        {item.gprs || "-"}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.troisg)}`}>
+                        {item.troisg || "-"}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.lte)}`}>
+                        {item.lte || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {editingId === item.id ? (
+                          <input
+                            type="text"
+                            name="imsi"
+                            value={editForm.imsi}
+                            onChange={(e) => handleInputChange(e, item.id)}
+                            className="border p-1 rounded w-full"
+                          />
+                        ) : (
+                          item.imsi || "-"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {editingId === item.id ? (
+                          <input
+                            type="text"
+                            name="mcc"
+                            value={editForm.mcc}
+                            onChange={(e) => handleInputChange(e, item.id)}
+                            className="border p-1 rounded w-full"
+                          />
+                        ) : (
+                          item.mcc || "-"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {editingId === item.id ? (
+                          <input
+                            type="text"
+                            name="mnc"
+                            value={editForm.mnc}
+                            onChange={(e) => handleInputChange(e, item.id)}
+                            className="border p-1 rounded w-full"
+                          />
+                        ) : (
+                          item.mnc || "-"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {editingId === item.id ? (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log("Clic sur le bouton Enregistrer");
+                                handleSaveAll();
+                              }}
+                              className="bg-green-500 hover:bg-green-600 text-white p-1 rounded"
+                              title="Enregistrer"
+                            >
+                              <FaSave />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleCancel();
+                              }}
+                              className="bg-red-500 hover:bg-red-600 text-white p-1 rounded"
+                              title="Annuler"
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log("Clic sur le bouton Modifier");
+                              handleEdit(item);
+                            }}
+                            className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded"
+                            title="Modifier"
+                          >
+                            <FaEdit />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="13" className="px-6 py-4 text-center text-gray-500">
+                      Aucune donnée disponible
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
+      
+      {/* Bouton Enregistrer en bas */}
+      {Object.keys(modifiedItems).length > 0 && (
+        <div className="fixed bottom-4 right-4">
+          <button
+            onClick={handleSaveAll}
+            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
+          >
+            <FaSave className="text-xl" />
+            <span>Enregistrer toutes les modifications</span>
+            <span className="bg-white text-green-500 rounded-full px-2 py-1 text-sm">
+              {Object.keys(modifiedItems).length}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

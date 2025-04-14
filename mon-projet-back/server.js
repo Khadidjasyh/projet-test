@@ -140,65 +140,31 @@ app.get("/roaming-partners", (req, res) => {
   });
 });
 
-// Route pour récupérer les données de situation_globale
-app.get("/situation-globale", (req, res) => {
-  console.log("Route /situation-globale appelée");
-  
-  // Vérifier si la connexion est active
-  if (!connection) {
-    console.error("❌ La connexion MySQL n'est pas initialisée");
-    return res.status(500).json({ 
-      error: "Erreur de connexion à la base de données",
-      details: "La connexion MySQL n'est pas initialisée"
-    });
-  }
-
-  // Vérifier si la connexion est toujours valide
-  connection.ping((err) => {
-    if (err) {
-      console.error("❌ La connexion MySQL n'est plus valide:", err);
-      return res.status(500).json({ 
-        error: "Erreur de connexion à la base de données",
-        details: "La connexion MySQL n'est plus valide"
-      });
-    }
-
-    const query = "SELECT * FROM situation_globales ORDER BY id";
-    console.log("Exécution de la requête SQL:", query);
+// Endpoint pour récupérer les données de la situation globale
+app.get('/situation-globale', async (req, res) => {
+  try {
+    const [rows] = await connection.execute(`
+      SELECT 
+        id,
+        pays,
+        operateur,
+        plmn,
+        gsm,
+        camel,
+        gprs,
+        troisg,
+        lte,
+        imsi,
+        mcc,
+        mnc
+      FROM situation_globales
+    `);
     
-    connection.query(query, (error, results) => {
-      if (error) {
-        console.error("❌ Erreur MySQL:", error);
-        return res.status(500).json({ 
-          error: "Erreur lors de la récupération des données",
-          details: error.message,
-          sql: error.sql
-        });
-      }
-
-      console.log(`✅ Nombre d'enregistrements trouvés: ${results.length}`);
-      if (results.length > 0) {
-        console.log("Premier enregistrement:", results[0]);
-      }
-
-      // Vérifier si les résultats sont valides
-      if (!Array.isArray(results)) {
-        console.error("❌ Les résultats ne sont pas un tableau:", results);
-        return res.status(500).json({ 
-          error: "Format de données invalide",
-          details: "Les résultats ne sont pas un tableau"
-        });
-      }
-
-      // Vérifier la structure des données
-      if (results.length > 0) {
-        const firstRecord = results[0];
-        console.log("Structure du premier enregistrement:", Object.keys(firstRecord));
-      }
-
-      res.status(200).json(results);
-    });
-  });
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+  }
 });
 
 // Route pour récupérer les nœuds réseau
