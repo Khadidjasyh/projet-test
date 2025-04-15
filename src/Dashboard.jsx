@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight } from 'react-icons/bs';
-import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload } from 'react-icons/fa';
+import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload, FaHome, FaChartBar, FaCog } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -153,7 +153,7 @@ function Sidebar() {
             <p className="text-xs uppercase text-gray-500 font-medium mb-2 ml-2">ASSISTANCE</p>
             <ul className="space-y-1">
               <li>
-                <Link to="/help" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                <Link to="/help" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg" target="_blank">
                   <BsQuestionCircle className="mr-3" />
                   Centre d'aide
                 </Link>
@@ -163,7 +163,7 @@ function Sidebar() {
         )}
         {isCollapsed && (
           <div className="mt-8 flex justify-center">
-            <Link to="/help" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Centre d'aide">
+            <Link to="/help" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Centre d'aide" target="_blank">
               <BsQuestionCircle />
             </Link>
           </div>

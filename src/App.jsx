@@ -13,6 +13,7 @@ import ConfigurationRoaming from "./ConfigurationRoaming";
 import RoamingPartners from './RoamingPartners';
 import SituationGlobale from './SituationGlobale';
 import NetworkNodes from "./NetworkNodes";
+import HelpCenter from "./HelpCenter";
 
 function App() {
   return (
@@ -75,6 +76,7 @@ function App() {
             <Route path="/roaming" element={<ConfigurationRoaming />} />
             <Route path="/situation-globale" element={<SituationGlobale />} />
             <Route path="/network-nodes" element={<NetworkNodes />} />
+            <Route path="/help" element={<HelpCenter />} />
           </Routes>
         </div>
       </div>
