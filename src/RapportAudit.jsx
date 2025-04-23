@@ -259,7 +259,6 @@ export default function RapportAudit() {
         return;
       }
 
-      const selectedTest = tests.find(t => t.test_id === parseInt(newReport.test_id));
       
       const report = {
         id: `AUD-${new Date().getFullYear()}-${String(reports.length + 1).padStart(3, '0')}`,

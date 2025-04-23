@@ -14,6 +14,10 @@ import RoamingPartners from './RoamingPartners';
 import SituationGlobale from './SituationGlobale';
 import NetworkNodes from "./NetworkNodes";
 import HelpCenter from "./HelpCenter";
+import MssEricsson from './MssEricsson';
+import MssHuawei from './MssHuawei';
+
+
 
 function App() {
   return (
@@ -77,6 +81,8 @@ function App() {
             <Route path="/situation-globale" element={<SituationGlobale />} />
             <Route path="/network-nodes" element={<NetworkNodes />} />
             <Route path="/help" element={<HelpCenter />} />
+            <Route path="/mss-ericsson" element={<MssEricsson />} />
+            <Route path="/mss-huawei" element={<MssHuawei />} />
           </Routes>
         </div>
       </div>

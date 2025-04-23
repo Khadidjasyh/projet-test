@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight } from 'react-icons/bs';
+import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight, BsTable } from 'react-icons/bs';
 import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload, FaHome, FaChartBar, FaCog } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -10,6 +10,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import RoamingPartners from './RoamingPartners';
 import RoamingServicesTable from './RoamingServicesTable';
+import MssHuawei from "./MssHuawei"; // adjust path if needed
+
 
 // Fix for Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -103,6 +105,8 @@ function Sidebar() {
     { id: "partners", label: "Partenaires", icon: <BsPeople /> },
     { id: "roaming", label: "Configuration Roaming", icon: <BsArrowLeftRight /> },
     { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
+    { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
+    { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }

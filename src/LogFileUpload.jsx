@@ -27,7 +27,7 @@ const LogFileUpload = () => {
         formData.append('file', file);
 
         try {
-            const response = await axios.post('http://localhost:5177/api/upload-log', formData, {
+            await axios.post('http://localhost:5177/api/upload-log', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
