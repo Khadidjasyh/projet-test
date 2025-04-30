@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Home from "./Home";
+import Home from "./home";
 import Contact from "./Contact";
 import AboutUs from "./AboutUs";
 import Login from "./Login";
@@ -16,6 +16,7 @@ import NetworkNodes from "./NetworkNodes";
 import HelpCenter from "./HelpCenter";
 import MssEricsson from './MssEricsson';
 import MssHuawei from './MssHuawei';
+import FirewallIPs from './FirewallIps';
 
 
 
@@ -83,6 +84,7 @@ function App() {
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/mss-ericsson" element={<MssEricsson />} />
             <Route path="/mss-huawei" element={<MssHuawei />} />
+            <Route path="/firewall-ips" element={<FirewallIPs />} />
           </Routes>
         </div>
       </div>

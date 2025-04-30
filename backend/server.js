@@ -8,10 +8,9 @@ const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 
-// Optional: external Huawei routes if needed
+// External routes
 const huaweiRoutes = require('./routes/huaweiRoutes');
 
-// Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 5177;
 
@@ -41,12 +40,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Middlewares
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+app.use(cors());
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
@@ -54,16 +48,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Email validation function
-function validateEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
+// Routes
 
-// Use external Huawei routes
-app.use('/api/huawei', huaweiRoutes);
-
-// Contact form route
+// Email Contact Form
 app.post("/send-email", (req, res) => {
   const { name, email, message } = req.body;
 
@@ -71,12 +58,13 @@ app.post("/send-email", (req, res) => {
     return res.status(400).json({ error: "Tous les champs sont obligatoires." });
   }
 
-  if (!validateEmail(email)) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!regex.test(email)) {
     return res.status(400).json({ error: "L'adresse e-mail est invalide." });
   }
 
   const query = "INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)";
-  connection.query(query, [name, email, message], (error, results) => {
+  connection.query(query, [name, email, message], (error) => {
     if (error) {
       console.error("Erreur MySQL :", error);
       return res.status(500).json({ error: "Erreur lors de l'enregistrement." });
@@ -89,7 +77,7 @@ app.post("/send-email", (req, res) => {
       text: `Nom: ${name}\nEmail: ${email}\nMessage: ${message}`,
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
+    transporter.sendMail(mailOptions, (error) => {
       if (error) {
         console.error("Erreur Nodemailer :", error);
         return res.status(500).json({ error: "Erreur lors de l'envoi de l'e-mail." });
@@ -99,7 +87,7 @@ app.post("/send-email", (req, res) => {
   });
 });
 
-// Optional: Messages route
+// Récupération des messages
 app.get("/messages", (req, res) => {
   const query = "SELECT * FROM contacts ORDER BY created_at DESC";
   connection.query(query, (error, results) => {
@@ -108,7 +96,7 @@ app.get("/messages", (req, res) => {
   });
 });
 
-// Roaming partners route
+// Roaming partners
 app.get("/roaming-partners", (req, res) => {
   const query = "SELECT * FROM roaming_partners";
   connection.query(query, (error, results) => {
@@ -228,7 +216,7 @@ app.get("/mss/gt-series", (req, res) => {
   });
 });
 
-// Unique node names from all MSS tables
+// MSS unique node names
 app.get('/mss/nodes', (req, res) => {
   const query = `
     SELECT DISTINCT node_name 
@@ -248,12 +236,34 @@ app.get('/mss/nodes', (req, res) => {
   });
 });
 
-// Test route
+// Partie à modifier dans server.js
+app.get('/api/firewall-ips', (req, res) => {
+  try {
+    connection.query(
+      'SELECT identifiant, nom, cidr_complet FROM firewall_ips ORDER BY identifiant DESC',
+      (error, results) => {
+        if (error) {
+          console.log('Erreur récupération firewall IPs:', error);
+          return res.status(500).json({ error: error.message });
+        }
+        res.json(results);
+      }
+    );
+  } catch (err) {
+    console.log('Erreur récupération firewall IPs:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Test
 app.get("/test", (req, res) => {
   res.json({ message: "Le serveur fonctionne correctement" });
 });
 
-// Start server
+// Routes externes
+app.use('/api/huawei', huaweiRoutes);
+
+// Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`🚀 Serveur backend démarré sur http://localhost:${PORT}`);
 });

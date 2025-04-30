@@ -10,7 +10,9 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import RoamingPartners from './RoamingPartners';
 import RoamingServicesTable from './RoamingServicesTable';
-import MssHuawei from "./MssHuawei"; // adjust path if needed
+
+
+
 
 
 // Fix for Leaflet marker icons
@@ -107,6 +109,7 @@ function Sidebar() {
     { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
     { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
     { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
+    { id: "firewall-ips", label: "Firewall IPs", icon: <BsTable /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }
