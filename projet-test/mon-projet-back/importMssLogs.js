@@ -6,7 +6,7 @@ const path = require('path');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'Aaa!121212',
+    password: '1234',
     database: 'mon_projet_db'
 });
 
@@ -21,12 +21,28 @@ connection.connect((err) => {
 });
 
 async function processLogFiles() {
-    const logDir = 'C:/Users/HP/projetKhFiles/projet-test/mon-projet-back/MSS_Ericson';
+    // Use the MSS_Ericson directory in the parent directory
+    const logDir = path.join(__dirname, 'MSS_Ericson');
     const ericssonNodes = ['BCORN1', 'BCMUS1', 'BCCNM1', 'BCCNE1', 'BCBMR1', 'BCANA1'];
 
-    for (const node of ericssonNodes) {
+    // First check if any log files exist
+    const existingFiles = ericssonNodes.filter(node => {
         const filePath = path.join(logDir, `${node}.log`);
-        console.log(`Processing ${node} log file...`);
+        return fs.existsSync(filePath);
+    });
+
+    if (existingFiles.length === 0) {
+        console.error('No log files found in the current directory. Please ensure the following files exist:');
+        ericssonNodes.forEach(node => console.log(`- ${node}.log`));
+        connection.end();
+        return;
+    }
+
+    console.log(`Found ${existingFiles.length} log files to process`);
+
+    for (const node of existingFiles) {
+        const filePath = path.join(logDir, `${node}.log`);
+        console.log(`\nProcessing ${node} log file...`);
 
         try {
             const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -42,6 +58,7 @@ async function processLogFiles() {
 
         } catch (error) {
             console.error(`Error processing ${node}:`, error);
+            console.error(`Please ensure the file exists at: ${filePath}`);
         }
     }
     

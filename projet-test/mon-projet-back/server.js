@@ -8,17 +8,23 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
+const multer = require("multer");
+const fs = require("fs");
+const xml2js = require("xml2js");
 
 // Initialisation de l'application Express
 const app = express();
 const PORT = 5177;
 
+const upload = multer({ dest: 'uploads/' });
+
+
 // Connexion à MySQL
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Aaa!121212", // ⚠️ Remplace par ton vrai mot de passe
-  database: "mon_projet_db",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "1234",
+  database: process.env.DB_NAME || "mon_projet_db"
 });
 
 connection.connect((err) => {
@@ -355,6 +361,35 @@ app.get('/mss/nodes', (req, res) => {
     }
     res.json(results.map(row => row.node_name));
   });
+});
+
+
+const importIR21File = require('./importIR21');
+
+app.post('/import-ir21', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Aucun fichier n\'a été uploadé' });
+  }
+
+  try {
+    const result = await importIR21File(req.file.path);
+    
+    // Supprimer le fichier temporaire
+    fs.unlinkSync(req.file.path);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Erreur lors de l\'import:', error);
+    
+    // Supprimer le fichier temporaire même en cas d'erreur
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Erreur lors de la suppression du fichier:', err);
+    }
+
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Démarrer le serveur

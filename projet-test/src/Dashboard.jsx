@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight, BsTable } from 'react-icons/bs';
-import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload, FaHome, FaChartBar, FaCog } from 'react-icons/fa';
+import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload, FaHome, FaChartBar, FaCog, FaPlay } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -102,6 +102,7 @@ function Sidebar() {
     { id: "audits", label: "Audits", icon: <BsFileEarmarkText /> },
     { id: "partners", label: "Partenaires", icon: <BsPeople /> },
     { id: "roaming", label: "Configuration Roaming", icon: <BsArrowLeftRight /> },
+    { id: "roaming-tests", label: "Tests de Roaming", icon: <FaPlay /> },
     { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
     { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
@@ -182,6 +183,39 @@ function Sidebar() {
 }
 
 // Composant principal Dashboard
+const tests = [
+  {
+    id: 1,
+    name: "Partenaires Roaming & Services",
+    description: "Vérification des accords et services disponibles (GSM, CAMEL, GPRS, LTE)."
+  },
+  {
+    id: 2,
+    name: "Inbound Roaming",
+    description: "Analyse du provisioning et de la configuration pour les visiteurs étrangers."
+  },
+  {
+    id: 3,
+    name: "Outbound Roaming",
+    description: "Vérification de la configuration pour l'itinérance des abonnés ATM à l'étranger."
+  },
+  {
+    id: 4,
+    name: "CAMEL Phase 2 - Inbound",
+    description: "Audit des paramètres CAMEL sur le réseau hôte (visiteurs)."
+  },
+  {
+    id: 5,
+    name: "CAMEL Phase 2 - Outbound",
+    description: "Analyse de la config CAMEL pour les abonnés en roaming sortant."
+  },
+  {
+    id: 6,
+    name: "Données Mobiles Inbound",
+    description: "Vérification MME/SGSN, plages IP et intégration IR.21 pour les données."
+  },
+];
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [partners, setPartners] = useState([]);
@@ -189,6 +223,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [partnersPerPage] = useState(10);
+  const [totalPartners, setTotalPartners] = useState(0);
 
   const [stats, setStats] = useState({
     totalAudits: 0,
@@ -473,6 +508,32 @@ const Dashboard = () => {
                 </div>
               </div>
               
+              {/* Tests de Roaming */}
+              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 className="text-lg font-semibold mb-4">Tests de Roaming</h2>
+                <div className="space-y-4">
+                  {tests.map((test) => (
+                    <div key={test.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-gray-800">{test.name}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{test.description}</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button className="px-3 py-1 rounded-full text-white bg-blue-500 hover:bg-blue-600 transition-colors">
+                            <span className="text-sm">Lancer</span>
+                          </button>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-xs text-gray-500">Statut:</span>
+                            <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Audits récents */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">

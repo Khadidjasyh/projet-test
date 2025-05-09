@@ -7,7 +7,7 @@ async function updateSituationGlobale() {
     connection = await mysql.createConnection({
       host: "localhost",
       user: "root",
-      password: "Aaa!121212",
+      password: "1234",
       database: "mon_projet_db"
     });
     

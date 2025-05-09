@@ -15,6 +15,8 @@ import SituationGlobale from './SituationGlobale';
 import NetworkNodes from "./NetworkNodes";
 import HelpCenter from "./HelpCenter";
 import MssEricsson from './MssEricsson';
+import FirewallIPs from './FirewallIPs';
+import RoamingTests from './RoamingTests';
 
 function App() {
   return (
@@ -79,6 +81,8 @@ function App() {
             <Route path="/network-nodes" element={<NetworkNodes />} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/mss-ericsson" element={<MssEricsson />} />
+            <Route path="/firewall-ips" element={<FirewallIPs />} />
+            <Route path="/roaming-tests" element={<RoamingTests />} />
           </Routes>
         </div>
       </div>
