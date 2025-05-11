@@ -16,7 +16,7 @@ const NetworkNodes = () => {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const response = await fetch('http://localhost:5177/network-nodes');
+        const response = await fetch('http://localhost:5178/network-nodes');
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des données');
         }

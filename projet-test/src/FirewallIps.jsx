@@ -12,7 +12,7 @@ const FirewallIPs = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5177/firewall-ips'); // Mise à jour du port
+        const response = await fetch('http://localhost:5177/api/firewall-ips'); // Mise à jour du port
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

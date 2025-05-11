@@ -20,7 +20,7 @@ connection.connect((err) => {
 });
 
 function importRoamingPartners() {
-  const filePath = "./MMEs IMSI-GT Roaming Partner MAPPING.xlsx";
+  const filePath = "/Users/macbok/mon-projet/projet-test/mon-projet-back/MMEs IMSI-GT Roaming Partner MAPPING.xlsx";
   const workbook = xlsx.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
@@ -58,7 +58,7 @@ function importRoamingPartners() {
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS roaming_partners (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      operator_name VARCHAR(255),
+      operateur VARCHAR(255),
       imsi_prefix VARCHAR(20),
       gt VARCHAR(20),
       mcc VARCHAR(3),
@@ -86,7 +86,7 @@ function importRoamingPartners() {
 
       // Préparer les données pour l'insertion
       const values = uniqueData.map(row => [
-        row.operateur,  // operator_name
+        row.operateur,  // operateur
         row.imsi,      // imsi_prefix
         row.gt,        // gt
         row.imsi.substring(0, 3),  // mcc (first 3 digits of IMSI)
@@ -98,7 +98,7 @@ function importRoamingPartners() {
       // Insérer les données
       const insertQuery = `
         INSERT INTO roaming_partners 
-        (operator_name, imsi_prefix, gt, mcc, mnc, country, bilateral)
+        (operateur, imsi_prefix, gt, mcc, mnc, country, bilateral)
         VALUES ?
       `;
 

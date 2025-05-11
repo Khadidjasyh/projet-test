@@ -18,14 +18,21 @@ const MssEricsson = () => {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const response = await fetch('http://localhost:5177/mss/nodes');
+        const response = await fetch('http://localhost:5178/mss/nodes');
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const text = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          throw new Error(`Expected JSON, got: ${text}`);
         }
         const nodes = await response.json();
         setUniqueNodes(nodes);
       } catch (err) {
         console.error('Error fetching nodes:', err);
+        setError(err.message || 'Failed to fetch nodes');
       }
     };
 
@@ -50,12 +57,18 @@ const MssEricsson = () => {
           ...(selectedNode && { node: selectedNode })
         });
 
-        const response = await fetch(`http://localhost:5177/mss/${endpoint}?${queryParams}`);
+        const response = await fetch(`http://localhost:5178/mss/${endpoint}?${queryParams}`);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const text = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          throw new Error(`Expected JSON, got: ${text}`);
         }
         const result = await response.json();
-        
+
         // Process the data to remove the id field
         const processedData = result.data.map(item => {
           const { id, ...rest } = item;
@@ -124,7 +137,7 @@ const MssEricsson = () => {
     if (error) {
       return <div className="text-red-500 text-center p-4">
         <p>Error: {error}</p>
-        <p className="text-sm mt-2">Please make sure the backend server is running on port 5177</p>
+        <p className="text-sm mt-2">Please make sure the backend server is running on port 5177 and returns valid JSON.</p>
       </div>;
     }
 
@@ -271,4 +284,4 @@ const MssEricsson = () => {
   );
 };
 
-export default MssEricsson; 
+export default MssEricsson;

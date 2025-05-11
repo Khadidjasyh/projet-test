@@ -15,8 +15,14 @@ import SituationGlobale from './SituationGlobale';
 import NetworkNodes from "./NetworkNodes";
 import HelpCenter from "./HelpCenter";
 import MssEricsson from './MssEricsson';
+import MssHuawei from './MssHuawei';
 import FirewallIPs from './FirewallIPs';
 import RoamingTests from './RoamingTests';
+import InboundRoamingResults from './pages/InboundRoamingResults';
+import OutboundRoamingResults from './pages/OutboundRoamingResults';
+import CamelInboundResults from './pages/CamelInboundResults';
+import CamelOutboundResults from './pages/CamelOutboundResults';
+import DataInboundResults from './pages/DataInboundResults';
 
 function App() {
   return (
@@ -43,9 +49,11 @@ function App() {
               <Link to="/rapportaudit" className="text-green-600 font-semibold hover:text-green-800">
                 Rapport Audit
               </Link>
+              
               <Link to="/alertes" className="text-green-600 font-semibold hover:text-green-800">
                 Alertes
               </Link>
+             
               <Link to="/contact" className="text-green-600 font-semibold hover:text-green-800">
                 Contact
               </Link>
@@ -83,6 +91,12 @@ function App() {
             <Route path="/mss-ericsson" element={<MssEricsson />} />
             <Route path="/firewall-ips" element={<FirewallIPs />} />
             <Route path="/roaming-tests" element={<RoamingTests />} />
+            <Route path="/inbound-roaming-results" element={<InboundRoamingResults />} />
+            <Route path="/outbound-roaming-results" element={<OutboundRoamingResults />} />
+            <Route path="/camel-inbound-results" element={<CamelInboundResults />} />
+            <Route path="/mss-huawei" element={<MssHuawei />} />
+            <Route path="/camel-outbound-results" element={<CamelOutboundResults />} />
+            <Route path="/data-inbound-results" element={<DataInboundResults />} />
           </Routes>
         </div>
       </div>

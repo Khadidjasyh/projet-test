@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BsFillShieldLockFill, BsExclamationTriangleFill, BsCheckCircleFill, BsGearFill, BsBell, BsGear, BsSpeedometer2, BsFileEarmarkText, BsPeople, BsArrowLeftRight, BsExclamationTriangle, BsFileEarmarkBarGraph, BsQuestionCircle, BsBoxArrowRight, BsTable } from 'react-icons/bs';
-import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload, FaHome, FaChartBar, FaCog, FaPlay } from 'react-icons/fa';
+import { FaNetworkWired, FaGlobe, FaExchangeAlt, FaFileUpload, FaHome, FaChartBar, FaCog, FaPlay, FaShieldAlt } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -105,7 +105,9 @@ function Sidebar() {
     { id: "roaming-tests", label: "Tests de Roaming", icon: <FaPlay /> },
     { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
     { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
+    { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
+    { id: "firewall", label: "Firewall", icon: <FaShieldAlt /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }
   ];
@@ -243,7 +245,7 @@ const Dashboard = () => {
 
   // Fetch statistics from backend
   useEffect(() => {
-    fetch("http://localhost:5177/dashboard/stats")
+    fetch("/dashboard/stats")
       .then((res) => res.json())
       .then((data) => setStats(data))
       .catch((err) => console.error("Error fetching stats:", err));
@@ -251,7 +253,7 @@ const Dashboard = () => {
 
   // Fetch roaming events from backend
   useEffect(() => {
-    fetch("http://localhost:5177/roaming-events")
+    fetch("/roaming-events")
       .then((res) => res.json())
       .then((data) => setRoamingEvents(data))
       .catch((err) => console.error("Error fetching roaming events:", err));
@@ -259,7 +261,7 @@ const Dashboard = () => {
 
   // Fetch critical alerts from backend
   useEffect(() => {
-    fetch("http://localhost:5177/critical-alerts")
+    fetch("/critical-alerts")
       .then((res) => res.json())
       .then((data) => setCriticalAlerts(data))
       .catch((err) => console.error("Error fetching critical alerts:", err));
@@ -267,7 +269,7 @@ const Dashboard = () => {
 
   // Fetch recent audits from backend
   useEffect(() => {
-    fetch('http://localhost:5177/audits')
+    fetch('/audits')
       .then(res => res.json())
       .then(data => setRecentAudits(data))
       .catch(err => console.error('Erreur de chargement des audits:', err));
@@ -275,7 +277,7 @@ const Dashboard = () => {
 
   // Fetch coverage data from backend
   useEffect(() => {
-    fetch("http://localhost:5177/roaming-coverage")
+    fetch("/roaming-coverage")
       .then((res) => res.json())
       .then((data) => setCoverage(data))
       .catch((err) => console.error("Error fetching data:", err));
@@ -288,7 +290,7 @@ const Dashboard = () => {
   const fetchPartners = async () => {
     console.log('Fetching partners...');
     try {
-      const response = await fetch('http://localhost:5177/roaming-partners');
+      const response = await fetch('/roaming-partners');
       const data = await response.json();
       console.log('Received partners data:', data);
       setPartners(data);
@@ -592,6 +594,10 @@ const Dashboard = () => {
                     <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50">
                       Voir tous les rapports
                     </button>
+                    <Link to="/firewall-ips" className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+                      <FaShieldAlt className="mr-2" />
+                      Firewall
+                    </Link>
                   </div>
                 </div>
               </div>

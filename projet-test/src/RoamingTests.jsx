@@ -4,9 +4,19 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaTimesCircle,
-  FaSpinner
+  FaSpinner,
+  FaTable,
+  FaMap,
+  FaChartBar,
+  FaArrowLeft,
+  FaSearch,
+  FaFilter,
+  FaSort,
+  FaSortUp,
+  FaSortDown
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 // Données extraites du fichier Excel
 const operatorData = {
   "Afghanistan": ["Telecom Development Company Afghanistan Ltd.", "Etisalat Afghanistan", "MTN", "Afghan Wireless Communication Company"],
@@ -207,47 +217,123 @@ const initialTests = [
   },
   {
     id: 4,
-    name: "Test d'appel vocal",
-    description: "Vérification des appels entrants et sortants en roaming.",
+    name: "Tests CAMEL Phase Service Inbound Roaming",
+    description: "Vérification des services CAMEL pour les visiteurs étrangers (USSD, VPN, etc.).",
     status: "pending"
   },
   {
     id: 5,
-    name: "Test SMS",
-    description: "Vérification de l'envoi et réception de SMS en roaming.",
+    name: "Tests CAMEL Phase Service Outbound Roaming",
+    description: "Vérification des services CAMEL pour les abonnés à l'étranger (USSD, VPN, etc.).",
     status: "pending"
   },
   {
     id: 6,
-    name: "Test données mobiles",
-    description: "Vérification de la connectivité data (3G/4G) en roaming.",
+    name: "Tests Data Inbound Roaming",
+    description: "Vérification de la connectivité data (3G/4G) pour les visiteurs étrangers.",
     status: "pending"
   }
 ];
 
-// Icônes pour l’état du test
-const getStatusIcon = (status) => {
-  switch (status) {
-    case "success":
-      return <FaCheckCircle className="text-[#34C759]" />;
-    case "error":
-      return <FaExclamationCircle className="text-[#FF3737]" />;
-    case "failed":
-      return <FaTimesCircle className="text-[#FF3737]" />;
-    case "running":
-      return <FaSpinner className="animate-spin text-[#34C759]" />;
-    default:
-      return <FaPlay className="text-[#34C759]" />;
-  }
-};
-
 const RoamingTests = () => {
+  const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState("Afghanistan");
   const [selectedOperator, setSelectedOperator] = useState("Telecom Development Company Afghanistan Ltd.");
   const [tests, setTests] = useState(initialTests);
+  const [viewMode, setViewMode] = useState('table');
+  const [selectedTest, setSelectedTest] = useState(null);
+  const [showResults, setShowResults] = useState(false);
+  const [showAuditTable, setShowAuditTable] = useState(false);
+  // Nouveaux states pour l'audit table
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCountryFilter, setSelectedCountryFilter] = useState('Tous');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showFilters, setShowFilters] = useState(false);
 
   const countries = Object.keys(operatorData);
   const operators = operatorData[selectedCountry] || [];
+
+  // Données spécifiques pour le premier test
+  const auditData = [
+    {
+      partenaire: "Orange France",
+      accord: "Bilatéral",
+      gsm: true,
+      camel: true,
+      gprs: true,
+      "3g": true,
+      lte: true,
+      parametresLte: true,
+      erreurs: false,
+      commentaires: "Aucun",
+      rapport: "Conforme, aucun écart identifié"
+    },
+    {
+      partenaire: "Vodafone UK",
+      accord: "Bilatéral",
+      gsm: true,
+      camel: false,
+      gprs: true,
+      "3g": true,
+      lte: true,
+      parametresLte: false,
+      erreurs: true,
+      commentaires: "CAMEL manquant",
+      rapport: "Non conforme – manque service CAMEL"
+    },
+    {
+      partenaire: "TIM Italie",
+      accord: "Unilatéral",
+      gsm: true,
+      camel: true,
+      gprs: false,
+      "3g": true,
+      lte: false,
+      parametresLte: null,
+      erreurs: true,
+      commentaires: "GPRS non activé",
+      rapport: "Partiel – GPRS manquant, pas de LTE"
+    },
+    {
+      partenaire: "T-Mobile US",
+      accord: "Bilatéral",
+      gsm: true,
+      camel: true,
+      gprs: true,
+      "3g": true,
+      lte: true,
+      parametresLte: true,
+      erreurs: false,
+      commentaires: "OK",
+      rapport: "Conforme – tous services activés"
+    },
+    {
+      partenaire: "MTN Afrique",
+      accord: "Bilatéral",
+      gsm: true,
+      camel: false,
+      gprs: false,
+      "3g": false,
+      lte: false,
+      parametresLte: false,
+      erreurs: true,
+      commentaires: "Plusieurs services indisponibles",
+      rapport: "Non conforme – nombreux services KO"
+    },
+    {
+      partenaire: "Telefonica ES",
+      accord: "Bilatéral",
+      gsm: true,
+      camel: true,
+      gprs: true,
+      "3g": true,
+      lte: true,
+      parametresLte: true,
+      erreurs: false,
+      commentaires: "OK",
+      rapport: "Conforme – pas de blocage détecté"
+    }
+  ];
 
   const handleRunTest = (testId) => {
     setTests(tests.map(test => 
@@ -256,7 +342,6 @@ const RoamingTests = () => {
         : test
     ));
 
-    // Simuler un test qui prend 2 secondes
     setTimeout(() => {
       const randomStatus = Math.random() > 0.5 ? "success" : "failed";
       setTests(tests.map(test => 
@@ -266,6 +351,497 @@ const RoamingTests = () => {
       ));
     }, 2000);
   };
+
+  const handleShowResults = (test) => {
+    if (test.name === "Partenaires Roaming & Services") {
+      setShowAuditTable(true);
+      setShowResults(false);
+    } else if (test.name === "Inbound Roaming") {
+      navigate('/inbound-roaming-results');
+    } else if (test.name === "Outbound Roaming") {
+      navigate('/outbound-roaming-results');
+    } else if (test.name === "Tests CAMEL Phase Service Inbound Roaming") {
+      navigate('/camel-inbound-results');
+    } else if (test.name === "Tests CAMEL Phase Service Outbound Roaming") {
+      navigate('/camel-outbound-results');
+    } else if (test.name === "Tests Data Inbound Roaming") {
+      navigate('/data-inbound-results');
+    } else {
+      setSelectedTest(test);
+      setShowResults(true);
+      setShowAuditTable(false);
+    }
+  };
+
+  const handleCloseResults = () => {
+    setShowResults(false);
+    setSelectedTest(null);
+  };
+
+  const handleBackToTests = () => {
+    setShowAuditTable(false);
+    setShowResults(false);
+    setSelectedTest(null);
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "success":
+        return <FaCheckCircle className="text-[#34C759]" />;
+      case "error":
+        return <FaExclamationCircle className="text-[#FF3737]" />;
+      case "failed":
+        return <FaTimesCircle className="text-[#FF3737]" />;
+      case "running":
+        return <FaSpinner className="animate-spin text-[#34C759]" />;
+      default:
+        return <FaPlay className="text-[#34C759]" />;
+    }
+  };
+
+  const renderTestResults = () => {
+    if (!selectedTest) return null;
+
+    const mockResults = {
+      "Partenaires Roaming & Services": {
+        details: [
+          { name: "GSM", status: "success", message: "Service GSM actif et fonctionnel" },
+          { name: "CAMEL", status: "success", message: "Service CAMEL correctement configuré" },
+          { name: "GPRS", status: "success", message: "Service GPRS opérationnel" },
+          { name: "LTE", status: "success", message: "Service LTE disponible" }
+        ]
+      },
+      "Inbound Roaming": {
+        type: "table",
+        headers: [
+          "Opérateur",
+          "Route Provisioning SCCP",
+          "VPLMN IR21 sur HPLMN MSS/MSC",
+          "Implémentation de l'IMSI",
+          "Conversion IMSI / MGT",
+          "Table de Routage (E.214 & E.212)",
+          "VPLMN MSISDN & MSRN (HPLMN)",
+          "Commentaires"
+        ],
+        data: [
+          {
+            operateur: "Mobilis",
+            routeProvisioning: "✅ Réussi",
+            vplmnIr21: "✅ Réussi",
+            implementationImsi: "✅ Réussi",
+            conversionImsi: "✅ Réussi",
+            tableRoutage: "✅ Réussi",
+            vplmnMsisdn: "✅ Réussi",
+            commentaires: "Test effectué avec succès, aucune anomalie détectée."
+          },
+          {
+            operateur: "Orange",
+            routeProvisioning: "✅ Réussi",
+            vplmnIr21: "✅ Réussi",
+            implementationImsi: "✅ Réussi",
+            conversionImsi: "✅ Réussi",
+            tableRoutage: "✅ Réussi",
+            vplmnMsisdn: "✅ Réussi",
+            commentaires: "Aucune déviation dans les configurations. Service stable."
+          },
+          {
+            operateur: "Djezzy",
+            routeProvisioning: "✅ Réussi",
+            vplmnIr21: "✅ Réussi",
+            implementationImsi: "✅ Réussi",
+            conversionImsi: "✅ Réussi",
+            tableRoutage: "✅ Réussi",
+            vplmnMsisdn: "✅ Réussi",
+            commentaires: "Test conforme aux attentes, pas de problème majeur."
+          },
+          {
+            operateur: "Ooredoo",
+            routeProvisioning: "✅ Réussi",
+            vplmnIr21: "✅ Réussi",
+            implementationImsi: "✅ Réussi",
+            conversionImsi: "✅ Réussi",
+            tableRoutage: "✅ Réussi",
+            vplmnMsisdn: "✅ Réussi",
+            commentaires: "Les tests ont montré que tout fonctionne correctement."
+          }
+        ]
+      },
+      "Outbound Roaming": {
+        details: [
+          { name: "Connectivité", status: "success", message: "Connectivité établie" },
+          { name: "Authentification", status: "success", message: "Authentification réussie" },
+          { name: "Services", status: "success", message: "Tous les services disponibles" }
+        ]
+      },
+      "Test d'appel vocal": {
+        details: [
+          { name: "Appels entrants", status: "success", message: "Appels entrants fonctionnels" },
+          { name: "Appels sortants", status: "success", message: "Appels sortants fonctionnels" },
+          { name: "Qualité audio", status: "success", message: "Qualité audio optimale" }
+        ]
+      },
+      "Test SMS": {
+        details: [
+          { name: "Envoi SMS", status: "success", message: "Envoi SMS fonctionnel" },
+          { name: "Réception SMS", status: "success", message: "Réception SMS fonctionnelle" },
+          { name: "Délai de livraison", status: "success", message: "Délai de livraison conforme" }
+        ]
+      },
+      "Test données mobiles": {
+        details: [
+          { name: "3G", status: "success", message: "Connexion 3G établie" },
+          { name: "4G", status: "success", message: "Connexion 4G établie" },
+          { name: "Débit", status: "success", message: "Débit conforme aux attentes" }
+        ]
+      }
+    };
+
+    const results = mockResults[selectedTest.name] || { details: [] };
+
+    if (results.type === "table") {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg p-6 max-w-7xl w-full mx-4 max-h-[90vh] overflow-auto"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Résultats détaillés - {selectedTest.name}</h2>
+              <button 
+                onClick={handleCloseResults}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimesCircle size={24} />
+              </button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white rounded-lg shadow">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {results.headers.map((header, index) => (
+                      <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {results.data.map((row, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.operateur}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.routeProvisioning}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.vplmnIr21}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.implementationImsi}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.conversionImsi}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.tableRoutage}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.vplmnMsisdn}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{row.commentaires}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleCloseResults}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-200"
+              >
+                Fermer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
+    // Retourner le rendu par défaut pour les autres types de résultats
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Résultats détaillés - {selectedTest.name}</h2>
+            <button 
+              onClick={handleCloseResults}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FaTimesCircle size={24} />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {results.details.map((detail, index) => (
+              <div key={index} className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {getStatusIcon(detail.status)}
+                    <span className="font-medium text-gray-800">{detail.name}</span>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    detail.status === "success" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                  }`}>
+                    {detail.status === "success" ? "Réussi" : "Échec"}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">{detail.message}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleCloseResults}
+              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-200"
+            >
+              Fermer
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  const renderTableView = () => (
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white rounded-lg shadow">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {tests.map((test) => (
+            <tr key={test.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">{test.name}</div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="text-sm text-gray-500">{test.description}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  {getStatusIcon(test.status)}
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                    test.status === "success" ? "bg-green-100 text-green-600" :
+                    test.status === "failed" ? "bg-red-100 text-red-600" :
+                    "bg-gray-100 text-gray-600"
+                  }`}>
+                    {test.status === "pending" ? "En attente" : 
+                     test.status === "running" ? "En cours" :
+                     test.status === "success" ? "Réussi" : "Échec"}
+                  </span>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleRunTest(test.id)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
+                    disabled={test.status === "running"}
+                  >
+                    {test.status === "running" ? (
+                      <FaSpinner className="animate-spin text-white" />
+                    ) : (
+                      getStatusIcon(test.status)
+                    )}
+                    <span>{test.status === "running" ? "En cours..." : "Lancer"}</span>
+                  </button>
+                  <button
+                    onClick={() => handleShowResults(test)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <FaChartBar />
+                    <span>Résultats</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderMapView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {tests.map((test) => (
+        <motion.div 
+          key={test.id} 
+          className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">{test.name}</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {`${test.description} [${selectedCountry} - ${selectedOperator}]`}
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-gray-500">Dernier résultat :</span>
+              <div className="flex items-center space-x-1">
+                {test.status === "running" ? (
+                  <FaSpinner className="animate-spin text-gray-500 w-3 h-3" />
+                ) : (
+                  getStatusIcon(test.status)
+                )}
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  test.status === "success" ? "bg-green-100 text-green-600" :
+                  test.status === "failed" ? "bg-red-100 text-red-600" :
+                  "bg-gray-100 text-gray-600"
+                }`}>
+                  {test.status === "pending" ? "En attente" : 
+                   test.status === "running" ? "En cours" :
+                   test.status === "success" ? "Réussi" : "Échec"}
+                </span>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => handleRunTest(test.id)}
+                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center justify-center space-x-2"
+                disabled={test.status === "running"}
+              >
+                {test.status === "running" ? (
+                  <FaSpinner className="animate-spin text-white" />
+                ) : (
+                  getStatusIcon(test.status)
+                )}
+                <span>{test.status === "running" ? "En cours..." : "Lancer"}</span>
+              </button>
+              <button
+                onClick={() => handleShowResults(test)}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                <FaChartBar />
+                <span>Résultats</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+
+  const renderAuditTable = () => {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="p-6"
+      >
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={handleBackToTests}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <FaArrowLeft />
+              <span>Retour aux tests</span>
+            </button>
+            <div className="text-sm text-gray-500">
+              Total des partenaires : {auditData.length}
+            </div>
+          </div>
+
+          {/* Statistiques */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Total</div>
+              <div className="text-2xl font-bold text-gray-800">{auditData.length}</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Bilatéraux</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {auditData.filter(p => p.accord === "Bilatéral").length}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Unilatéraux</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {auditData.filter(p => p.accord === "Unilatéral").length}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Conformes</div>
+              <div className="text-2xl font-bold text-green-600">
+                {auditData.filter(p => !p.erreurs).length}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="text-sm text-gray-500">Non Conformes</div>
+              <div className="text-2xl font-bold text-red-600">
+                {auditData.filter(p => p.erreurs).length}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tableau */}
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="p-6 border-b">
+            <h2 className="text-2xl font-bold text-gray-800">📊 Tableau de Synthèse – Audit Roaming (IR.21)</h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partenaire</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accord</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GSM</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAMEL</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GPRS</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">3G</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LTE/4G</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paramètres LTE OK</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Erreurs détectées</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaires</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rapport</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {auditData.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.partenaire}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.accord}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.gsm ? "✔️" : "❌"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.camel ? "✔️" : "❌"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.gprs ? "✔️" : "❌"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row["3g"] ? "✔️" : "❌"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.lte ? "✔️" : "❌"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {row.parametresLte === null ? "N/A" : row.parametresLte ? "✔️" : "❌"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.erreurs ? "❌" : "✔️"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.commentaires}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.rapport}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  if (showAuditTable) {
+    return renderAuditTable();
+  }
 
   return (
     <motion.div 
@@ -280,10 +856,38 @@ const RoamingTests = () => {
         transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-green-600 mb-2">Tests de Roaming</h1>
-        <p className="text-green-600 text-lg max-w-2xl">
-          Gestion et exécution des tests d'itinérance pour les opérateurs internationaux
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-green-600 mb-2">Tests de Roaming</h1>
+            <p className="text-green-600 text-lg max-w-2xl">
+              Gestion et exécution des tests d'itinérance pour les opérateurs internationaux
+            </p>
+          </div>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                viewMode === 'table' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <FaTable />
+              <span>Tableau</span>
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                viewMode === 'map' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <FaMap />
+              <span>Carte</span>
+            </button>
+          </div>
+        </div>
       </motion.div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -324,61 +928,9 @@ const RoamingTests = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tests.map((test) => (
-          <motion.div 
-            key={test.id} 
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">{test.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {`${test.description} [${selectedCountry} - ${selectedOperator}]`}
-                </p>
-              </div>
-              <button 
-                onClick={() => handleRunTest(test.id)}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
-                disabled={test.status === "running"}
-              >
-                <div className="flex items-center space-x-2">
-                  {test.status === "running" ? (
-                    <FaSpinner className="animate-spin text-white" />
-                  ) : (
-                    getStatusIcon(test.status)
-                  )}
-                  <span>{test.status === "running" ? "En cours..." : "Lancer"}</span>
-                </div>
-              </button>
-            </div>
-
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Dernier résultat :</span>
-                <div className="flex items-center space-x-1">
-                  {test.status === "running" ? (
-                    <FaSpinner className="animate-spin text-gray-500 w-3 h-3" />
-                  ) : (
-                    getStatusIcon(test.status)
-                  )}
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    test.status === "success" ? "bg-green-100 text-green-600" :
-                    test.status === "failed" ? "bg-red-100 text-red-600" :
-                    "bg-gray-100 text-gray-600"
-                  }`}>
-                    {test.status === "pending" ? "En attente" : 
-                     test.status === "running" ? "En cours" :
-                     test.status === "success" ? "Réussi" : "Échec"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      {viewMode === 'table' ? renderTableView() : renderMapView()}
+      {showResults && renderTestResults()}
+      {showAuditTable && renderAuditTable()}
     </motion.div>
   );
 };

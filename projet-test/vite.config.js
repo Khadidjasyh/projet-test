@@ -17,7 +17,21 @@ export default defineConfig({
     port: 5176,
     proxy: {
       "/situation-globale": {
-        target: "http://localhost:5177",
+        target: "http://localhost:5178",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        rewrite: (path) => path
+      },
+      "/roaming-partners": {
+        target: "http://localhost:5178",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        rewrite: (path) => path
+      },
+      "/huawei/mobile-networks": {
+        target: "http://localhost:5178",
         changeOrigin: true,
         secure: false,
         ws: true,

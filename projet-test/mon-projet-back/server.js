@@ -11,13 +11,55 @@ const nodemailer = require("nodemailer");
 const multer = require("multer");
 const fs = require("fs");
 const xml2js = require("xml2js");
+const path = require("path");
 
 // Initialisation de l'application Express
 const app = express();
-const PORT = 5177;
+const PORT = 5178;
 
-const upload = multer({ dest: 'uploads/' });
+// Configuration de multer pour le stockage des fichiers
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, 'uploads');
+    // Créer le dossier s'il n'existe pas
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    console.log('📁 Dossier de destination:', uploadDir);
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Garder le nom de fichier original
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
 
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    console.log('🔍 Vérification du fichier:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype
+    });
+    
+    // Vérifier les types de fichiers acceptés
+    const allowedTypes = ['.xml', '.pdf', '.ir21'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    if (allowedTypes.includes(ext)) {
+      console.log('✅ Type de fichier accepté:', ext);
+      cb(null, true);
+    } else {
+      console.error('❌ Type de fichier non supporté:', ext);
+      cb(new Error('Format de fichier non supporté. Utilisez un fichier XML, PDF ou IR21.'));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB max
+  }
+});
 
 // Connexion à MySQL
 const connection = mysql.createConnection({
@@ -132,15 +174,31 @@ app.get("/test", (req, res) => {
 // Route pour récupérer les partenaires roaming
 app.get("/roaming-partners", (req, res) => {
   console.log("Route /roaming-partners appelée");
-  const query = "SELECT * FROM roaming_partners";
+  
+  // Vérifier si la connexion est active
+  if (!connection) {
+    console.error("❌ La connexion MySQL n'est pas initialisée");
+    return res.status(500).json({ 
+      error: "Erreur de connexion à la base de données",
+      details: "La connexion MySQL n'est pas initialisée"
+    });
+  }
+
+  const query = "SELECT id, imsi_prefix, gt, operateur, mcc, mnc, country, bilateral FROM roaming_partners WHERE imsi_prefix IS NOT NULL AND gt IS NOT NULL AND operateur IS NOT NULL ORDER BY id";
+  console.log("Exécution de la requête SQL:", query);
+  
   connection.query(query, (error, results) => {
     if (error) {
-      console.error("Erreur MySQL :", error);
-      return res.status(500).json({ error: "Erreur lors de la récupération des partenaires." });
+      console.error("❌ Erreur MySQL:", error);
+      return res.status(500).json({ 
+        error: "Erreur lors de la récupération des partenaires",
+        details: error.message
+      });
     }
-    console.log(`Nombre de partenaires trouvés : ${results.length}`);
+
+    console.log(`✅ Nombre de partenaires trouvés: ${results.length}`);
     if (results.length > 0) {
-      console.log("Premier partenaire :", results[0]);
+      console.log("Premier partenaire:", results[0]);
     }
     res.status(200).json(results);
   });
@@ -204,139 +262,104 @@ app.get("/network-nodes", (req, res) => {
   });
 });
 
-// Routes for MSS data
-app.get("/mss/imsi-analysis", (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
-  const offset = (page - 1) * limit;
-  const node = req.query.node || '';
-
-  let query = "SELECT * FROM mss_imsi_analysis";
-  let countQuery = "SELECT COUNT(*) as total FROM mss_imsi_analysis";
-  
-  if (node) {
-    query += " WHERE node_name = ?";
-    countQuery += " WHERE node_name = ?";
-  }
-  
-  query += " ORDER BY node_name, imsi_series LIMIT ? OFFSET ?";
-  
-  const queryParams = node ? [node, limit, offset] : [limit, offset];
-  
-  // First get total count
-  connection.query(countQuery, node ? [node] : [], (error, countResults) => {
+// Route pour récupérer les réseaux mobiles
+app.get("/mobile-networks", (req, res) => {
+  console.log("Route /mobile-networks appelée");
+  const query = "SELECT * FROM mobile_network";
+  connection.query(query, (error, results) => {
     if (error) {
-      console.error("Error counting IMSI records:", error);
-      return res.status(500).json({ error: "Error fetching data" });
+      console.error("Erreur MySQL :", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération des réseaux mobiles." });
     }
-    
-    // Then get paginated data
-    connection.query(query, queryParams, (error, results) => {
-      if (error) {
-        console.error("Error fetching IMSI data:", error);
-        return res.status(500).json({ error: "Error fetching data" });
-      }
-      res.json({
-        data: results,
-        total: countResults[0].total,
-        page,
-        totalPages: Math.ceil(countResults[0].total / limit)
-      });
-    });
+    console.log(`Nombre de réseaux trouvés : ${results.length}`);
+    if (results.length > 0) {
+      console.log("Premier réseau :", results[0]);
+    }
+    res.status(200).json(results);
   });
 });
 
-app.get('/mss/bnumber-analysis', (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
-  const offset = (page - 1) * limit;
-  const node = req.query.node || '';
+// Routes for MSS data
+app.get("/mss/nodes", (req, res) => {
+  const query = "SELECT DISTINCT node_name FROM mss_imsi_analysis ORDER BY node_name";
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error("Erreur lors de la récupération des nœuds:", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération des nœuds" });
+    }
+    res.json(results.map(row => row.node_name));
+  });
+});
 
-  let query = `
-    SELECT 
-      node_name,
-      b_number,
-      miscell,
-      f_n,
-      route,
-      charge,
-      l_value as l,
-      a_value,
-      created_at
-    FROM mss_bnumber_analysis
-  `;
-  let countQuery = "SELECT COUNT(*) as total FROM mss_bnumber_analysis";
+app.get("/mss/imsi-analysis", (req, res) => {
+  const { page = 1, limit = 50, node } = req.query;
+  const offset = (page - 1) * limit;
+  
+  let query = "SELECT * FROM mss_imsi_analysis";
+  const params = [];
   
   if (node) {
     query += " WHERE node_name = ?";
-    countQuery += " WHERE node_name = ?";
+    params.push(node);
   }
   
-  query += " ORDER BY node_name, b_number LIMIT ? OFFSET ?";
+  query += " LIMIT ? OFFSET ?";
+  params.push(parseInt(limit), offset);
   
-  const queryParams = node ? [node, limit, offset] : [limit, offset];
-  
-  // First get total count
-  connection.query(countQuery, node ? [node] : [], (error, countResults) => {
+  connection.query(query, params, (error, results) => {
     if (error) {
-      console.error("Error counting B-Number records:", error);
-      return res.status(500).json({ error: "Error fetching data" });
+      console.error("Erreur lors de la récupération des données IMSI:", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération des données IMSI" });
     }
-    
-    // Then get paginated data
-    connection.query(query, queryParams, (error, results) => {
-      if (error) {
-        console.error("Error fetching B-Number data:", error);
-        return res.status(500).json({ error: "Error fetching data" });
-      }
-      res.json({
-        data: results,
-        total: countResults[0].total,
-        page,
-        totalPages: Math.ceil(countResults[0].total / limit)
-      });
-    });
+    res.json({ data: results });
+  });
+});
+
+app.get("/mss/bnumber-analysis", (req, res) => {
+  const { page = 1, limit = 50, node } = req.query;
+  const offset = (page - 1) * limit;
+  
+  let query = "SELECT * FROM mss_bnumber_analysis";
+  const params = [];
+  
+  if (node) {
+    query += " WHERE node_name = ?";
+    params.push(node);
+  }
+  
+  query += " LIMIT ? OFFSET ?";
+  params.push(parseInt(limit), offset);
+  
+  connection.query(query, params, (error, results) => {
+    if (error) {
+      console.error("Erreur lors de la récupération des données B-Number:", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération des données B-Number" });
+    }
+    res.json({ data: results });
   });
 });
 
 app.get("/mss/gt-series", (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
+  const { page = 1, limit = 50, node } = req.query;
   const offset = (page - 1) * limit;
-  const node = req.query.node || '';
-
+  
   let query = "SELECT * FROM mss_gt_series";
-  let countQuery = "SELECT COUNT(*) as total FROM mss_gt_series";
+  const params = [];
   
   if (node) {
     query += " WHERE node_name = ?";
-    countQuery += " WHERE node_name = ?";
+    params.push(node);
   }
   
-  query += " ORDER BY node_name, tt LIMIT ? OFFSET ?";
+  query += " LIMIT ? OFFSET ?";
+  params.push(parseInt(limit), offset);
   
-  const queryParams = node ? [node, limit, offset] : [limit, offset];
-  
-  // First get total count
-  connection.query(countQuery, node ? [node] : [], (error, countResults) => {
+  connection.query(query, params, (error, results) => {
     if (error) {
-      console.error("Error counting GT Series records:", error);
-      return res.status(500).json({ error: "Error fetching data" });
+      console.error("Erreur lors de la récupération des données GT Series:", error);
+      return res.status(500).json({ error: "Erreur lors de la récupération des données GT Series" });
     }
-    
-    // Then get paginated data
-    connection.query(query, queryParams, (error, results) => {
-      if (error) {
-        console.error("Error fetching GT Series data:", error);
-        return res.status(500).json({ error: "Error fetching data" });
-      }
-      res.json({
-        data: results,
-        total: countResults[0].total,
-        page,
-        totalPages: Math.ceil(countResults[0].total / limit)
-      });
-    });
+    res.json({ data: results });
   });
 });
 
@@ -363,33 +386,150 @@ app.get('/mss/nodes', (req, res) => {
   });
 });
 
+// Route pour les réseaux mobiles de MSS Huawei
+app.get('/huawei/mobile-networks', (req, res) => {
+  const query = `
+    SELECT 
+      id,
+      network_name,
+      mcc,
+      mnc,
+      plmn,
+      gt,
+      imsi_prefix,
+      country,
+      operator,
+      status,
+      created_at,
+      updated_at
+    FROM mobile_network
+  `;
+  
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('Erreur lors de la récupération des réseaux mobiles:', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des réseaux mobiles' });
+    }
+    console.log('Nombre de réseaux mobiles trouvés:', results.length);
+    if (results.length > 0) {
+      console.log('Premier réseau mobile:', results[0]);
+    }
+    res.json(results);
+  });
+});
 
 const importIR21File = require('./importIR21');
 
-app.post('/import-ir21', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Aucun fichier n\'a été uploadé' });
+// Vérification de la connexion à la base de données
+async function checkDatabaseConnection() {
+  try {
+    await connection.promise().query('SELECT 1');
+    console.log('✅ Connexion à la base de données réussie');
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur de connexion à la base de données:', error);
+    return false;
+  }
+}
+
+// Route pour l'import IR21
+app.post('/import-ir21', async (req, res, next) => {
+  console.log('=== Début de la requête d\'import ===');
+  console.log('Headers:', req.headers);
+  
+  // Vérifier la connexion à la base de données
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur de connexion à la base de données'
+    });
   }
 
-  try {
-    const result = await importIR21File(req.file.path);
-    
-    // Supprimer le fichier temporaire
-    fs.unlinkSync(req.file.path);
-
-    res.json(result);
-  } catch (error) {
-    console.error('Erreur lors de l\'import:', error);
-    
-    // Supprimer le fichier temporaire même en cas d'erreur
-    try {
-      fs.unlinkSync(req.file.path);
-    } catch (err) {
-      console.error('Erreur lors de la suppression du fichier:', err);
+  // Middleware pour gérer les erreurs multer
+  upload.single('ir21File')(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('❌ Erreur Multer:', err);
+      return res.status(400).json({
+        success: false,
+        message: `Erreur lors de l'upload: ${err.message}`
+      });
+    } else if (err) {
+      console.error('❌ Erreur inconnue:', err);
+      return res.status(500).json({
+        success: false,
+        message: `Erreur serveur: ${err.message}`
+      });
     }
 
-    res.status(500).json({ error: error.message });
-  }
+    if (!req.file) {
+      console.error('❌ Aucun fichier n\'a été uploadé');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Aucun fichier n\'a été uploadé' 
+      });
+    }
+
+    console.log('📁 Fichier reçu:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
+    });
+
+    try {
+      // Vérifier si le fichier existe
+      if (!fs.existsSync(req.file.path)) {
+        throw new Error('Le fichier n\'existe pas sur le serveur');
+      }
+
+      // Lire le contenu du fichier
+      const fileContent = fs.readFileSync(req.file.path, 'utf8');
+      console.log('📄 Contenu du fichier (premiers 500 caractères):', fileContent.substring(0, 500));
+
+      // Vérifier si le contenu est un XML valide
+      if (!fileContent.trim().startsWith('<?xml')) {
+        throw new Error('Le fichier ne semble pas être un XML valide');
+      }
+
+      // Importer le fichier
+      console.log('🔄 Début du traitement du fichier');
+      const result = await importIR21File(req.file.path);
+      console.log('✅ Traitement terminé avec succès:', result);
+
+      // Supprimer le fichier temporaire
+      try {
+        fs.unlinkSync(req.file.path);
+        console.log('🗑️ Fichier temporaire supprimé');
+      } catch (err) {
+        console.error('⚠️ Erreur lors de la suppression du fichier temporaire:', err);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('❌ Erreur détaillée:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
+      // Supprimer le fichier temporaire
+      try {
+        if (req.file && req.file.path) {
+          fs.unlinkSync(req.file.path);
+          console.log('🗑️ Fichier temporaire supprimé après erreur');
+        }
+      } catch (err) {
+        console.error('⚠️ Erreur lors de la suppression du fichier temporaire:', err);
+      }
+
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Erreur lors de l\'import du fichier IR21',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    }
+  });
 });
 
 // Démarrer le serveur
