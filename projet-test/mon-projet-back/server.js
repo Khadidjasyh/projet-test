@@ -294,7 +294,7 @@ app.get("/mss/nodes", (req, res) => {
 app.get("/mss/imsi-analysis", (req, res) => {
   const { page = 1, limit = 50, node } = req.query;
   const offset = (page - 1) * limit;
-  
+
   let query = "SELECT * FROM mss_imsi_analysis";
   const params = [];
   
@@ -310,7 +310,7 @@ app.get("/mss/imsi-analysis", (req, res) => {
     if (error) {
       console.error("Erreur lors de la récupération des données IMSI:", error);
       return res.status(500).json({ error: "Erreur lors de la récupération des données IMSI" });
-    }
+      }
     res.json({ data: results });
   });
 });
@@ -318,7 +318,7 @@ app.get("/mss/imsi-analysis", (req, res) => {
 app.get("/mss/bnumber-analysis", (req, res) => {
   const { page = 1, limit = 50, node } = req.query;
   const offset = (page - 1) * limit;
-  
+
   let query = "SELECT * FROM mss_bnumber_analysis";
   const params = [];
   
@@ -334,7 +334,7 @@ app.get("/mss/bnumber-analysis", (req, res) => {
     if (error) {
       console.error("Erreur lors de la récupération des données B-Number:", error);
       return res.status(500).json({ error: "Erreur lors de la récupération des données B-Number" });
-    }
+      }
     res.json({ data: results });
   });
 });
@@ -342,7 +342,7 @@ app.get("/mss/bnumber-analysis", (req, res) => {
 app.get("/mss/gt-series", (req, res) => {
   const { page = 1, limit = 50, node } = req.query;
   const offset = (page - 1) * limit;
-  
+
   let query = "SELECT * FROM mss_gt_series";
   const params = [];
   
@@ -358,7 +358,7 @@ app.get("/mss/gt-series", (req, res) => {
     if (error) {
       console.error("Erreur lors de la récupération des données GT Series:", error);
       return res.status(500).json({ error: "Erreur lors de la récupération des données GT Series" });
-    }
+      }
     res.json({ data: results });
   });
 });
@@ -390,13 +390,13 @@ app.get('/mss/nodes', (req, res) => {
 app.get('/huawei/mobile-networks', (req, res) => {
   const query = `
     SELECT 
-      id,
+      id, 
       network_name,
       mcc,
       mnc,
       plmn,
       gt,
-      imsi_prefix,
+      imsi_prefix, 
       country,
       operator,
       status,
@@ -418,119 +418,37 @@ app.get('/huawei/mobile-networks', (req, res) => {
   });
 });
 
-const importIR21File = require('./importIR21');
 
-// Vérification de la connexion à la base de données
-async function checkDatabaseConnection() {
-  try {
-    await connection.promise().query('SELECT 1');
-    console.log('✅ Connexion à la base de données réussie');
-    return true;
-  } catch (error) {
-    console.error('❌ Erreur de connexion à la base de données:', error);
-    return false;
-  }
-}
 
-// Route pour l'import IR21
-app.post('/import-ir21', async (req, res, next) => {
-  console.log('=== Début de la requête d\'import ===');
-  console.log('Headers:', req.headers);
-  
-  // Vérifier la connexion à la base de données
-  const isConnected = await checkDatabaseConnection();
-  if (!isConnected) {
-    return res.status(500).json({
-      success: false,
-      message: 'Erreur de connexion à la base de données'
-    });
-  }
-
-  // Middleware pour gérer les erreurs multer
-  upload.single('ir21File')(req, res, async (err) => {
-    if (err instanceof multer.MulterError) {
-      console.error('❌ Erreur Multer:', err);
-      return res.status(400).json({
-        success: false,
-        message: `Erreur lors de l'upload: ${err.message}`
-      });
-    } else if (err) {
-      console.error('❌ Erreur inconnue:', err);
-      return res.status(500).json({
-        success: false,
-        message: `Erreur serveur: ${err.message}`
-      });
+app.get('/hss', (req, res) => {
+  console.log('GET /hss endpoint hit');
+  connection.query('SELECT epc, `3g`, hss_esm FROM hss_data', (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données HSS' });
     }
-
-    if (!req.file) {
-      console.error('❌ Aucun fichier n\'a été uploadé');
-      return res.status(400).json({ 
-        success: false,
-        message: 'Aucun fichier n\'a été uploadé' 
-      });
-    }
-
-    console.log('📁 Fichier reçu:', {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path
-    });
-
-    try {
-      // Vérifier si le fichier existe
-      if (!fs.existsSync(req.file.path)) {
-        throw new Error('Le fichier n\'existe pas sur le serveur');
-      }
-
-      // Lire le contenu du fichier
-      const fileContent = fs.readFileSync(req.file.path, 'utf8');
-      console.log('📄 Contenu du fichier (premiers 500 caractères):', fileContent.substring(0, 500));
-
-      // Vérifier si le contenu est un XML valide
-      if (!fileContent.trim().startsWith('<?xml')) {
-        throw new Error('Le fichier ne semble pas être un XML valide');
-      }
-
-      // Importer le fichier
-      console.log('🔄 Début du traitement du fichier');
-      const result = await importIR21File(req.file.path);
-      console.log('✅ Traitement terminé avec succès:', result);
-
-      // Supprimer le fichier temporaire
-      try {
-        fs.unlinkSync(req.file.path);
-        console.log('🗑️ Fichier temporaire supprimé');
-      } catch (err) {
-        console.error('⚠️ Erreur lors de la suppression du fichier temporaire:', err);
-      }
-
-      res.json(result);
-    } catch (error) {
-      console.error('❌ Erreur détaillée:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-
-      // Supprimer le fichier temporaire
-      try {
-        if (req.file && req.file.path) {
-          fs.unlinkSync(req.file.path);
-          console.log('🗑️ Fichier temporaire supprimé après erreur');
-        }
-      } catch (err) {
-        console.error('⚠️ Erreur lors de la suppression du fichier temporaire:', err);
-      }
-
-      res.status(500).json({
-        success: false,
-        message: error.message || 'Erreur lors de l\'import du fichier IR21',
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      });
-    }
+    console.log('Sending HSS data:', results);
+    res.json({ data: results });
   });
 });
+
+app.get('/ir21', async (req, res) => {
+  try {
+    // Utiliser connection au lieu de db
+    connection.query('SELECT * FROM ir21_data', (err, results) => {
+      if (err) {
+        console.error('Erreur de base de données:', err);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des données IR21' });
+      }
+      console.log('Données IR21 envoyées:', results);
+      res.json(results);
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données IR21 :', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 
 // Démarrer le serveur
 app.listen(PORT, () => {

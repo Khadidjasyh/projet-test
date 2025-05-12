@@ -23,6 +23,8 @@ import OutboundRoamingResults from './pages/OutboundRoamingResults';
 import CamelInboundResults from './pages/CamelInboundResults';
 import CamelOutboundResults from './pages/CamelOutboundResults';
 import DataInboundResults from './pages/DataInboundResults';
+import HssPage from './HssPage';
+import IR21Page from './IR21Page';
 
 function App() {
   return (
@@ -91,12 +93,14 @@ function App() {
             <Route path="/mss-ericsson" element={<MssEricsson />} />
             <Route path="/firewall-ips" element={<FirewallIPs />} />
             <Route path="/roaming-tests" element={<RoamingTests />} />
+            <Route path="/ir21" element={<IR21Page />} />
             <Route path="/inbound-roaming-results" element={<InboundRoamingResults />} />
             <Route path="/outbound-roaming-results" element={<OutboundRoamingResults />} />
             <Route path="/camel-inbound-results" element={<CamelInboundResults />} />
             <Route path="/mss-huawei" element={<MssHuawei />} />
             <Route path="/camel-outbound-results" element={<CamelOutboundResults />} />
             <Route path="/data-inbound-results" element={<DataInboundResults />} />
+            <Route path="/hss" element={<HssPage />} />
           </Routes>
         </div>
       </div>
