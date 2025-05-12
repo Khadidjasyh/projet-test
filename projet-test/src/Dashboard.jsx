@@ -106,6 +106,9 @@ function Sidebar() {
     { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
     { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
     { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
+    { id: "hlrr", label: "HLRR", icon: <FaNetworkWired /> },
+    { id: "hss", label: "HSS", icon: <FaNetworkWired /> },
+    { id: "mme", label: "MME", icon: <FaNetworkWired /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "firewall", label: "Firewall", icon: <FaShieldAlt /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
@@ -153,7 +156,38 @@ function Sidebar() {
         </ul>
         
         {!isCollapsed && (
-          <div className="mt-8">
+          <div className="mt-6">
+            <p className="text-xs uppercase text-gray-500 font-medium mb-2 ml-2">DOCUMENTS</p>
+            <ul className="space-y-1 mb-4">
+              <li>
+                <Link to="/ir21" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                  <BsFileEarmarkText className="mr-3" />
+                  Fichier IR21
+                </Link>
+              </li>
+              <li>
+                <Link to="/ir85" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                  <BsFileEarmarkText className="mr-3" />
+                  Fichier IR85
+                </Link>
+              </li>
+            </ul>
+          </div>
+        )}
+        
+        {isCollapsed && (
+          <div className="mt-6 flex flex-col items-center space-y-3">
+            <Link to="/ir21" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Fichier IR21">
+              <BsFileEarmarkText />
+            </Link>
+            <Link to="/ir85" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Fichier IR85">
+              <BsFileEarmarkText />
+            </Link>
+          </div>
+        )}
+        
+        {!isCollapsed && (
+          <div className="mt-6">
             <p className="text-xs uppercase text-gray-500 font-medium mb-2 ml-2">ASSISTANCE</p>
             <ul className="space-y-1">
               <li>
