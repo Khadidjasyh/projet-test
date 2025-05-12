@@ -110,6 +110,7 @@ function Sidebar() {
     { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
     { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
     { id: "firewall-ips", label: "Firewall IPs", icon: <BsTable /> },
+    { id : "Mme-Imsi", label : "IMSI MME", icon: <BsTable /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }

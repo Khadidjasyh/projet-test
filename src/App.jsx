@@ -17,6 +17,7 @@ import HelpCenter from "./HelpCenter";
 import MssEricsson from './MssEricsson';
 import MssHuawei from './MssHuawei';
 import FirewallIPs from './FirewallIps';
+import MmeImsi from './MmeImsi';
 
 
 
@@ -85,6 +86,7 @@ function App() {
             <Route path="/mss-ericsson" element={<MssEricsson />} />
             <Route path="/mss-huawei" element={<MssHuawei />} />
             <Route path="/firewall-ips" element={<FirewallIPs />} />
+            <Route path="/mme-imsi" element={<MmeImsi />} />
           </Routes>
         </div>
       </div>

@@ -259,7 +259,46 @@ app.get('/api/firewall-ips', (req, res) => {
 app.get("/test", (req, res) => {
   res.json({ message: "Le serveur fonctionne correctement" });
 });
+// Add this to your existing server.js routes section
+// Add this to your existing server.js routes section
 
+// MME IMSI Analysis
+app.get("/api/mme-imsi", (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+  const searchTerm = req.query.search || '';
+
+  let query = `
+    SELECT * FROM mme_imsi_analysis 
+    WHERE imsi LIKE ? OR misc_info1 LIKE ? 
+    ORDER BY imsi 
+    LIMIT ? OFFSET ?
+  `;
+
+  let countQuery = `
+    SELECT COUNT(*) as total FROM mme_imsi_analysis 
+    WHERE imsi LIKE ? OR misc_info1 LIKE ?
+  `;
+
+  const searchParam = `%${searchTerm}%`;
+  const queryParams = [searchParam, searchParam, limit, offset];
+  const countParams = [searchParam, searchParam];
+
+  connection.query(countQuery, countParams, (error, countResults) => {
+    if (error) return res.status(500).json({ error: "Error counting MME IMSI records" });
+
+    connection.query(query, queryParams, (error, results) => {
+      if (error) return res.status(500).json({ error: "Error fetching MME IMSI data" });
+      res.json({
+        data: results,
+        total: countResults[0].total,
+        page,
+        totalPages: Math.ceil(countResults[0].total / limit),
+      });
+    });
+  });
+});
 // Routes externes
 app.use('/api/huawei', huaweiRoutes);
 

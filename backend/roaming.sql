@@ -20,6 +20,16 @@ USE `mon_projet_db`;
 --
 -- Table structure for table `Adresse_IP`
 --
+CREATE TABLE mme_imsi_analysis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    imsi VARCHAR(20) NOT NULL,
+    default_apn_operator_id VARCHAR(50),
+    digits_to_add VARCHAR(20),
+    misc_info1 VARCHAR(100),
+    hss_realm_name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+); 
+
 CREATE TABLE IF NOT EXISTS mobile_networks (
   id INT AUTO_INCREMENT PRIMARY KEY,
   imsi_prefix VARCHAR(20),
