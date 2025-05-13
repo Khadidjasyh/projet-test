@@ -15,6 +15,7 @@ const Sidebar = () => {
     { path: '/roaming-partners', icon: <FaUsers />, label: 'Partenaires' },
     { path: '/mss-huawei', icon: <FaNetworkWired />, label: 'MSS Huawei' },
     { path: '/firewall-ips', icon: <FaShieldAlt />, label: 'Firewall' },
+    { path: '/hlrr', icon: <FaNetworkWired />, label: 'HLR' },
   ];
 
   return (

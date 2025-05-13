@@ -601,6 +601,18 @@ app.get("/mme-imsi", (req, res) => {
   });
 });
 
+app.get('/hlrr', (req, res) => {
+  // Utiliser le style de callback standard pour MySQL
+  connection.query('SELECT tt, np, na, ns, gtrc FROM hlr', (error, rows) => {
+    if (error) {
+      console.error('Error fetching HLR data:', error);
+      return res.status(500).json({ error: 'Failed to fetch HLR data' });
+    }
+    
+    res.json({ data: rows });
+  });
+});
+
 // Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
