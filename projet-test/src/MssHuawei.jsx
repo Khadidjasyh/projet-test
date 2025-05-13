@@ -19,18 +19,44 @@ const MssHuawei = () => {
       setError(null);
       try {
         const response = await fetch('http://localhost:5178/mobile-networks');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP error! status: ${response.status}`
+          );
+        }
+        
         const result = await response.json();
         
-        setNetworkData(result);
-        setFilteredData(result);
+        // Vérifier que la réponse est un tableau
+        if (!Array.isArray(result)) {
+          throw new Error('La réponse du serveur n\'est pas un tableau valide');
+        }
         
-        // Extract unique managed object groups for the filter dropdown
-        const groups = [...new Set(result.map(item => item.managed_object_group).filter(Boolean))];
+        console.log('Données reçues du serveur:', result);
+        
+        // S'assurer que chaque élément a les propriétés nécessaires
+        const validatedData = result.map(item => ({
+          id: item.id || '',
+          imsi_prefix: item.imsi_prefix || '',
+          msisdn_prefix: item.msisdn_prefix || '',
+          network_name: item.network_name || 'Nom inconnu',
+          managed_object_group: item.managed_object_group || 'Groupe inconnu',
+          // Ajouter d'autres champs nécessaires avec des valeurs par défaut
+          ...item
+        }));
+        
+        setNetworkData(validatedData);
+        setFilteredData(validatedData);
+        
+        // Extraire les groupes uniques pour le filtre déroulant
+        const groups = [...new Set(validatedData.map(item => item.managed_object_group).filter(Boolean))];
         setUniqueGroups(groups);
+        
       } catch (err) {
-        console.error('Error fetching network data:', err);
-        setError(err.message || 'Failed to fetch data');
+        console.error('Erreur lors de la récupération des données réseau:', err);
+        setError(`Erreur: ${err.message || 'Impossible de charger les données'}`);
       } finally {
         setLoading(false);
       }

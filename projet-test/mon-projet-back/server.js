@@ -13,9 +13,25 @@ const fs = require("fs");
 const xml2js = require("xml2js");
 const path = require("path");
 
+// Configuration de la journalisation
+const logStream = fs.createWriteStream(path.join(__dirname, 'server.log'), { flags: 'a' });
+
+const log = (message) => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  console.log(logMessage);
+  logStream.write(logMessage);
+};
+
 // Initialisation de l'application Express
 const app = express();
 const PORT = 5178;
+
+// Middleware pour logger les requêtes
+app.use((req, res, next) => {
+  log(`[${req.method}] ${req.originalUrl}`);
+  next();
+});
 
 // Configuration de multer pour le stockage des fichiers
 const storage = multer.diskStorage({
@@ -265,17 +281,56 @@ app.get("/network-nodes", (req, res) => {
 // Route pour récupérer les réseaux mobiles
 app.get("/mobile-networks", (req, res) => {
   console.log("Route /mobile-networks appelée");
-  const query = "SELECT * FROM mobile_network";
-  connection.query(query, (error, results) => {
-    if (error) {
-      console.error("Erreur MySQL :", error);
-      return res.status(500).json({ error: "Erreur lors de la récupération des réseaux mobiles." });
+  
+  // Vérifier la connexion à la base de données
+  if (!connection || connection.state === 'disconnected') {
+    console.error("Erreur: Pas de connexion à la base de données");
+    return res.status(500).json({ 
+      error: "Erreur de connexion à la base de données",
+      details: "La connexion à la base de données n'est pas établie"
+    });
+  }
+
+  // Vérifier si la table existe
+  const checkTableQuery = `SHOW TABLES LIKE 'mobile_networks'`;
+  connection.query(checkTableQuery, (checkError, checkResults) => {
+    if (checkError) {
+      console.error("Erreur lors de la vérification de la table:", checkError);
+      return res.status(500).json({ 
+        error: "Erreur lors de la vérification de la table",
+        details: checkError.message
+      });
     }
-    console.log(`Nombre de réseaux trouvés : ${results.length}`);
-    if (results.length > 0) {
-      console.log("Premier réseau :", results[0]);
+
+    if (checkResults.length === 0) {
+      console.error("La table 'mobile_networks' n'existe pas");
+      return res.status(404).json({ 
+        error: "Table non trouvée",
+        details: "La table 'mobile_networks' n'existe pas dans la base de données"
+      });
     }
-    res.status(200).json(results);
+
+    // Si la table existe, exécuter la requête
+    const query = "SELECT * FROM mobile_networks";
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error("Erreur MySQL :", error);
+        return res.status(500).json({ 
+          error: "Erreur lors de la récupération des réseaux mobiles.",
+          details: error.message,
+          sql: error.sql
+        });
+      }
+      
+      console.log(`Nombre de réseaux trouvés : ${results.length}`);
+      if (results.length > 0) {
+        console.log("Premier réseau :", JSON.stringify(results[0], null, 2));
+      } else {
+        console.log("Aucun réseau trouvé dans la table mobile_networks");
+      }
+      
+      res.status(200).json(results);
+    });
   });
 });
 
@@ -402,7 +457,7 @@ app.get('/huawei/mobile-networks', (req, res) => {
       status,
       created_at,
       updated_at
-    FROM mobile_network
+    FROM mobile_networks
   `;
   
   connection.query(query, (error, results) => {
