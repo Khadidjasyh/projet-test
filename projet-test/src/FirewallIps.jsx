@@ -4,23 +4,37 @@ import { BsSearch } from 'react-icons/bs';
 const FirewallIPs = () => {
   const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const itemsPerPage = 50;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5177/api/firewall-ips'); // Mise à jour du port
+        console.log('Fetching firewall IPs from backend...');
+        const response = await fetch('http://localhost:5178/firewall-ips');
+        
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          const errorText = await response.text();
+          console.error('Response not OK:', errorText);
+          throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
         }
+        
         const result = await response.json();
+        console.log('Firewall IPs data received:', result);
+        
+        if (!Array.isArray(result)) {
+          console.error('Expected array but got:', typeof result);
+          setError('Invalid data format received from server');
+          setData([]);
+          return;
+        }
+        
         setData(result);
       } catch (err) {
-        setError('Error fetching firewall IPs');
-        console.error('Error fetching firewall IPs:', err);
+        setError(`Error fetching firewall IPs: ${err.message}`);
+        console.error('Error details:', err);
       } finally {
         setLoading(false);
       }
@@ -29,23 +43,9 @@ const FirewallIPs = () => {
   }, []);
 
   const filteredData = data.filter(entry =>
-    entry.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.cidr_complet.toLowerCase().includes(searchTerm.toLowerCase())
+    (entry.nom ? entry.nom.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
+    (entry.cidr_complet ? entry.cidr_complet.toLowerCase().includes(searchTerm.toLowerCase()) : false)
   );
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-  // Handle edge case for currentPage
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
 
   return (
     <div className="p-6">
@@ -89,33 +89,19 @@ const FirewallIPs = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {paginatedData.map((item, index) => (
+              {filteredData.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-700">{item.nom}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{item.cidr_complet}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{item.nom || item.identifiant || 'N/A'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{item.cidr_complet || 'N/A'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-gray-600">Page {currentPage} of {totalPages || 1}</span>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage >= totalPages}
-            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
+        {/* Affichage du nombre total d'entrées */}
+        <div className="flex justify-end items-center mt-4">
+          <span className="text-gray-600">Total: {filteredData.length} entrées</span>
         </div>
       </div>
     </div>

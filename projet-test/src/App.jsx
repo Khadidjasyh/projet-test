@@ -16,7 +16,6 @@ import NetworkNodes from "./NetworkNodes";
 import HelpCenter from "./HelpCenter";
 import MssEricsson from './MssEricsson';
 import MssHuawei from './MssHuawei';
-import FirewallIPs from './FirewallIPs';
 import RoamingTests from './RoamingTests';
 import InboundRoamingResults from './pages/InboundRoamingResults';
 import OutboundRoamingResults from './pages/OutboundRoamingResults';
@@ -24,6 +23,8 @@ import CamelInboundResults from './pages/CamelInboundResults';
 import CamelOutboundResults from './pages/CamelOutboundResults';
 import DataInboundResults from './pages/DataInboundResults';
 import HssPage from './HssPage';
+import FirewallIPs from './FirewallIps';
+import MmeImsi from './MmeImsi';
 import IR21Page from './IR21Page';
 
 function App() {
@@ -92,6 +93,7 @@ function App() {
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/mss-ericsson" element={<MssEricsson />} />
             <Route path="/firewall-ips" element={<FirewallIPs />} />
+            <Route path="/firewall" element={<FirewallIPs />} />
             <Route path="/roaming-tests" element={<RoamingTests />} />
             <Route path="/ir21" element={<IR21Page />} />
             <Route path="/inbound-roaming-results" element={<InboundRoamingResults />} />
@@ -101,6 +103,8 @@ function App() {
             <Route path="/camel-outbound-results" element={<CamelOutboundResults />} />
             <Route path="/data-inbound-results" element={<DataInboundResults />} />
             <Route path="/hss" element={<HssPage />} />
+            <Route path="/mme-imsi" element={<MmeImsi />} />
+            <Route path="/mme" element={<MmeImsi />} />
           </Routes>
         </div>
       </div>

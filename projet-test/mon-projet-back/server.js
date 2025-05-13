@@ -450,6 +450,102 @@ app.get('/ir21', async (req, res) => {
 });
 
 
+// Partie à modifier dans server.js
+app.get('/firewall-ips', (req, res) => {
+  try {
+    connection.query(
+      'SELECT identifiant, nom, cidr_complet FROM firewall_ips ORDER BY identifiant DESC',
+      (error, results) => {
+        if (error) {
+          console.log('Erreur récupération firewall IPs:', error);
+          return res.status(500).json({ error: error.message });
+        }
+        res.json(results);
+      }
+    );
+  } catch (err) {
+    console.log('Erreur récupération firewall IPs:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/mme-imsi", (req, res) => {
+  console.log('Requête reçue sur /mme-imsi avec les paramètres:', req.query);
+  
+  // Vérifier la connexion à la base de données
+  if (!connection || connection.state === 'disconnected') {
+    console.error('Erreur: Pas de connexion à la base de données');
+    return res.status(500).json({ error: 'Database connection error' });
+  }
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = (page - 1) * limit;
+  const searchTerm = req.query.search || '';
+
+  console.log(`Paramètres de pagination - page: ${page}, limit: ${limit}, offset: ${offset}, search: '${searchTerm}'`);
+
+  // Vérifier si la table existe
+  const checkTableQuery = `SHOW TABLES LIKE 'mme_imsi_analysis'`;
+  
+  connection.query(checkTableQuery, (tableErr, tableResults) => {
+    if (tableErr) {
+      console.error('Erreur lors de la vérification de la table:', tableErr);
+      return res.status(500).json({ error: 'Database error checking table' });
+    }
+
+    if (tableResults.length === 0) {
+      console.error('La table mme_imsi_analysis n\'existe pas dans la base de données');
+      return res.status(404).json({ error: 'Table mme_imsi_analysis not found' });
+    }
+
+    let query = `
+      SELECT * FROM mme_imsi_analysis 
+      WHERE imsi LIKE ? OR misc_info1 LIKE ? 
+      ORDER BY imsi 
+      LIMIT ? OFFSET ?
+    `;
+
+    let countQuery = `
+      SELECT COUNT(*) as total FROM mme_imsi_analysis 
+      WHERE imsi LIKE ? OR misc_info1 LIKE ?
+    `;
+
+    const searchParam = `%${searchTerm}%`;
+    const queryParams = [searchParam, searchParam, limit, offset];
+    const countParams = [searchParam, searchParam];
+
+    console.log('Exécution de la requête de comptage avec les paramètres:', countParams);
+    
+    connection.query(countQuery, countParams, (countError, countResults) => {
+      if (countError) {
+        console.error('Erreur lors du comptage des enregistrements MME IMSI:', countError);
+        return res.status(500).json({ error: 'Error counting MME IMSI records', details: countError.message });
+      }
+      
+      console.log('Résultat du comptage:', countResults[0].total);
+
+      console.log('Exécution de la requête principale avec les paramètres:', queryParams);
+      
+      connection.query(query, queryParams, (dataError, results) => {
+        if (dataError) {
+          console.error('Erreur lors de la récupération des données MME IMSI:', dataError);
+          return res.status(500).json({ error: 'Error fetching MME IMSI data', details: dataError.message });
+        }
+        
+        console.log(`Récupération de ${results.length} enregistrements`);
+        
+        res.json({
+          data: results,
+          total: countResults[0].total,
+          page,
+          totalPages: Math.ceil(countResults[0].total / limit),
+        });
+      });
+    });
+  });
+});
+
 // Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);

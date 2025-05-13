@@ -3,113 +3,211 @@ const path = require('path');
 const xml2js = require('xml2js');
 const mysql = require('mysql2/promise');
 
-const directoryPath = path.join(__dirname, 'IR21_xml'); // Dossier contenant les fichiers XML
-
-const connectionConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '1234',
-  database: 'mon_projet_db',
+// Configuration
+const config = {
+  inputDir: path.join(__dirname, 'IR21_xml'),
+  db: {
+    host: 'localhost',
+    user: 'root',
+    password: '1234',
+    database: 'mon_projet_db',
+    connectionLimit: 10
+  },
+  logFile: path.join(__dirname, 'ir21_import.log')
 };
 
-async function extractDataFromXML(xml) {
-  const parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: true });
-  const result = await parser.parseStringPromise(xml);
+// Logger amélioré
+function log(message, level = 'INFO') {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] [${level}] ${message}\n`;
+  fs.appendFileSync(config.logFile, logMessage);
+  console[level === 'ERROR' ? 'error' : 'log'](message);
+}
 
-  const raex = result['tadig-raex-21:TADIGRAEXIR21'];
-  const fileHeader = raex?.RAEXIR21FileHeader;
-  const organisationInfo = raex?.OrganisationInfo;
+// Fonction d'extraction complète des données
+async function extractDataFromXML(filePath) {
+  try {
+    const xmlContent = fs.readFileSync(filePath, 'utf8');
+    const fileName = path.basename(filePath);
+    
+    // Parsing XML
+    const parser = new xml2js.Parser({
+      explicitArray: false,
+      mergeAttrs: true,
+      ignoreAttrs: true,
+      tagNameProcessors: [xml2js.processors.stripPrefix]
+    });
 
-  if (!fileHeader || !organisationInfo) {
-    console.warn('❌ Structure XML inattendue.');
-    return null;
-  }
-
-  const tadig = fileHeader.SenderTADIG || '';
-  const pays = organisationInfo.CountryInitials || '';
-
-  const networks = organisationInfo.NetworkList?.Network || [];
-  const networkArray = Array.isArray(networks) ? networks : [networks];
-
-  const data = [];
-
-  for (const network of networkArray) {
-    const networkData = network.NetworkData || {};
-    const packetInfoSection = network.PacketDataServiceInfoSection?.PacketDataServiceInfo || {};
-
-    const e212List = networkData.CCITT_E212_NumberSeries || [];
-    const e214List = networkData.CCITT_E214_MGT || [];
-
-    const e212 = Array.isArray(e212List) ? e212List : [e212List];
-    const e214 = Array.isArray(e214List) ? e214List : [e214List];
-
-    const apnList = packetInfoSection.APNOperatorIdentifierList?.APNOperatorIdentifier || [];
-    const apns = Array.isArray(apnList) ? apnList : [apnList];
-
-    // ✅ Correction ici : IPs extraites depuis NetworkData
-    const ipSection = networkData.GRXIPXRoutingForDataRoamingSection?.GRXIPXRoutingForDataRoaming;
-    const ipRanges = ipSection?.InterPMNBackboneIPList?.IPAddressOrRange || [];
-    const ipList = Array.isArray(ipRanges) ? ipRanges : [ipRanges];
-    const ips = ipList.map(ip => ip.IPAddressRange).filter(Boolean);
-
-    if (e212.length === 0 && e214.length === 0 && apns.length === 0 && ips.length === 0) {
-      console.warn(`⚠️ Aucun champ utile trouvé pour cette ligne.`);
-      continue;
+    const result = await parser.parseStringPromise(xmlContent);
+    const raex = result.TADIGRAEXIR21;
+    if (!raex) {
+      log(`Structure TADIGRAEXIR21 non trouvée dans ${fileName}`, 'WARN');
+      return null;
     }
 
-    data.push({
+    const fileHeader = raex.RAEXIR21FileHeader;
+    const organisationInfo = raex.OrganisationInfo;
+    if (!fileHeader || !organisationInfo) {
+      log(`En-tête ou info organisation manquante dans ${fileName}`, 'WARN');
+      return null;
+    }
+
+    const tadig = fileHeader.SenderTADIG || '';
+    const pays = organisationInfo.CountryInitials || '';
+
+    const networks = organisationInfo.NetworkList?.Network || [];
+    const networkArray = Array.isArray(networks) ? networks : [networks];
+
+    const extractedData = {
       tadig,
       pays,
-      e212: e212.join(', '),
-      e214: e214.join(', '),
-      apns: apns.join(', '),
-      ips: ips.join(', '),
-    });
-  }
+      e212: '',
+      e214: '',
+      apn: '',
+      ips: ''
+    };
 
-  return data;
-}
+    for (const network of networkArray) {
+      // Extraction E212 (MCC/MNC)
+      const routingInfo = network.NetworkData?.RoutingInfoSection?.RoutingInfo || {};
+      const e212Series = routingInfo.CCITT_E212_NumberSeries;
+      if (e212Series) {
+        const mcc = e212Series.MCC || '';
+        const mnc = e212Series.MNC ? e212Series.MNC.padStart(2, '0') : '00';
+        if (mcc && mnc) {
+          extractedData.e212 = `${mcc}${mnc}`;
+        }
+      }
 
-async function processFile(filePath, db) {
-  const fileName = path.basename(filePath);
-  console.log(`\n📂 Traitement du fichier : ${fileName}`);
+      // Extraction E214
+      const e214Series = routingInfo.CCITT_E214_MGT;
+      if (e214Series) {
+        const mgtCC = e214Series.MGT_CC || '';
+        const mgtNC = e214Series.MGT_NC || '';
+        if (mgtCC && mgtNC) {
+          extractedData.e214 = `${mgtCC}${mgtNC}`;
+        }
+      }
 
-  const xml = fs.readFileSync(filePath, 'utf8');
+      // Extraction APN (méthode robuste combinée)
+      const packetInfo = network.PacketDataServiceInfoSection?.PacketDataServiceInfo || {};
+      
+      // Méthode 1: Recherche regex directe
+      const apnRegex = /<APNOperatorIdentifier>(epc\.mnc\d{3}\.mcc\d{3})(?:\.3gppnetwork\.org)?<\/APNOperatorIdentifier>/i;
+      const regexMatch = xmlContent.match(apnRegex);
+      if (regexMatch && regexMatch[1]) {
+        extractedData.apn = regexMatch[1];
+      } else {
+        // Méthode 2: Parsing XML classique
+        const apnList = packetInfo.APNOperatorIdentifierList?.APNOperatorIdentifierItem || [];
+        const apns = Array.isArray(apnList) ? apnList : [apnList];
+        for (const apnItem of apns) {
+          if (apnItem?.APNOperatorIdentifier?.includes('epc.mnc')) {
+            extractedData.apn = apnItem.APNOperatorIdentifier.split('.3gppnetwork.org')[0];
+            break;
+          }
+        }
+      }
 
-  try {
-    const data = await extractDataFromXML(xml);
-    if (!data || data.length === 0) {
-      console.warn(`⚠️ Aucune entrée de données trouvée dans ce fichier.`);
-      return;
+      // Extraction IP
+      const ipSection = network.NetworkData?.GRXIPXRoutingForDataRoamingSection?.GRXIPXRoutingForDataRoaming || {};
+      const ipRanges = ipSection.InterPMNBackboneIPList?.IPAddressOrRange || [];
+      const ipList = Array.isArray(ipRanges) ? ipRanges : [ipRanges];
+      extractedData.ips = ipList.map(ip => ip.IPAddressRange || ip.IPAddress).filter(Boolean).join(', ');
     }
 
-    for (const entry of data) {
-      const { tadig, pays, e212, e214, apns, ips } = entry;
-      await db.execute(
-        'INSERT INTO ir21_data (tadig, pays, e212, e214, apn, ipaddress) VALUES (?, ?, ?, ?, ?, ?)',
-        [tadig, pays, e212, e214, apns, ips]
-      );
+    // Validation des données extraites
+    if (!extractedData.e212 && !extractedData.e214 && !extractedData.apn && !extractedData.ips) {
+      log(`Aucune donnée valide trouvée dans ${fileName}`, 'WARN');
+      return null;
     }
 
-    console.log(`✅ ${data.length} ligne(s) insérée(s).`);
+    return extractedData;
+
   } catch (error) {
-    console.error(`❌ Erreur lors du traitement du fichier : ${error.message}`);
+    log(`Erreur lors de l'extraction des données depuis ${path.basename(filePath)}: ${error.message}`, 'ERROR');
+    return null;
   }
 }
 
-async function main() {
-  const files = fs.readdirSync(directoryPath).filter((file) => file.endsWith('.xml'));
+// Traitement principal
+async function processFiles() {
+  let db;
+  try {
+    db = await mysql.createConnection(config.db);
+    log('Connecté à la base de données avec succès');
 
-  const db = await mysql.createConnection(connectionConfig);
-  console.log('✅ Connecté à la base de données');
+    const files = fs.readdirSync(config.inputDir)
+      .filter(file => file.endsWith('.xml'))
+      .map(file => path.join(config.inputDir, file));
 
-  for (const file of files) {
-    const filePath = path.join(directoryPath, file);
-    await processFile(filePath, db);
+    log(`Début du traitement de ${files.length} fichiers...`);
+
+    for (const file of files) {
+      try {
+        const fileData = await extractDataFromXML(file);
+        if (!fileData) continue;
+
+        // Vérifier si l'enregistrement existe déjà
+        const [existing] = await db.execute(
+          'SELECT tadig FROM ir21_data WHERE tadig = ?', 
+          [fileData.tadig]
+        );
+
+        if (existing.length > 0) {
+          // Mise à jour de l'enregistrement existant
+          await db.execute(
+            `UPDATE ir21_data 
+             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?
+             WHERE tadig = ?`,
+            [
+              fileData.pays,
+              fileData.e212,
+              fileData.e214,
+              fileData.apn,
+              fileData.ips,
+              fileData.tadig
+            ]
+          );
+          log(`Mise à jour réussie pour ${fileData.tadig}`, 'INFO');
+        } else {
+          // Insertion d'un nouvel enregistrement
+          await db.execute(
+            `INSERT INTO ir21_data 
+             (tadig, pays, e212, e214, apn, ipaddress) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              fileData.tadig,
+              fileData.pays,
+              fileData.e212,
+              fileData.e214,
+              fileData.apn,
+              fileData.ips
+            ]
+          );
+          log(`Insertion réussie pour ${fileData.tadig}`, 'INFO');
+        }
+      } catch (error) {
+        log(`Erreur lors du traitement de ${path.basename(file)}: ${error.message}`, 'ERROR');
+      }
+    }
+  } catch (error) {
+    log(`Erreur de connexion à la base de données: ${error.message}`, 'ERROR');
+  } finally {
+    if (db) await db.end();
+    log('Traitement terminé');
   }
-
-  console.log('\n✅ Tous les fichiers ont été traités.');
-  await db.end();
 }
 
-main().catch(console.error);
+// Initialisation
+function init() {
+  try {
+    fs.writeFileSync(config.logFile, ''); // Réinitialiser le fichier de log
+    log('Démarrage du script IR21 Import');
+    processFiles();
+  } catch (error) {
+    console.error('Erreur lors de l\'initialisation:', error);
+  }
+}
+
+init();
