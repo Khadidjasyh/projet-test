@@ -1,52 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 function Home() {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    message: ""
-  });
-
-  const [status, setStatus] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setStatus("");
-
-    try {
-      const response = await fetch("http://localhost:5177/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      console.log("📩 Réponse du serveur :", data);
-
-      if (response.ok) {
-        setStatus("✅ Message envoyé avec succès !");
-        setFormData({ name: "", phone: "", email: "", message: "" });
-      } else {
-        setStatus(`❌ Erreur : ${data.error || "Erreur lors de l'envoi."}`);
-      }
-    } catch (error) {
-      console.error("❌ Erreur d'envoi :", error);
-      setStatus("❌ Impossible de contacter le serveur.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-10">
       {/* Section avec texte et image */}
@@ -200,94 +155,20 @@ function Home() {
         </div>
       </div>
 
-      {/* Section Contact */}
-      <div className="w-full h-64 pb-10">
-        {/* Carte Google Maps */}
-        <div className="w-full h-64">
-          <iframe
-            title="Mobilis Birkhadem Map"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12851.747226348133!2d3.012788795409721!3d36.71353510279611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128fad3b0d8e89e5%3A0xa1a1d2f2d86b5d1d!2sMobilis!5e0!3m2!1sfr!2sdz!4v1711043894765!5m2!1sfr!2sdz"
-            className="w-full h-full"
-            style={{ border: 0 }}
-            allowFullScreen=""
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+      {/* New Simple Footer */}
+      <footer className="w-full py-8 mt-16 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8">
+          <Link to="/contact" className="text-gray-600 hover:text-green-600 transition-colors">
+            Contact Us
+          </Link>
+          <Link to="/aboutus" className="text-gray-600 hover:text-green-600 transition-colors">
+            About Us
+          </Link>
         </div>
-
-        {/* Bloc Contact */}
-        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg -mt-18 p-10 text-center">
-          <h2 className="text-3xl font-bold text-green-600 mb-4">CONTACT</h2>
-          
-          {/* Coordonnées */}
-          <p className="text-gray-700 mb-2">Siège Mobilis, Birkhadem, Alger</p>
-          <p className="text-gray-700 flex items-center justify-center">
-            📞 <a href="tel:+21321617300" className="text-green-600 font-semibold ml-1">+213 21 61 73 00</a>
-          </p>
-          <p className="text-gray-700 flex items-center justify-center">
-            📧 <a href="mailto:contact@mobilis.dz" className="text-green-600 font-semibold ml-1">contact@mobilis.dz</a>
-          </p>
-          <p className="text-gray-700">🕒 Lun-Ven : 08:00 - 19:00</p>
-
-          {/* Formulaire de Contact */}
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input 
-                type="text" 
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Nom" 
-                className="p-3 border rounded w-full" 
-                required
-              />
-              <input 
-                type="text" 
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Téléphone" 
-                className="p-3 border rounded w-full" 
-                required
-              />
-            </div>
-            <input 
-              type="email" 
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email" 
-              className="p-3 border rounded w-full" 
-              required
-            />
-            <textarea 
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              placeholder="Message" 
-              rows="4" 
-              className="p-3 border rounded w-full"
-              required
-            ></textarea>
-            
-            <button 
-              type="submit"
-              className={`w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              disabled={isLoading}
-            >
-              {isLoading ? "Envoi en cours..." : "ENVOYER"}
-            </button>
-          </form>
-
-          {status && (
-            <p className={`mt-4 ${status.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
-              {status}
-            </p>
-          )}
-        </div>
-      </div>
+        <p className="text-center text-gray-500 text-sm mt-8">
+          © {new Date().getFullYear()} Mobilis. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }

@@ -8,9 +8,9 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
+    // port: process.env.DB_PORT, // Usually not needed if using default MySQL port 3306
     dialect: 'mysql',
-    logging: false, // Désactive les logs SQL
+    logging: false, 
     pool: {
       max: 5,
       min: 0,
@@ -20,13 +20,22 @@ const sequelize = new Sequelize(
   }
 );
 
-// Test de la connexion
+// Test de la connexion et synchronisation des modèles
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connexion à la base de données établie avec succès.');
+    
+    // Charger les modèles avant de synchroniser
+    const User = require('./models/User');
+    // Si vous avez d'autres modèles, require-les ici aussi
+    // exemple: const Post = require('./models/Post');
+
+    await sequelize.sync(); // Normal sync without force: true
+    console.log('Modèles synchronisés avec la base de données.');
+
   } catch (error) {
-    console.error('Impossible de se connecter à la base de données:', error);
+    console.error('Erreur lors de la connexion/synchronisation à la DB:', error);
   }
 };
 

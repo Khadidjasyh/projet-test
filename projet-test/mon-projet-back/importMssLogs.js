@@ -6,7 +6,7 @@ const path = require('path');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: 'Aaa!121212',
     database: 'mon_projet_db'
 });
 
@@ -20,15 +20,44 @@ connection.connect((err) => {
     processLogFiles();
 });
 
+async function clearMssTables() {
+    try {
+        console.log('Clearing existing MSS tables...');
+        await connection.promise().query('DELETE FROM mss_imsi_analysis');
+        await connection.promise().query('DELETE FROM mss_bnumber_analysis');
+        await connection.promise().query('DELETE FROM mss_gt_series');
+        console.log('Successfully cleared all MSS tables');
+    } catch (error) {
+        console.error('Error clearing tables:', error);
+        throw error;
+    }
+}
+
 async function processLogFiles() {
+    // Clear existing data first
+    await clearMssTables();
+
     // Use the MSS_Ericson directory in the parent directory
     const logDir = path.join(__dirname, 'MSS_Ericson');
+    console.log('Current directory:', __dirname);
+    console.log('Looking for log files in directory:', logDir);
+    
+    // List all files in the directory
+    try {
+        const files = fs.readdirSync(logDir);
+        console.log('Files found in directory:', files);
+    } catch (error) {
+        console.error('Error reading directory:', error);
+    }
+    
     const ericssonNodes = ['BCORN1', 'BCMUS1', 'BCCNM1', 'BCCNE1', 'BCBMR1', 'BCANA1'];
 
     // First check if any log files exist
     const existingFiles = ericssonNodes.filter(node => {
         const filePath = path.join(logDir, `${node}.log`);
-        return fs.existsSync(filePath);
+        const exists = fs.existsSync(filePath);
+        console.log(`Checking for ${node}.log: ${exists ? 'Found' : 'Not found'}`);
+        return exists;
     });
 
     if (existingFiles.length === 0) {
@@ -38,22 +67,26 @@ async function processLogFiles() {
         return;
     }
 
-    console.log(`Found ${existingFiles.length} log files to process`);
+    console.log(`Found ${existingFiles.length} log files to process:`, existingFiles);
 
     for (const node of existingFiles) {
         const filePath = path.join(logDir, `${node}.log`);
-        console.log(`\nProcessing ${node} log file...`);
+        console.log(`\nProcessing ${node} log file at: ${filePath}`);
 
         try {
             const fileContent = fs.readFileSync(filePath, 'utf8');
+            console.log(`Successfully read file ${node}.log (${fileContent.length} characters)`);
             
             // Process IMSI Analysis
+            console.log(`\nStarting IMSI Analysis for ${node}...`);
             await parseImsiAnalysis(fileContent, node);
             
             // Process B-Number Analysis
+            console.log(`\nStarting B-Number Analysis for ${node}...`);
             await parseBNumberAnalysis(fileContent, node);
             
             // Process GT Series
+            console.log(`\nStarting GT Series for ${node}...`);
             await parseGTSeries(fileContent, node);
 
         } catch (error) {
@@ -67,32 +100,86 @@ async function processLogFiles() {
 }
 
 async function parseImsiAnalysis(content, nodeName) {
-    const imsiSection = content.match(/<mgisp:imsis=all;[^]*?(?=<|$)/);
-    if (!imsiSection) return;
-
-    const lines = imsiSection[0].split('\n');
+    console.log(`\nParsing IMSI Analysis for ${nodeName}...`);
+    const lines = content.split('\n');
+    let headerFound = false;
     const data = [];
+    let currentImsi = null, currentM = null, currentNA = null, currentAnresValues = [];
 
-    for (const line of lines) {
-        // Skip header lines and empty lines
-        if (line.includes('IMSIS') || !line.trim() || line.includes('OPERATING') || line.includes('mgisp')) continue;
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].replace('\r', '').trimEnd();
+        const originalLine = lines[i]; // keep the original for indentation check
 
-        const parts = line.trim().split(/\s+/);
-        if (parts.length >= 3) {
-            data.push([
-                nodeName,
-                parts[0], // IMSIS
-                parts[1], // M
-                parts[2], // NA
-                parts[3] || '' // ANRES
-            ]);
+        // Find the IMSIS header
+        if (!headerFound) {
+            if (line.includes('IMSIS')) {
+                headerFound = true;
+                console.log('Found IMSIS header');
+                continue;
+            }
+            continue;
+        }
+
+        // Skip empty lines
+        if (!line.trim()) continue;
+
+        // If line starts with a number and has the expected format
+        const match = line.match(/^(\d+)\s+([^\s]+)\s+(\d+)(?:\s+(.*))?$/);
+        if (match) {
+            // Save previous record if exists
+            if (currentImsi) {
+                data.push([
+                    nodeName,
+                    currentImsi,
+                    currentM,
+                    currentNA,
+                    currentAnresValues.join(', ')
+                ]);
+                console.log(`Processed record: IMSI=${currentImsi}, M=${currentM}, NA=${currentNA}, ANRES=${currentAnresValues.join(', ')}`);
+            }
+            // Start new record
+            currentImsi = match[1];
+            currentM = match[2];
+            currentNA = match[3];
+            currentAnresValues = match[4] ? [match[4].trim()] : [];
+        } else if (currentImsi && /^\s+/.test(originalLine)) {
+            // Additional ANRES value (indented line in the original)
+            const anresValue = line.trim();
+            if (anresValue && !anresValue.includes('IMSIS')) {
+                currentAnresValues.push(anresValue);
+            }
         }
     }
 
+    // Add the last record
+    if (currentImsi) {
+        data.push([
+            nodeName,
+            currentImsi,
+            currentM,
+            currentNA,
+            currentAnresValues.join(', ')
+        ]);
+        console.log(`Processed final record: IMSI=${currentImsi}, M=${currentM}, NA=${currentNA}, ANRES=${currentAnresValues.join(', ')}`);
+    }
+
+    console.log(`Found ${data.length} IMSI records to insert for ${nodeName}`);
+
     if (data.length > 0) {
-        const query = 'INSERT INTO mss_imsi_analysis (node_name, imsi_series, m_value, na_value, anres_value) VALUES ?';
-        await connection.promise().query(query, [data]);
-        console.log(`Inserted ${data.length} IMSI records for ${nodeName}`);
+        try {
+            // First clear existing data for this node
+            await connection.promise().query('DELETE FROM mss_imsi_analysis WHERE node_name = ?', [nodeName]);
+            console.log(`Cleared existing data for node ${nodeName}`);
+
+            const query = 'INSERT INTO mss_imsi_analysis (node_name, imsi_series, m_value, na_value, anres_value) VALUES ?';
+            await connection.promise().query(query, [data]);
+            console.log(`Successfully inserted ${data.length} IMSI records for ${nodeName}`);
+        } catch (error) {
+            console.error(`Error inserting IMSI records for ${nodeName}:`, error);
+            throw error;
+        }
+    } else {
+        console.log(`No IMSI records found for ${nodeName}`);
     }
 }
 
