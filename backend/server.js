@@ -7,7 +7,63 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
+const multer = require("multer");
+const fs = require("fs");
+const xml2js = require("xml2js");
+const path = require("path"); 
+// Configuration de la journalisation
+const logStream = fs.createWriteStream(path.join(__dirname, 'server.log'), { flags: 'a' });
 
+const log = (message) => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  console.log(logMessage);
+  logStream.write(logMessage);
+};
+
+// Configuration de multer pour le stockage des fichiers
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, 'uploads');
+    // Créer le dossier s'il n'existe pas
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    console.log('📁 Dossier de destination:', uploadDir);
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Garder le nom de fichier original
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    console.log('🔍 Vérification du fichier:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype
+    });
+    
+    // Vérifier les types de fichiers acceptés
+    const allowedTypes = ['.xml', '.pdf', '.ir21'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    if (allowedTypes.includes(ext)) {
+      console.log('✅ Type de fichier accepté:', ext);
+      cb(null, true);
+    } else {
+      console.error('❌ Type de fichier non supporté:', ext);
+      cb(new Error('Format de fichier non supporté. Utilisez un fichier XML, PDF ou IR21.'));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB max
+  }
+}); 
 // External routes
 const huaweiRoutes = require('./routes/huaweiRoutes');
 
@@ -49,7 +105,39 @@ app.use((req, res, next) => {
 });
 
 // Routes
-
+app.get('/ir21', async (req, res) => {
+  try {
+    // Utiliser connection au lieu de db
+    connection.query('SELECT * FROM ir21_data', (err, results) => {
+      if (err) {
+        console.error('Erreur de base de données:', err);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des données IR21' });
+      }
+      console.log('Données IR21 envoyées:', results);
+      res.json(results);
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données IR21 :', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+// Route pour récupérer les données IR85
+app.get('/ir85', async (req, res) => {
+  try {
+    // Utiliser connection au lieu de db
+    connection.query('SELECT * FROM ir85_data', (err, results) => {
+      if (err) {
+        console.error('Erreur de base de données:', err);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des données IR85' });
+      }
+      console.log('Données IR85 envoyées:', results.length);
+      res.json(results);
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données IR85 :', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 // Email Contact Form
 app.post("/send-email", (req, res) => {
   const { name, email, message } = req.body;

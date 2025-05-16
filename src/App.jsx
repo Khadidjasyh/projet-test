@@ -18,7 +18,8 @@ import MssEricsson from './MssEricsson';
 import MssHuawei from './MssHuawei';
 import FirewallIPs from './FirewallIps';
 import MmeImsi from './MmeImsi';
-
+import IR21Page from './IR21Page';
+import IR85Page from './IR85Page'
 
 
 function App() {
@@ -87,6 +88,9 @@ function App() {
             <Route path="/mss-huawei" element={<MssHuawei />} />
             <Route path="/firewall-ips" element={<FirewallIPs />} />
             <Route path="/mme-imsi" element={<MmeImsi />} />
+            <Route path="/ir21" element={<IR21Page />} />
+             <Route path="/ir85" element={<IR85Page />} />
+            
           </Routes>
         </div>
       </div>

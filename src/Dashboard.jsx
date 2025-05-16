@@ -113,7 +113,10 @@ function Sidebar() {
     { id : "Mme-Imsi", label : "IMSI MME", icon: <BsTable /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
-    { id: "settings", label: "Paramètres", icon: <BsGear /> }
+    { id: "settings", label: "Paramètres", icon: <BsGear /> },
+    {id : "ir21", label : "IR21", icon: <BsTable />},
+    {id : "ir85", label : "IR85", icon: <BsTable />}
+      // Ajoutez d'autres éléments de menu ici
   ];
 
   return (

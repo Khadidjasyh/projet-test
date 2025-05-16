@@ -1,25 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `mon_projet_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `mon_projet_db`;
--- MySQL dump 10.13  Distrib 8.0.41, for macos15 (x86_64)
---
--- Host: 127.0.0.1    Database: mon_projet_db
--- ------------------------------------------------------
--- Server version	9.2.0
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `Adresse_IP`
---
 CREATE TABLE mme_imsi_analysis (
     id INT AUTO_INCREMENT PRIMARY KEY,
     imsi VARCHAR(20) NOT NULL,
@@ -29,6 +7,39 @@ CREATE TABLE mme_imsi_analysis (
     hss_realm_name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ); 
+CREATE TABLE audits (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  filename VARCHAR(255) NOT NULL,
+  erp_code VARCHAR(50),
+  erp_nom VARCHAR(255),
+  date_audit DATETIME,
+  statut VARCHAR(50),
+  raw_data JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ir85_data (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tadig VARCHAR(20),
+    pays VARCHAR(10),
+    e212 TEXT,
+    e214 TEXT,
+    apn TEXT,
+    ipaddress TEXT,
+    date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ir21_data (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tadig VARCHAR(20),
+    pays VARCHAR(10),
+    e212 TEXT,
+    e214 TEXT,
+    apn TEXT,
+    ipaddress TEXT,
+    date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 
 CREATE TABLE IF NOT EXISTS mobile_networks (
   id INT AUTO_INCREMENT PRIMARY KEY,
