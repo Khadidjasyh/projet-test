@@ -17,7 +17,7 @@ const PORT = 5177;
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234", // ⚠️ Remplace par ton vrai mot de passe
+  password: "bechafiyasmine", // ⚠️ Remplace par ton vrai mot de passe
   database: "mon_projet_db",
 });
 
