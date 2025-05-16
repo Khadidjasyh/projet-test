@@ -504,6 +504,22 @@ app.get('/ir21', async (req, res) => {
   }
 });
 
+// Endpoint pour récupérer les données IR85
+app.get('/ir85', async (req, res) => {
+  try {
+    connection.query('SELECT * FROM ir85_data', (err, results) => {
+      if (err) {
+        console.error('Erreur de base de données:', err);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des données IR85' });
+      }
+      console.log('Données IR85 envoyées:', results);
+      res.json(results);
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données IR85 :', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 
 // Partie à modifier dans server.js
 app.get('/firewall-ips', (req, res) => {

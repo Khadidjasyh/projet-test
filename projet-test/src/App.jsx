@@ -27,6 +27,7 @@ import FirewallIPs from './FirewallIps';
 import MmeImsi from './MmeImsi';
 import IR21Page from './IR21Page';
 import HlrPage from "./HLR";
+import IR85Page from './IR85Page'
 
 function App() {
   return (
@@ -107,6 +108,7 @@ function App() {
             <Route path="/mme-imsi" element={<MmeImsi />} />
             <Route path="/mme" element={<MmeImsi />} />
             <Route path="/hlrr" element={<HlrPage />} />
+            <Route path="/ir85" element={<IR85Page />} />
           </Routes>
         </div>
       </div>
