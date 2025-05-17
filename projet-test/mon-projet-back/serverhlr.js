@@ -40,11 +40,12 @@ const parseHlrData = (text) => {
 
 const importHlrData = async (filePaths) => {
     const connection = await mysql.createConnection(dbConfig);
+    const currentDate = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
 
     try {
         const query = `
-            INSERT INTO hlr (tt, np, na, ns, gtrc)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO hlr (tt, np, na, ns, gtrc, imported_date)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
         let totalImported = 0;
 
@@ -60,10 +61,11 @@ const importHlrData = async (filePaths) => {
                         entry.np,
                         entry.na,
                         entry.ns,
-                        entry.gtrc
+                        entry.gtrc,
+                        currentDate
                     ]);
                     fileImportedCount++;
-                    console.log(`Imported HLR entry from ${path.basename(filePath)}: TT=${entry.tt}, NP=${entry.np}, NA=${entry.na}, NS=${entry.ns}, GTRC=${entry.gtrc}`);
+                    console.log(`Imported HLR entry from ${path.basename(filePath)}: TT=${entry.tt}, NP=${entry.np}, NA=${entry.na}, NS=${entry.ns}, GTRC=${entry.gtrc}, Date=${currentDate}`);
                 }
                 console.log(`✅ Imported ${fileImportedCount} entries from: ${path.basename(filePath)}`);
                 totalImported += fileImportedCount;
