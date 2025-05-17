@@ -97,22 +97,20 @@ function Sidebar() {
   };
 
   const menuItems = [
-    { id: "dashboard", label: "Tableau de Bord", icon: <BsSpeedometer2 /> },
-    { id: "situation-globale", label: "Situation Globale", icon: <FaGlobe /> },
-    { id: "audits", label: "Audits", icon: <BsFileEarmarkText /> },
-    { id: "partners", label: "Partenaires", icon: <BsPeople /> },
-    { id: "roaming", label: "Configuration Roaming", icon: <BsArrowLeftRight /> },
-    { id: "roaming-tests", label: "Tests de Roaming", icon: <FaPlay /> },
-    { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired /> },
-    { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable /> },
-    { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
-    { id: "hlrr", label: "HLRR", icon: <FaNetworkWired /> },
-    { id: "hss", label: "HSS", icon: <FaNetworkWired /> },
-    { id: "mme", label: "MME", icon: <FaNetworkWired /> },
-    { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
-    { id: "firewall", label: "Firewall", icon: <FaShieldAlt /> },
-    { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
-    { id: "settings", label: "Paramètres", icon: <BsGear /> }
+    { id: "dashboard", label: "Tableau de Bord", icon: <BsSpeedometer2 />, path: "/dashboard" },
+    { id: "situation-globale", label: "Situation Globale", icon: <FaGlobe />, path: "/situation-globale" },
+    { id: "audits", label: "Audits", icon: <BsFileEarmarkText />, path: "/audits" },
+    { id: "partners", label: "Partenaires", icon: <BsPeople />, path: "/partners" },
+    { id: "roaming", label: "Configuration Roaming", icon: <BsArrowLeftRight />, path: "/roaming" },
+    { id: "roaming-tests", label: "Tests de Roaming", icon: <FaPlay />, path: "/roaming-tests" },
+    { id: "network-nodes", label: "Nœuds Réseau", icon: <FaNetworkWired />, path: "/network-nodes" },
+    { id: "mss-ericsson", label: "MSS Ericsson", icon: <BsTable />, path: "/mss-ericsson" },
+    { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable />, path: "/mss-huawei" },
+    { id: "hss", label: "HSS", icon: <FaNetworkWired />, path: "/hss" },
+    { id: "alertes", label: "Alertes", icon: <BsExclamationTriangle />, path: "/alertes" },
+    { id: "firewall", label: "Firewall", icon: <FaShieldAlt />, path: "/firewall-ips" },
+    { id: "rapports", label: "Rapports", icon: <BsFileEarmarkBarGraph />, path: "/rapportaudit" },
+    { id: "settings", label: "Paramètres", icon: <BsGear />, path: "/settings" }
   ];
 
   return (
@@ -139,7 +137,7 @@ function Sidebar() {
           {menuItems.map(item => (
             <li key={item.id}>
               <Link 
-                to={item.id === "dashboard" ? "/" : `/${item.id}`} 
+                to={item.path}
                 className={`flex items-center py-2 ${isCollapsed ? 'px-2 justify-center' : 'px-3'} rounded-lg transition-colors ${
                   activeItem === item.id 
                     ? "bg-blue-50 text-blue-600" 
@@ -165,12 +163,6 @@ function Sidebar() {
                   Fichier IR21
                 </Link>
               </li>
-              <li>
-                <Link to="/ir85" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg">
-                  <BsFileEarmarkText className="mr-3" />
-                  Fichier IR85
-                </Link>
-              </li>
             </ul>
           </div>
         )}
@@ -178,9 +170,6 @@ function Sidebar() {
         {isCollapsed && (
           <div className="mt-6 flex flex-col items-center space-y-3">
             <Link to="/ir21" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Fichier IR21">
-              <BsFileEarmarkText />
-            </Link>
-            <Link to="/ir85" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Fichier IR85">
               <BsFileEarmarkText />
             </Link>
           </div>
@@ -191,7 +180,7 @@ function Sidebar() {
             <p className="text-xs uppercase text-gray-500 font-medium mb-2 ml-2">ASSISTANCE</p>
             <ul className="space-y-1">
               <li>
-                <Link to="/help" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg" target="_blank">
+                <Link to="/help" className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-lg">
                   <BsQuestionCircle className="mr-3" />
                   Centre d'aide
                 </Link>
@@ -201,7 +190,7 @@ function Sidebar() {
         )}
         {isCollapsed && (
           <div className="mt-8 flex justify-center">
-            <Link to="/help" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Centre d'aide" target="_blank">
+            <Link to="/help" className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg" title="Centre d'aide">
               <BsQuestionCircle />
             </Link>
           </div>
@@ -209,13 +198,57 @@ function Sidebar() {
       </div>
       
       <div className={`p-4 border-t ${isCollapsed ? 'flex justify-center' : ''}`}>
-        <button className={`${isCollapsed ? '' : 'flex items-center w-full'} py-2 px-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors`} title={isCollapsed ? "Déconnexion" : ""}>
+        <button 
+          className={`${isCollapsed ? '' : 'flex items-center w-full'} py-2 px-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors`} 
+          title={isCollapsed ? "Déconnexion" : ""}
+          onClick={() => {
+            // Ajouter la logique de déconnexion ici
+            window.location.href = '/login';
+          }}
+        >
           <BsBoxArrowRight className={isCollapsed ? "" : "mr-3"} />
           {!isCollapsed && "Déconnexion"}
         </button>
       </div>
     </div>
   );
+}
+
+// Composant ErrorBoundary
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Dashboard Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-gray-100">
+          <div className="bg-white p-8 rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Une erreur est survenue</h2>
+            <p className="text-gray-600 mb-4">Le tableau de bord n'a pas pu être chargé correctement.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Recharger la page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 // Composant principal Dashboard
@@ -255,7 +288,7 @@ const tests = [
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [partners, setPartners] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [partnersPerPage] = useState(10);
@@ -279,42 +312,74 @@ const Dashboard = () => {
 
   // Fetch statistics from backend
   useEffect(() => {
+    setLoading(true);
     fetch("/dashboard/stats")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur lors de la récupération des statistiques');
+        return res.json();
+      })
       .then((data) => setStats(data))
-      .catch((err) => console.error("Error fetching stats:", err));
+      .catch((err) => {
+        console.error("Error fetching stats:", err);
+        toast.error("Erreur lors du chargement des statistiques");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   // Fetch roaming events from backend
   useEffect(() => {
     fetch("/roaming-events")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur lors de la récupération des événements');
+        return res.json();
+      })
       .then((data) => setRoamingEvents(data))
-      .catch((err) => console.error("Error fetching roaming events:", err));
+      .catch((err) => {
+        console.error("Error fetching roaming events:", err);
+        toast.error("Erreur lors du chargement des événements");
+      });
   }, []);
 
   // Fetch critical alerts from backend
   useEffect(() => {
     fetch("/critical-alerts")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur lors de la récupération des alertes');
+        return res.json();
+      })
       .then((data) => setCriticalAlerts(data))
-      .catch((err) => console.error("Error fetching critical alerts:", err));
+      .catch((err) => {
+        console.error("Error fetching critical alerts:", err);
+        toast.error("Erreur lors du chargement des alertes");
+      });
   }, []);
 
   // Fetch recent audits from backend
   useEffect(() => {
     fetch('/audits')
-      .then(res => res.json())
-      .then(data => setRecentAudits(data))
-      .catch(err => console.error('Erreur de chargement des audits:', err));
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur lors de la récupération des audits');
+        return res.json();
+      })
+      .then((data) => setRecentAudits(data))
+      .catch((err) => {
+        console.error('Erreur de chargement des audits:', err);
+        toast.error("Erreur lors du chargement des audits");
+      });
   }, []);
 
   // Fetch coverage data from backend
   useEffect(() => {
     fetch("/roaming-coverage")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur lors de la récupération des données de couverture');
+        return res.json();
+      })
       .then((data) => setCoverage(data))
-      .catch((err) => console.error("Error fetching data:", err));
+      .catch((err) => {
+        console.error("Error fetching data:", err);
+        toast.error("Erreur lors du chargement des données de couverture");
+      });
   }, []);
 
   useEffect(() => {
@@ -325,21 +390,30 @@ const Dashboard = () => {
     console.log('Fetching partners...');
     try {
       const response = await fetch('/roaming-partners');
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des partenaires');
+      }
       const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
       console.log('Received partners data:', data);
-      setPartners(data);
-      setTotalPartners(data.length);
+      setPartners(Array.isArray(data) ? data : []);
+      setTotalPartners(Array.isArray(data) ? data.length : 0);
     } catch (error) {
       console.error('Error fetching partners:', error);
+      toast.error("Erreur lors du chargement des partenaires");
+      setPartners([]);
+      setTotalPartners(0);
     }
   };
 
   // Filtrer les partenaires en fonction du terme de recherche
-  const filteredPartners = partners.filter(partner =>
-    partner.operateur?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    partner.imsi_prefix?.toString().includes(searchTerm) ||
-    partner.gt?.toString().includes(searchTerm)
-  );
+  const filteredPartners = Array.isArray(partners) ? partners.filter(partner =>
+    partner?.operateur?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    partner?.imsi_prefix?.toString().includes(searchTerm) ||
+    partner?.gt?.toString().includes(searchTerm)
+  ) : [];
 
   // Pagination
   const indexOfLastPartner = currentPage * partnersPerPage;
@@ -373,6 +447,17 @@ const Dashboard = () => {
       default: return 'text-gray-600';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -721,4 +806,11 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+// Wrap the Dashboard component with ErrorBoundary
+export default function DashboardWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <Dashboard />
+    </ErrorBoundary>
+  );
+} 

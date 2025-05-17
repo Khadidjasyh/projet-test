@@ -12,6 +12,9 @@ const multer = require("multer");
 const fs = require("fs");
 const xml2js = require("xml2js");
 const path = require("path");
+const authRoutes = require('./routes/auth');
+const User = require('./models/User');
+const UserReport = require('./models/UserReport');
 
 // Configuration de la journalisation
 const logStream = fs.createWriteStream(path.join(__dirname, 'server.log'), { flags: 'a' });
@@ -81,7 +84,7 @@ const upload = multer({
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "1234",
+  password: process.env.DB_PASSWORD || "Aaa!121212",
   database: process.env.DB_NAME || "mon_projet_db"
 });
 
@@ -628,6 +631,13 @@ app.get('/hlrr', (req, res) => {
     res.json({ data: rows });
   });
 });
+
+// Auth routes (authentification)
+app.use('/auth', authRoutes);
+
+// Associations Sequelize pour les signalements
+User.hasMany(UserReport, { foreignKey: 'userId' });
+UserReport.belongsTo(User, { foreignKey: 'userId' });
 
 // Démarrer le serveur
 app.listen(PORT, () => {
