@@ -130,7 +130,7 @@ const Profile = () => {
       </div>
       <div className="flex gap-2">
         {!editMode ? (
-          <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={() => setEditMode(true)}>
+          <button className="px-4 py-2 border border-green-600 text-green-600 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition" onClick={() => setEditMode(true)}>
             Modifier
           </button>
         ) : (
@@ -144,7 +144,7 @@ const Profile = () => {
           </>
         )}
         {!isAdmin && (
-          <button className="px-4 py-2 bg-yellow-500 text-white rounded" onClick={() => setReportMode(r => !r)}>
+          <button className="px-4 py-2 border border-red-600 text-red-600 font-semibold rounded-lg hover:bg-red-600 hover:text-white transition" onClick={() => setReportMode(r => !r)}>
             Signaler une erreur
           </button>
         )}
@@ -158,7 +158,7 @@ const Profile = () => {
             onChange={e => setReportMsg(e.target.value)}
           />
           <div className="flex gap-2 mt-2">
-            <button className="px-4 py-2 bg-yellow-600 text-white rounded" onClick={handleReport}>
+            <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={handleReport}>
               Envoyer le signalement
             </button>
             <button className="px-4 py-2 bg-gray-400 text-white rounded" onClick={() => { setReportMode(false); setReportMsg(''); }}>

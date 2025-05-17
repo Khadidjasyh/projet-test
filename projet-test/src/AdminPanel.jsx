@@ -110,7 +110,7 @@ const AdminPanel = () => {
                   <td className="border">{user.telephone}</td>
                   <td className="border">{user.role}</td>
                   <td className="border">
-                    <button className="px-2 py-1 bg-blue-600 text-white rounded" onClick={() => handleEdit(user)}>Modifier</button>
+                    <button className="px-4 py-2 border border-green-600 text-green-600 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition" onClick={() => handleEdit(user)}>Modifier</button>
                   </td>
                 </>
               )}

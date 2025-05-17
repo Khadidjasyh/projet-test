@@ -129,13 +129,13 @@ function AppLayout() {
                     <>
                       <Link 
                         to="/create-account" 
-                        className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+                        className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
                       >
                         Création de comptes
                       </Link>
                       <Link 
                         to="/admin-panel" 
-                        className="px-4 py-2 border border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-600 hover:text-white transition"
+                        className="px-4 py-2 border border-green-600 text-green-600 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition"
                       >
                         Admin
                       </Link>
