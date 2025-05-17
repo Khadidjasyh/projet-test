@@ -2,7 +2,10 @@ import { useState } from 'react';
 
 function CreateAccount() {
   const [name, setName] = useState('');
+  const [prenom, setPrenom] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [telephone, setTelephone] = useState('');
   const [role, setRole] = useState('user');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -14,12 +17,15 @@ function CreateAccount() {
     const response = await fetch('/api/auth/create-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, role })
+      body: JSON.stringify({ name, prenom, username, email, telephone, role })
     });
     if (response.ok) {
       setSuccess('User created, activation link sent!');
       setName('');
+      setPrenom('');
+      setUsername('');
       setEmail('');
+      setTelephone('');
       setRole('user');
     } else {
       const data = await response.json();
@@ -45,11 +51,41 @@ function CreateAccount() {
             />
           </div>
           <div className="mb-4">
+            <label className="block text-gray-700">Prenom</label>
+            <input
+              type="text"
+              value={prenom}
+              onChange={(e) => setPrenom(e.target.value)}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="mb-4">
             <label className="block text-gray-700">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700">Téléphone</label>
+            <input
+              type="text"
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
               className="w-full p-2 border rounded"
               required
             />
