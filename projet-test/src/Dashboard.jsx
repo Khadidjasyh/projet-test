@@ -110,7 +110,7 @@ function Sidebar() {
     { id: "hss", label: "HSS", icon: <FaNetworkWired /> },
     { id: "mme", label: "MME", icon: <FaNetworkWired /> },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
-    { id: "firewall", label: "Firewall", icon: <FaShieldAlt /> },
+    { id: "firewall-ips", label: "Firewall", icon: <FaShieldAlt /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },
     { id: "settings", label: "Paramètres", icon: <BsGear /> }
   ];

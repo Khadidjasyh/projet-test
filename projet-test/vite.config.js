@@ -16,6 +16,18 @@ export default defineConfig({
   server: {
     port: 5176,
     proxy: {
+      '/api': {
+        target: 'http://localhost:5178',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      },
+      '/auth': {
+        target: 'http://localhost:5178',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      },
       "/situation-globale": {
         target: "http://localhost:5178",
         changeOrigin: true,
