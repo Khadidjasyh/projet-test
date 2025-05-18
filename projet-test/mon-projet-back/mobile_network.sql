@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS mobile_network (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    network_name VARCHAR(100),
+    mcc VARCHAR(10),
+    mnc VARCHAR(10),
+    plmn VARCHAR(20),
+    gt VARCHAR(20),
+    imsi_prefix VARCHAR(20),
+    country VARCHAR(100),
+    operator VARCHAR(100),
+    status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+); 

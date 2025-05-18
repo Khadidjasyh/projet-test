@@ -1,0 +1,3407 @@
+{
+  "TADIGRAEXIR21": {
+    "RAEXIR21FileHeader": {
+      "FileCreationTimestamp": "2024-11-29T11:53:44+01:00",
+      "FileType": "IR.21",
+      "SenderTADIG": "VNMVT",
+      "PublishComment": "New  IP backbone address : 185.242.39.96/27",
+      "TADIGGenSchemaVersion": "2.4",
+      "TADIGRAEXIR21SchemaVersion": "17.0"
+    },
+    "OrganisationInfo": {
+      "OrganisationName": "Viettel Group",
+      "CountryInitials": "VNM",
+      "TADIGSummaryList": {
+        "TADIGSummaryItem": {
+          "TADIGCode": "VNMVT",
+          "NetworkProperties": {
+            "MCC": "452",
+            "MNC": "04",
+            "VPMNHPMNList": {
+              "VPMNHPMN": [
+                "VPMN",
+                "HPMN"
+              ]
+            },
+            "NetworkType": "Terrestrial"
+          }
+        }
+      },
+      "NetworkList": {
+        "Network": {
+          "TADIGCode": "VNMVT",
+          "NetworkName": "Viettel Telecom Company",
+          "NetworkData": {
+            "RoutingInfoSection": {
+              "RoutingInfo": {
+                "EffectiveDateOfChange": "2023-04-19",
+                "CCITT_E164_NumberSeries": {
+                  "MSISDN_NumberRanges": {
+                    "RangeData": [
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "98",
+                          "SN_Range": {
+                            "SN_RangeStart": "1000000",
+                            "SN_RangeStop": "9999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "97",
+                          "SN_Range": {
+                            "SN_RangeStart": "1000000",
+                            "SN_RangeStop": "9999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "96",
+                          "SN_Range": {
+                            "SN_RangeStart": "1000000",
+                            "SN_RangeStop": "9999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "1900"
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "1800"
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "3",
+                          "SN_Range": {
+                            "SN_RangeStart": "10000000",
+                            "SN_RangeStop": "99999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "86",
+                          "SN_Range": {
+                            "SN_RangeStart": "0000000",
+                            "SN_RangeStop": "9999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "98",
+                          "SN_Range": {
+                            "SN_RangeStart": "0000000",
+                            "SN_RangeStop": "0999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "97",
+                          "SN_Range": {
+                            "SN_RangeStart": "0000000",
+                            "SN_RangeStop": "0999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "96",
+                          "SN_Range": {
+                            "SN_RangeStart": "0000000",
+                            "SN_RangeStop": "0999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "16",
+                          "SN_Range": {
+                            "SN_RangeStart": "00000000",
+                            "SN_RangeStop": "99999999"
+                          }
+                        },
+                        "NetworkOwner": "MNO"
+                      }
+                    ]
+                  },
+                  "GT_NumberRanges": {
+                    "RangeData": [
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "980"
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "9700"
+                        },
+                        "NetworkOwner": "MNO"
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "3200"
+                        },
+                        "NetworkOwner": "MNO"
+                      }
+                    ]
+                  },
+                  "MSRN_NumberRanges": {
+                    "RangeData": [
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "980"
+                        }
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "970"
+                        }
+                      },
+                      {
+                        "NumberRange": {
+                          "CC": "84",
+                          "NDC": "320"
+                        }
+                      }
+                    ]
+                  }
+                },
+                "CCITT_E212_NumberSeries": {
+                  "MCC": "452",
+                  "MNC": "04"
+                },
+                "CCITT_E214_MGT": {
+                  "MGT_CC": "84",
+                  "MGT_NC": "98"
+                },
+                "DoesNumberPortabilityApply": "true",
+                "Is15DigitMSISDNSupported": "true",
+                "NP_E164NumberRangesList": {
+                  "NP_E164NumberRange": [
+                    {
+                      "CC": "84",
+                      "NDC": "90",
+                      "SN_Range": {
+                        "SN_RangeStart": "1000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "93",
+                      "SN_Range": {
+                        "SN_RangeStart": "1000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "89",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "70",
+                      "SN_Range": {
+                        "SN_RangeStart": "2000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "79",
+                      "SN_Range": {
+                        "SN_RangeStart": "2000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "77",
+                      "SN_Range": {
+                        "SN_RangeStart": "2000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "76",
+                      "SN_Range": {
+                        "SN_RangeStart": "2000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "78",
+                      "SN_Range": {
+                        "SN_RangeStart": "2000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "91",
+                      "SN_Range": {
+                        "SN_RangeStart": "1000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "94",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "88",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "81",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "82",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "83",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "84",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    },
+                    {
+                      "CC": "84",
+                      "NDC": "85",
+                      "SN_Range": {
+                        "SN_RangeStart": "0000000",
+                        "SN_RangeStop": "9999999"
+                      }
+                    }
+                  ]
+                },
+                "AdditionalInformation": "843200 is prefix of Viettel hub for roaming inbound in Viettel INE\nFormat: 843200[CC][NDC]xxx (length 15 digits)\n8432005193xxx --> Bitel, Peru (PERVT)\n84320050933xxx --> Natcom, Haiti (HTIHT)\n843200856209xxx --> Unitel, Lao (LAOLA) \n84320085597xxx --> Metfone, Cambodia  (KHMVT)\n84320025886xxx --> Movitel, Mozambique  (MOZVT)\n84320067075xxx -->  Telemor, Timor-Leste (TLSVT)\n84320023766xxx --> Nexttel, Cameroon   (CMRVT)\n84320025769xxx  --> Lumitel, Burundi (BDIVT)\n84320025562xxx --> Halotel, Tanzania (TZAVT)",
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2016-03-04",
+                      "Description": "New NDC +84868"
+                    },
+                    {
+                      "Date": "2012-12-26",
+                      "Description": "Add new GT ranges 84970"
+                    },
+                    {
+                      "Date": "2011-12-16",
+                      "Description": "New NDC 96"
+                    },
+                    {
+                      "Date": "2016-11-29",
+                      "Description": "New NDC 84869"
+                    },
+                    {
+                      "Date": "2017-10-25",
+                      "Description": "New additional routing information"
+                    },
+                    {
+                      "Date": "2018-04-05",
+                      "Description": "New NDC 84866xx"
+                    },
+                    {
+                      "Date": "2018-07-04",
+                      "Description": "New NDC 843xx"
+                    },
+                    {
+                      "Date": "2018-09-13",
+                      "Description": "New NDC 84865xx"
+                    },
+                    {
+                      "Date": "2018-11-09",
+                      "Description": "New NDC 84867xx"
+                    },
+                    {
+                      "Date": "2019-01-21",
+                      "Description": "Remove NDC 8416xx"
+                    },
+                    {
+                      "Date": "2018-11-09",
+                      "Description": "Enable MNP"
+                    },
+                    {
+                      "Date": "2019-06-10",
+                      "Description": "New NDC 84860xx -84864xx"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "New  MSRN Range 84320  from 2022-03-31"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "New MSISDN 84980x, 84970x, 84960x from 2022-03-31"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "New GT range 843200 from 2022-03-01"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "Merge MSISDN ranges  8486x to 8486"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "Update additional routing information"
+                    },
+                    {
+                      "Date": "2023-04-14",
+                      "Description": "remove GT 849700 for Viettel's INE"
+                    },
+                    {
+                      "Date": "2023-04-18",
+                      "Description": "New NDC"
+                    },
+                    {
+                      "Date": "2023-04-19",
+                      "Description": "new NDC"
+                    }
+                  ]
+                }
+              }
+            },
+            "InternationalSCCPGatewaySection": {
+              "InternationalSCCPGatewayInfo": {
+                "EffectiveDateOfChange": "2024-04-15",
+                "InternationalSCCPCarrierList": {
+                  "SCCPCarrierItem": [
+                    {
+                      "SCCPCarrierName": "COMFONE",
+                      "SCCPConnectivityInformation": "Backup",
+                      "DPCList": {
+                        "DPCItem": [
+                          {
+                            "SCSignature": "Lausanne – Savoie STP CSP1",
+                            "SCType": "STP SCCP",
+                            "DPC": "2.61.6"
+                          },
+                          {
+                            "SCSignature": "Bern – Baumgarten STP CSP2",
+                            "SCType": "STP SCCP",
+                            "DPC": "2.61.7"
+                          },
+                          {
+                            "SCSignature": "Comfone 16160",
+                            "SCType": "STP SCCP",
+                            "DPC": "7.228.0"
+                          },
+                          {
+                            "SCSignature": "Comfone 16161",
+                            "SCType": "STP SCCP",
+                            "DPC": "7.228.1"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "SCCPCarrierName": "TATA ( Telegloble)",
+                      "SCCPConnectivityInformation": "Primary",
+                      "DPCList": {
+                        "DPCItem": [
+                          {
+                            "SCSignature": "Toronto",
+                            "SCType": "TTP",
+                            "DPC": "3.5.0"
+                          },
+                          {
+                            "SCSignature": "Montreal",
+                            "SCType": "MTP",
+                            "DPC": "3.6.0"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "SCCPCarrierName": "FT (France Telecom)",
+                      "SCCPConnectivityInformation": "Primary",
+                      "DPCList": {
+                        "DPCItem": [
+                          {
+                            "SCSignature": "Paris TK-1 ",
+                            "SCType": "STP",
+                            "DPC": "2.202.3"
+                          },
+                          {
+                            "SCSignature": "Paris TK-2",
+                            "SCType": "STP",
+                            "DPC": "2.202.4"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "SCCPCarrierName": "CITIC",
+                      "SCCPConnectivityInformation": "Primary",
+                      "DPCList": {
+                        "DPCItem": [
+                          {
+                            "SCSignature": "HKCIT",
+                            "SCType": "STP",
+                            "DPC": "4.178.3"
+                          },
+                          {
+                            "SCSignature": "HKCIT",
+                            "SCType": "STP",
+                            "DPC": "4.177.1"
+                          },
+                          {
+                            "SCSignature": "CITIC9604",
+                            "SCType": "STP",
+                            "DPC": "4.176.4"
+                          },
+                          {
+                            "SCSignature": "CITIC9624",
+                            "SCType": "STP",
+                            "DPC": "4.179.0"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2016-03-04",
+                      "Description": "Update SCCP infomation"
+                    },
+                    {
+                      "Date": "2015-09-10",
+                      "Description": "Update SCCP infomation"
+                    },
+                    {
+                      "Date": "2011-03-07",
+                      "Description": "Add new SCCP carrier "
+                    },
+                    {
+                      "Date": "2008-02-29",
+                      "Description": "Add new SCCP carrier "
+                    },
+                    {
+                      "Date": "2020-04-29",
+                      "Description": "New DPCs of SCCP carrier"
+                    },
+                    {
+                      "Date": "2024-04-15",
+                      "Description": "Change SCCP to Backup."
+                    }
+                  ]
+                }
+              }
+            },
+            "DomesticSCCPGatewaySection": {
+              "DomesticSCCPGatewayInfo": {
+                "EffectiveDateOfChange": "2022-01-20",
+                "SCCPCarrierList": {
+                  "SCCPCarrierItem": {
+                    "SCCPCarrierName": "VIETTEL",
+                    "DPCList": {
+                      "DPCItem": [
+                        {
+                          "SCSignature": "VIETTEL- Hanoi",
+                          "SCType": "STP SCCP",
+                          "DPC": "4.103.4"
+                        },
+                        {
+                          "SCSignature": "VIETTEL- Ho Chi Minh",
+                          "SCType": "STP SCCP",
+                          "DPC": "4.103.6"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": {
+                    "Date": "2012-02-17",
+                    "Description": "Update INTERNATIONAL SCCP GATEWAY "
+                  }
+                }
+              }
+            },
+            "SCCPProtocolAvailableAtPMNSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "SubscrIdentityAuthenticationSection": {
+              "SubscrIdentityAuthenticationInfo": {
+                "EffectiveDateOfChange": "2015-04-23",
+                "GSMAuthentication": "Yes",
+                "GPRSAuthentication": "Yes",
+                "ChangeHistory": {
+                  "ChangeHistoryItem": {
+                    "Date": "2015-04-23",
+                    "Description": "update Authentication"
+                  }
+                }
+              }
+            },
+            "TestNumbersInfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "MAPGeneralInfoSection": {
+              "MAPGeneralInfo": {
+                "EffectiveDateOfChange": "2015-03-19",
+                "NetworkLocUp": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "RoamingNumberEnquiry": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "InfoRetrieval": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "SubscriberDataMngt": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "NetworkFunctionalSs": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "MwdMngt": {
+                  "InboundRoamingMSC_VLR": "MAPv2",
+                  "InboundRoamingSGSN": "MAPv2",
+                  "OutboundRoaming": "MAPv2"
+                },
+                "ShortMsgMTRelay": {
+                  "InboundRoamingMSC_VLR": "MAPv2",
+                  "InboundRoamingSGSN": "-",
+                  "OutboundRoaming": "MAPv2"
+                },
+                "ShortMsgMORelay": {
+                  "InboundRoamingMSC_VLR": "MAPv2",
+                  "InboundRoamingSGSN": "-",
+                  "OutboundRoaming": "MAPv2"
+                },
+                "SsInvocationNotification": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "SubscriberInfoEnquiry": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "InboundRoamingSGSN": "-",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "GprsLocationUpdate": {
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "LocationCancellation": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "MsPurging": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "Reset": {
+                  "InboundRoamingMSC_VLR": "MAPv2",
+                  "InboundRoamingSGSN": "MAPv2",
+                  "OutboundRoaming": "MAPv2"
+                },
+                "NetworkUnstructuredSs": {
+                  "InboundRoamingMSC_VLR": "MAPv2",
+                  "OutboundRoaming": "MAPv2"
+                },
+                "Reporting": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "CallCompletion": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "IstAlerting": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "ServiceTermination": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "LocationSvcGateway": {
+                  "OutboundRoaming": "MAPv3"
+                },
+                "MmEventReporting": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "AuthenticationFailureReport": {
+                  "InboundRoamingMSC_VLR": "MAPv3",
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "ImsiRetrieval": {
+                  "InboundRoamingMSC_VLR": "MAPv2",
+                  "OutboundRoaming": "MAPv2"
+                },
+                "GprsNotifyContext": {
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "GprsLocationInfoRetrieval": {
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "FailureReport": {
+                  "InboundRoamingSGSN": "MAPv3",
+                  "OutboundRoaming": "MAPv3"
+                },
+                "SecureTransportHandling": {
+                  "InboundRoamingMSC_VLR": "-",
+                  "InboundRoamingSGSN": "-",
+                  "OutboundRoaming": "-"
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": {
+                    "Date": "2012-05-28",
+                    "Description": "Update Mobile Application MAP information "
+                  }
+                }
+              }
+            },
+            "MAPInterOperatorSMSEnhancementSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "NetworkElementsInfoSection": {
+              "NetworkElementsInfo": {
+                "EffectiveDateOfChange": "2023-04-18",
+                "NwNodeList": {
+                  "NwNode": [
+                    {
+                      "NwElementType": "SMSC",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802006",
+                        "SN_Range": {
+                          "SN_RangeStart": "10",
+                          "SN_RangeStop": "29"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "SMSC",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802007",
+                        "SN_Range": {
+                          "SN_RangeStart": "40",
+                          "SN_RangeStop": "59"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "SMSC",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802009",
+                        "SN_Range": {
+                          "SN_RangeStart": "00",
+                          "SN_RangeStop": "49"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "SGSN",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802006",
+                        "SN_Range": {
+                          "SN_RangeStart": "30",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "IPAddressInfo": {
+                        "IPAddressRange": "125.235.48.0/25"
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "SGSN",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802007",
+                        "SN_Range": {
+                          "SN_RangeStart": "60",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "IPAddressInfo": {
+                        "IPAddressRange": "125.235.152.0/25"
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "SGSN",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802009",
+                        "SN_Range": {
+                          "SN_RangeStart": "50",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "IPAddressInfo": {
+                        "IPAddressRange": "125.234.48.0/25"
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "MSS/VLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "980201",
+                        "SN_Range": {
+                          "SN_RangeStart": "000",
+                          "SN_RangeStop": "999"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "MSS/VLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "980202",
+                        "SN_Range": {
+                          "SN_RangeStart": "000",
+                          "SN_RangeStop": "999"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "MSS/VLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "980203",
+                        "SN_Range": {
+                          "SN_RangeStart": "000",
+                          "SN_RangeStop": "999"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "HLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "98020002",
+                        "SN_Range": {
+                          "SN_RangeStart": "0",
+                          "SN_RangeStop": "9"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "HLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "98020004",
+                        "SN_Range": {
+                          "SN_RangeStart": "0",
+                          "SN_RangeStop": "9"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "HLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "98020012",
+                        "SN_Range": {
+                          "SN_RangeStart": "0",
+                          "SN_RangeStop": "9"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "HLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "98020014",
+                        "SN_Range": {
+                          "SN_RangeStart": "0",
+                          "SN_RangeStop": "9"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "Other",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802000",
+                        "SN_Range": {
+                          "SN_RangeStart": "50",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "SCP",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802004",
+                        "SN_Range": {
+                          "SN_RangeStart": "00",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "Other",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802008",
+                        "SN_Range": {
+                          "SN_RangeStart": "10",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "HLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "98020018",
+                        "SN_Range": {
+                          "SN_RangeStart": "0",
+                          "SN_RangeStop": "9"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "HLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "98020008",
+                        "SN_Range": {
+                          "SN_RangeStart": "0",
+                          "SN_RangeStop": "9"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "Other",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "980204"
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "Other",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "980206"
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "Other",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "980205"
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "MSS/VLR",
+                      "GTAddressInfo": {
+                        "CC": "84",
+                        "NDC": "9802003",
+                        "SN_Range": {
+                          "SN_RangeStart": "00",
+                          "SN_RangeStop": "99"
+                        }
+                      },
+                      "UTCTimeOffset": "+07:00"
+                    },
+                    {
+                      "NwElementType": "MME",
+                      "IPAddressInfo": {
+                        "IPAddressRange": "125.235.65.0/24"
+                      },
+                      "UTCTimeOffset": "+00:00"
+                    }
+                  ]
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2014-06-20",
+                      "Description": "New SGSN, MSS address "
+                    },
+                    {
+                      "Date": "2012-05-28",
+                      "Description": "New SGSN, HLR and SCP GT address "
+                    },
+                    {
+                      "Date": "2011-12-16",
+                      "Description": "New SMSC/ MSC/GMSC/ HLR/STP GT address"
+                    },
+                    {
+                      "Date": "2017-10-25",
+                      "Description": "Remove SMSC GT"
+                    },
+                    {
+                      "Date": "2018-07-04",
+                      "Description": "New elements"
+                    }
+                  ]
+                }
+              }
+            },
+            "USSDInfoSection": {
+              "USSDInfo": {
+                "EffectiveDateOfChange": "2015-03-19",
+                "IsUSSDCapabilityAvailable": "true",
+                "SupportedUSSDPhase": "Phase 2",
+                "ChangeHistory": {
+                  "ChangeHistoryItem": {
+                    "Date": "2012-02-17",
+                    "Description": "Update USSD Information"
+                  }
+                }
+              }
+            },
+            "CAMELInfoSection": {
+              "CAMELInfo": {
+                "EffectiveDateOfChange": "2015-03-19",
+                "GSM_SSF_MSC": {
+                  "CAP_Version_Supported_MSC": {
+                    "CAP_Ver_Supp_MSC_Inbound": {
+                      "CAP_MSCVersion": [
+                        "CAPv3",
+                        "CAPv2",
+                        "CAPv1"
+                      ]
+                    },
+                    "CAP_Ver_Supp_MSC_Outbound": {
+                      "CAP_MSCVersion": "CAPv2"
+                    }
+                  }
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": {
+                    "Date": "2013-10-24",
+                    "Description": "Update CAP version 4  in Camel Information "
+                  }
+                }
+              }
+            },
+            "PacketDataServiceInfoSection": {
+              "PacketDataServiceInfo": {
+                "EffectiveDateOfChange": "2023-05-08",
+                "APNOperatorIdentifierList": {
+                  "APNOperatorIdentifierItem": [
+                    {
+                      "APNOperatorIdentifier": "mnc004.mcc452.gprs"
+                    },
+                    {
+                      "APNOperatorIdentifier": "epc.mnc004.mcc452.3gppnetwork.org"
+                    }
+                  ]
+                },
+                "TestingAPNs": {
+                  "APN_WEBList": {
+                    "APN_WEB": [
+                      {
+                        "APN_Credential": {
+                          "APN": "v-internet"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "Blackberry.net"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "e-connect"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "metfone"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "startelecom;unitel3g"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "natcom"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "m-internet; m-connect"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "bitel"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "t-internet"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "n-internet; n-connect;"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "internet"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "b-internet"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "econnect"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "test-internet"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "Voffice"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "t-test"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "Mytel"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "n-cen;n-lit;n-est;n-sud;n-swt;n-nwt;n-out;n-ada;n-nor;n-exn"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "RequiredPduSessionTypeList": {
+                          "RequiredPduSessionType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdnTypeList": {
+                          "RequiredPdnType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "RequiredPdpTypeList": {
+                          "RequiredPdpType": [
+                            "IPv4",
+                            "IPv6",
+                            "IPv4v6"
+                          ]
+                        },
+                        "ISP_DNS_IP_AddressPrimary": "125.235.65.61",
+                        "ISP_DNS_IP_AddressSecondary": "125.235.97.61"
+                      }
+                    ]
+                  },
+                  "APN_WAPList": {
+                    "APN_WAP": [
+                      {
+                        "APN_Credential": {
+                          "APN": "v-wap"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Gateway_IP_Address": "192.168.233.10",
+                        "WAP_Server_URL": "http://wap.viettelmobile.com.vn",
+                        "WAP1_PortList": {
+                          "WAP_Port": [
+                            "8080",
+                            "9201"
+                          ]
+                        }
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "metfone"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Gateway_IP_Address": "192.168.23.85",
+                        "WAP_Server_URL": "http://wap.com.kh",
+                        "WAP1_PortList": {
+                          "WAP_Port": "8080"
+                        }
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "wap"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Server_URL": "192.168.3.134",
+                        "WAP1_PortList": {
+                          "WAP_Port": "8000"
+                        }
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "m-wap"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Gateway_IP_Address": "10.229.111.200"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "bitel-wap"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Gateway_IP_Address": "10.121.144.3",
+                        "WAP_Server_URL": "http://wap.bitel.com.pe"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "t-wap"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Gateway_IP_Address": "10.18.2.183"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "n-wap"
+                        },
+                        "APNTypeList": {
+                          "APNType": "H-APN"
+                        },
+                        "WAP_Gateway_IP_Address": "10.124.49.190"
+                      }
+                    ]
+                  },
+                  "APN_MMSList": {
+                    "APN_MMS": [
+                      {
+                        "APN_Credential": {
+                          "APN": "v-mms"
+                        },
+                        "MMS_Gateway_IP_Address": "192.168.233.10",
+                        "Messaging_Server_URL": "http://mms.viettelmobile.com.vn/mms/wapenc"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "mms"
+                        },
+                        "MMS_Gateway_IP_Address": "192.168.23.85",
+                        "Messaging_Server_URL": "http://192.168.24.10:38090"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "mms"
+                        },
+                        "MMS_Gateway_IP_Address": "192.168.3.134",
+                        "Messaging_Server_URL": "http://natcom.mmsc.com"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "m-mms"
+                        },
+                        "MMS_Gateway_IP_Address": "10.229.111.200",
+                        "Messaging_Server_URL": "http://192.168.24.10:38090/was"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "bitel-mms"
+                        },
+                        "MMS_Gateway_IP_Address": "10.121.144.3",
+                        "Messaging_Server_URL": "http://181.176.241.99:8080"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "t-mms"
+                        },
+                        "MMS_Gateway_IP_Address": "10.18.2.183"
+                      },
+                      {
+                        "APN_Credential": {
+                          "APN": "n-mms"
+                        },
+                        "MMS_Gateway_IP_Address": "10.124.49.190",
+                        "Messaging_Server_URL": "http://mms.nexttel.com.cm"
+                      }
+                    ]
+                  }
+                },
+                "GTPVersionInfo": {
+                  "SGSN_GTPVersionList": {
+                    "SGSN_GTPVersion": "GTPv1"
+                  },
+                  "GGSN_GTPVersionList": {
+                    "GGSN_GTPVersion": "GTPv1"
+                  }
+                },
+                "DataServicesSupportedList": {
+                  "DataServicesSupportedItem": [
+                    {
+                      "DataServiceSupported2G": {
+                        "DataService2G": "GPRS"
+                      }
+                    },
+                    {
+                      "DataServiceSupported2G": {
+                        "DataService2G": "EDGE"
+                      }
+                    },
+                    {
+                      "DataServicesSupported3G": {
+                        "DataService3G": "HSDPA"
+                      }
+                    },
+                    {
+                      "DataServicesSupported3G": {
+                        "DataService3G": "3GPS"
+                      }
+                    }
+                  ]
+                },
+                "MultiplePDPContextSupport": {
+                  "NotSupported": "Not Supported"
+                },
+                "IPv6ConnectivityInformation": {
+                  "SGSNSupport": {
+                    "IPv6PDPSupported": "true",
+                    "IPv4v6PDPSupported": "true"
+                  },
+                  "GGSNSupport": {
+                    "IPv6PDPSupported": "true",
+                    "IPv4v6PDPSupported": "true"
+                  }
+                },
+                "QOSProfile2G3GList": {
+                  "QOSProfile2G3GItem": {
+                    "ProfileName2G3G": "WEB",
+                    "TrafficClassList": {
+                      "TrafficClass": "Background"
+                    },
+                    "ARP2G3GList": {
+                      "ARP2G3G": "3"
+                    },
+                    "EvolvedARP": {
+                      "IsEARPSupported": "true",
+                      "EARPPriorityLevelList": {
+                        "EARPPriorityLevel": "1"
+                      }
+                    },
+                    "MaximumSDUSize2G3G": "1500",
+                    "SDUFormatInformation2G3GList": ""
+                  }
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2016-05-12",
+                      "Description": "Update APN Operator Identifiers"
+                    },
+                    {
+                      "Date": "2015-07-02",
+                      "Description": "update new APN"
+                    },
+                    {
+                      "Date": "2015-04-23",
+                      "Description": "update APN"
+                    },
+                    {
+                      "Date": "2013-05-28",
+                      "Description": "New APN , IP ranges"
+                    },
+                    {
+                      "Date": "2015-03-10",
+                      "Description": "New IP Backbone ranges 154.73.104.48/29"
+                    },
+                    {
+                      "Date": "2014-11-15",
+                      "Description": "new IP Backbone ranges 181.176.33.0/25"
+                    },
+                    {
+                      "Date": "2014-06-20",
+                      "Description": "New IP Backbone ranges "
+                    },
+                    {
+                      "Date": "2017-02-25",
+                      "Description": "new APN"
+                    },
+                    {
+                      "Date": "2017-05-12",
+                      "Description": "Change ISP DNS IP address"
+                    },
+                    {
+                      "Date": "2018-04-05",
+                      "Description": "New APN"
+                    },
+                    {
+                      "Date": "2018-08-07",
+                      "Description": "new APN"
+                    }
+                  ]
+                }
+              }
+            },
+            "GRXIPXRoutingForDataRoamingSection": {
+              "GRXIPXRoutingForDataRoaming": {
+                "EffectiveDateOfChange": "2024-11-29",
+                "InterPMNBackboneIPList": {
+                  "IPAddressOrRange": [
+                    {
+                      "IPAddressRange": "125.234.48.0/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.234.49.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.48.0/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.49.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.152.0/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.153.0/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.50.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.154.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.51.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.234.173.0/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.64.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.65.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.81.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.80.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.97.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.96.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.12.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.153.64/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.66.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.100.0/23",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.0/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.24/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.64/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.128/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.96/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "36.37.246.0/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "36.37.247.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "117.120.25.64/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "117.120.25.92/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "175.100.127.0/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "175.100.127.128/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "175.100.127.160/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "175.100.127.192/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "197.218.32.80/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.33.128/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.33.0/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.33.64/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.35.160/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.234.168.0/26",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "43.254.58.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.105.16/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.105.128/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.106.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.107.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.107.32/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.107.64/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.85.107.80/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.191.98.160/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.191.98.144/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.191.98.192/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.191.98.152/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "154.73.104.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "154.73.105.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "169.255.187.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.72.9/32",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.88.32/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.74.8/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.90.16/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "186.1.196.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "186.1.197.0/24",
+                      "IPXVLAN": "Data-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "190.102.69.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "190.102.95.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.37.128/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.38.0/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.165.93.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.165.93.32/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.165.93.64/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "202.165.93.48/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.192/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.32/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.40/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.48/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "183.182.126.52/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "197.218.32.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "197.218.34.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "197.218.32.96/28",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "197.218.32.128/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.38.128/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "65.18.113.220/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.74.48/29",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.78.252/30",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "196.249.106.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "27.109.116.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.86.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.56.0/22",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "181.176.50.0/25",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "190.102.94.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "185.242.39.192/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.87.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.102.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.103.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.71.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.70.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "43.231.67.0/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "103.23.134.224/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "36.37.246.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.68.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.82.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "125.235.98.0/24",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddressRange": "185.242.39.96/27",
+                      "IPXVLAN": "Control-Roaming",
+                      "NetworkOwner": "MNO"
+                    }
+                  ]
+                },
+                "ASNsList": {
+                  "ASNItem": [
+                    {
+                      "ASN": "64920",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "ASN": "7552",
+                      "NetworkOwner": "MNO"
+                    }
+                  ]
+                },
+                "PMNAuthoritativeDNSIPList": {
+                  "DNSitem": [
+                    {
+                      "IPAddress": "125.235.65.61",
+                      "DNSname": "mnc004.mcc452.gprs",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddress": "125.235.97.61",
+                      "DNSname": "mnc004.mcc452.gprs",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddress": "125.235.65.61",
+                      "DNSname": "epc.mnc004.mcc452.3gppnetwork.org",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddress": "125.235.97.61",
+                      "DNSname": "epc.mnc004.mcc452.3gppnetwork.org",
+                      "NetworkOwner": "MNO"
+                    }
+                  ]
+                },
+                "PMNLocalDNSIPList": {
+                  "DNSitem": [
+                    {
+                      "IPAddress": "125.235.65.61",
+                      "DNSname": "mnc004.mcc452.gprs",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddress": "125.235.97.61",
+                      "DNSname": "mnc004.mcc452.gprs",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddress": "125.235.65.61",
+                      "DNSname": "epc.mnc004.mcc452.3gppnetwork.org",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "IPAddress": "125.235.97.61",
+                      "DNSname": "epc.mnc004.mcc452.3gppnetwork.org",
+                      "NetworkOwner": "MNO"
+                    }
+                  ]
+                },
+                "PingTracerouteIPAddressList": {
+                  "PingTracerouteIPAddressItem": "203.113.156.202"
+                },
+                "GRXIPXProvidersList": {
+                  "GRXIPXProviderItem": [
+                    {
+                      "ProviderName": "Comfone",
+                      "ASN": "35030",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "ProviderName": "Syniverse",
+                      "ASN": "22870",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "ProviderName": "iBasis",
+                      "ASN": "64553",
+                      "NetworkOwner": "MNO"
+                    },
+                    {
+                      "ProviderName": "Orange (France Telecom)",
+                      "ASN": "2300",
+                      "NetworkOwner": "MNO"
+                    }
+                  ]
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2016-06-08",
+                      "Description": "Add new IPs in list of PMN authoritative DNS server IP addresses and names"
+                    },
+                    {
+                      "Date": "2016-05-12",
+                      "Description": "Update local caching DNS and GRX provider list"
+                    },
+                    {
+                      "Date": "2015-12-29",
+                      "Description": "delete IP backbone range 183.182.126.0/24"
+                    },
+                    {
+                      "Date": "2015-12-23",
+                      "Description": "update new IP backbone"
+                    },
+                    {
+                      "Date": "2015-07-21",
+                      "Description": "update new IP backbone"
+                    },
+                    {
+                      "Date": "2015-07-02",
+                      "Description": "update new IP backbone"
+                    },
+                    {
+                      "Date": "2015-06-08",
+                      "Description": "update new IP backbone"
+                    },
+                    {
+                      "Date": "2015-03-26",
+                      "Description": "Add new IP backbone range"
+                    },
+                    {
+                      "Date": "2012-05-28",
+                      "Description": "Update new DNS and GSN IP ranges "
+                    },
+                    {
+                      "Date": "2017-07-13",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2017-07-20",
+                      "Description": "New IP INE range "
+                    },
+                    {
+                      "Date": "2017-10-25",
+                      "Description": "new IP range "
+                    },
+                    {
+                      "Date": "2017-10-25",
+                      "Description": "New GRX providers"
+                    },
+                    {
+                      "Date": "2018-01-30",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2018-04-05",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2018-07-04",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2018-08-02",
+                      "Description": "New local caching DNS server IP"
+                    },
+                    {
+                      "Date": "2018-08-02",
+                      "Description": "New IP range "
+                    },
+                    {
+                      "Date": "2018-08-07",
+                      "Description": "New IP range, Authoritative DNS servers, and local caching DNS servers"
+                    },
+                    {
+                      "Date": "2018-09-05",
+                      "Description": "Change IP range"
+                    },
+                    {
+                      "Date": "2018-10-01",
+                      "Description": "Remove IP in Authoritative DNS servers and Local caching DNS servers"
+                    },
+                    {
+                      "Date": "2019-03-04",
+                      "Description": "new IP range"
+                    },
+                    {
+                      "Date": "2019-11-25",
+                      "Description": "change DNS name"
+                    },
+                    {
+                      "Date": "2020-01-21",
+                      "Description": "New Ip range"
+                    },
+                    {
+                      "Date": "2020-08-05",
+                      "Description": "remove IP 41.244.252.0/24"
+                    },
+                    {
+                      "Date": "2020-09-03",
+                      "Description": "New IP range "
+                    },
+                    {
+                      "Date": "2021-01-06",
+                      "Description": "new IP range 202.191.98.192/27 and 202.191.98.152/29"
+                    },
+                    {
+                      "Date": "2021-04-22",
+                      "Description": "New IP range 181.176.37.x and 181.176.38.x"
+                    },
+                    {
+                      "Date": "2021-11-08",
+                      "Description": "New Ip range 202.165.93.0/27 and 202.165.93.32/28"
+                    },
+                    {
+                      "Date": "2022-03-28",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2022-03-28",
+                      "Description": "add ASN 7552"
+                    },
+                    {
+                      "Date": "2022-10-17",
+                      "Description": "New IP range "
+                    },
+                    {
+                      "Date": "2023-01-30",
+                      "Description": "new IP range "
+                    },
+                    {
+                      "Date": "2023-03-16",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2023-04-14",
+                      "Description": "New IP range"
+                    },
+                    {
+                      "Date": "2023-04-14",
+                      "Description": "remove IP range"
+                    },
+                    {
+                      "Date": "2023-04-14",
+                      "Description": "change DNS name"
+                    },
+                    {
+                      "Date": "2023-05-08",
+                      "Description": "new IP range "
+                    },
+                    {
+                      "Date": "2023-06-13",
+                      "Description": "new IP range "
+                    },
+                    {
+                      "Date": "2023-12-26",
+                      "Description": "Add new IP address range"
+                    },
+                    {
+                      "Date": "2024-01-09",
+                      "Description": "new IP address"
+                    },
+                    {
+                      "Date": "2024-05-02",
+                      "Description": "New IP Address range"
+                    },
+                    {
+                      "Date": "2024-09-16",
+                      "Description": "Add new IP address"
+                    },
+                    {
+                      "Date": "2024-09-24",
+                      "Description": "add new IP address"
+                    },
+                    {
+                      "Date": "2024-10-03",
+                      "Description": "Add new IP address"
+                    },
+                    {
+                      "Date": "2024-11-29",
+                      "Description": "ad new IP backbone"
+                    },
+                    {
+                      "Date": "2024-11-29",
+                      "Description": "new Ip backbone"
+                    }
+                  ]
+                }
+              }
+            },
+            "MMS_IW_InfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "WLANInfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "LTEInfoSection": {
+              "LTEInfo": {
+                "EffectiveDateOfChange": "2023-04-14",
+                "IPXInterconnectionInfo": {
+                  "IPXProviderInfoList": {
+                    "IPXProviderInfo": [
+                      {
+                        "IPXProviderName": "Comfone",
+                        "IPXDARealmsUsed": "comfone.com"
+                      },
+                      {
+                        "IPXProviderName": "iBasis",
+                        "IPXDARealmsUsed": "ibasis.grx"
+                      }
+                    ]
+                  }
+                },
+                "RoamingInterconnection": {
+                  "Diameter": {
+                    "EPCRealmsForRoamingList": {
+                      "EPCRealmsForRoaming": "epc.mnc004.mcc452.3gppnetwork.org"
+                    },
+                    "FQDNDiameterEdgeAgent": [
+                      {
+                        "FQDN": "DEHL01_Ha Noi",
+                        "PrimaryIPAddressDEAFQDN": {
+                          "IPAddress": "203.113.128.181"
+                        }
+                      },
+                      {
+                        "FQDN": "DEHT01_Ho Chi Minh",
+                        "PrimaryIPAddressDEAFQDN": {
+                          "IPAddress": "27.68.239.105"
+                        }
+                      }
+                    ]
+                  },
+                  "S6a": {
+                    "IsS6aSupportedWithoutIWF": "true",
+                    "IsMAP_IWFsupportedToHSS": "false",
+                    "IsMAP_IWFsupportedToMME": "false"
+                  },
+                  "S6d": {
+                    "IsS6dUsedForLegacySGSN": "false"
+                  },
+                  "S9": {
+                    "IsS9usedForPCC": "false"
+                  }
+                },
+                "Voice_ITW": "CSFB",
+                "RoamingCSFallback": {
+                  "RoamingCSFallbackMethod": "Roaming Forward (MTRF)"
+                },
+                "HPMNInfoLTERoamingAgreementOnly": {
+                  "IsLTEOnlyRoamingSupported": "false"
+                },
+                "VPMNInfoLTERoamingAgreementOnly": {
+                  "IsLTEOnlyRoamingSupported": "false"
+                },
+                "HPMNInfo2G3GRoamingAgreementOnly": {
+                  "IsScenario2Supported": "false",
+                  "IsScenario3Supported": "false"
+                },
+                "VPMNInfo2G3GRoamingAgreementOnly": {
+                  "IsScenario2Supported": "false",
+                  "IsScenario3Supported": "false"
+                },
+                "HPMNInfo2G3GLTERoamingAgreementOnly": {
+                  "IsScenario1Supported": "true",
+                  "IsScenario2Supported": "true",
+                  "IsScenario3Supported": "true",
+                  "IsScenario4Supported": "true",
+                  "IsScenario5Supported": "false",
+                  "IsScenario6Supported": "false"
+                },
+                "VPMNInfo2G3GLTERoamingAgreementOnly": {
+                  "IsScenario1Supported": "true",
+                  "IsScenario2Supported": "true",
+                  "IsScenario3Supported": "false",
+                  "IsScenario4Supported": "false",
+                  "IsScenario5Supported": "false",
+                  "IsScenario6Supported": "false"
+                },
+                "LTEQosProfileList": {
+                  "LTEQosProfile": [
+                    {
+                      "ProfileName": "Data",
+                      "QCIValueList": {
+                        "QCIValue": "9"
+                      },
+                      "QOSARPList": {
+                        "ARPPriorityLevel": "12"
+                      },
+                      "ARPPreemptionVulnerability": "Enabled",
+                      "ARPPreemptionCapability": "Enabled"
+                    },
+                    {
+                      "ProfileName": "Voice",
+                      "QCIValueList": {
+                        "QCIValue": "1"
+                      },
+                      "QOSARPList": {
+                        "ARPPriorityLevel": "12"
+                      },
+                      "ARPPreemptionVulnerability": "Enabled",
+                      "ARPPreemptionCapability": "Enabled"
+                    },
+                    {
+                      "ProfileName": "Video",
+                      "QCIValueList": {
+                        "QCIValue": "2"
+                      },
+                      "QOSARPList": {
+                        "ARPPriorityLevel": "12"
+                      },
+                      "ARPPreemptionVulnerability": "Enabled",
+                      "ARPPreemptionCapability": "Enabled"
+                    },
+                    {
+                      "ProfileName": "SIP",
+                      "QCIValueList": {
+                        "QCIValue": "5"
+                      },
+                      "QOSARPList": {
+                        "ARPPriorityLevel": "12"
+                      },
+                      "ARPPreemptionVulnerability": "Enabled",
+                      "ARPPreemptionCapability": "Enabled"
+                    }
+                  ]
+                },
+                "IPv6ConnectivityInformation": {
+                  "MMESupport": {
+                    "IPv6PDPSupported": "true",
+                    "IPv4v6PDPSupported": "true"
+                  },
+                  "SGWSupport": {
+                    "IPv6PDPSupported": "true",
+                    "IPv4v6PDPSupported": "true"
+                  },
+                  "PGWSupport": {
+                    "IPv6PDPSupported": "true",
+                    "IPv4v6PDPSupported": "true"
+                  }
+                },
+                "DiameterCertificatesExchange": {
+                  "IPAddressIPSecGW": "",
+                  "CertificateIPSecGW": ""
+                },
+                "DiameterEndToEndSecuritySupport": {
+                  "SupportedDessPhase": "No support"
+                },
+                "FiveGEarlyDropSupport": {
+                  "FiveGEarlyDropSupportAsHpmn": {
+                    "FiveGNsaSupported": "true",
+                    "DnsPgwNaptrIncludesNcNr": "false",
+                    "SupportNrAsSecondaryRat": "false"
+                  },
+                  "FiveGEarlyDropSupportAsVpmn": {
+                    "FiveGNsaSupported": "true",
+                    "DnsPgwNaptrIncludesNcNr": "false",
+                    "RestrictNrAccessIfHssDoesNotSupportNrAsSecondaryRat": "true"
+                  }
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2016-05-27",
+                      "Description": "Update LTE information"
+                    },
+                    {
+                      "Date": "2017-07-13",
+                      "Description": "Change LTE infomation"
+                    },
+                    {
+                      "Date": "2018-08-08",
+                      "Description": "Change information for diameter for roaming interconnection"
+                    },
+                    {
+                      "Date": "2019-01-22",
+                      "Description": "change QCI list"
+                    },
+                    {
+                      "Date": "2019-06-10",
+                      "Description": "Support IPV4V6"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "change information in 5G early drop support"
+                    },
+                    {
+                      "Date": "2022-02-10",
+                      "Description": "Support Ipv6"
+                    },
+                    {
+                      "Date": "2023-04-14",
+                      "Description": "update DESS phase"
+                    }
+                  ]
+                }
+              }
+            },
+            "ContactInfoSection": {
+              "ContactInfo": {
+                "EffectiveDateOfChange": "2024-11-29",
+                "RTContactInfoList": {
+                  "RTContactInfo": {
+                    "Location": "Hanoi, Vietnam",
+                    "UTCTimeOffset": "+07:00",
+                    "OfficeHours": {
+                      "OfficeHour": {
+                        "startTime": "08:00:00",
+                        "endTime": "17:30:00",
+                        "inclusiveAllWeekDays": "false",
+                        "WeekDayList": {
+                          "WeekDay": [
+                            "Mon",
+                            "Tue",
+                            "Wed",
+                            "Thu",
+                            "Fri"
+                          ]
+                        }
+                      }
+                    },
+                    "MainContact": {
+                      "TeamName": "INOC  (Live trouble shooting and testing support)",
+                      "PhoneFixList": {
+                        "PhoneFix": [
+                          "+842462731532",
+                          "+842462800025",
+                          "+842462731648"
+                        ]
+                      },
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84867010004"
+                      },
+                      "EmailList": {
+                        "Email": [
+                          "inocroam@viettel.com.vn",
+                          "fo_mobile@viettel.com.vn"
+                        ]
+                      }
+                    },
+                    "EscalationContact": {
+                      "GivenName": "Nguyen Thuy Hanh (level1)",
+                      "FamilyName": "Nguyen Ngoc Bich/ Nguyen Thieu Nam (level2)",
+                      "PhoneFixList": {
+                        "PhoneFix": "+842462736321"
+                      },
+                      "PhoneMobileList": {
+                        "PhoneMobile": [
+                          "+84961009686",
+                          "+84962712345",
+                          "+84983000369"
+                        ]
+                      },
+                      "EmailList": {
+                        "Email": [
+                          "ireg@viettel.com.vn",
+                          "hanhnguyen@viettel.com.vn",
+                          "ngocbich@viettel.com.vn",
+                          "namnt@viettel.com.vn"
+                        ]
+                      }
+                    },
+                    "TS24x7Contact": {
+                      "TeamName": "INOC  (Live trouble shooting and testing support)",
+                      "PhoneFixList": {
+                        "PhoneFix": [
+                          "+842462731532",
+                          "+842462800025",
+                          "+842462731648"
+                        ]
+                      },
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84867010004"
+                      },
+                      "EmailList": {
+                        "Email": [
+                          "inocroam@viettel.com.vn",
+                          "fo_mobile@viettel.com.vn"
+                        ]
+                      }
+                    },
+                    "TS24x7EscalationContact": {
+                      "TeamName": "INOC  (Live trouble shooting and testing support)",
+                      "PhoneFixList": {
+                        "PhoneFix": [
+                          "+842462731532",
+                          "+842462800025",
+                          "+842462731648"
+                        ]
+                      },
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84867010004"
+                      },
+                      "EmailList": {
+                        "Email": [
+                          "inocroam@viettel.com.vn",
+                          "fo_mobile@viettel.com.vn"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "RTTicketingSystemInfoList": {
+                  "RTTicketingSystemInfo": [
+                    {
+                      "TicketingSystemContactEmail": "inocroam@viettel.com.vn"
+                    },
+                    {
+                      "TicketingSystemContactEmail": "ireg@viettel.com.vn"
+                    }
+                  ]
+                },
+                "SCCPInquiriesAndOrderingOfSS7Routes": {
+                  "ContactPerson": {
+                    "GivenName": "IREG",
+                    "FamilyName": "Team",
+                    "EmailList": {
+                      "Email": "ireg@viettel.com.vn"
+                    }
+                  }
+                },
+                "RoamingCoordinator": {
+                  "ContactPerson": {
+                    "GivenName": "Commercial",
+                    "FamilyName": "Team",
+                    "EmailList": {
+                      "Email": "coordinator@viettel.com.vn"
+                    }
+                  }
+                },
+                "IREGTests": {
+                  "ContactPerson": {
+                    "GivenName": "IREG",
+                    "FamilyName": "Team",
+                    "EmailList": {
+                      "Email": "ireg@viettel.com.vn"
+                    }
+                  }
+                },
+                "TADIGTests": {
+                  "ContactPerson": {
+                    "GivenName": "TADIG",
+                    "FamilyName": "Team",
+                    "EmailList": {
+                      "Email": "tadig@viettel.com.vn"
+                    }
+                  }
+                },
+                "CertificateAndKeyManagementContact": {
+                  "ContactPerson": {
+                    "GivenName": "Nguyen Thuy Hanh (level1)",
+                    "FamilyName": "Nguyen Ngoc Bich/ Nguyen Thieu Nam (level2)",
+                    "PhoneFixList": {
+                      "PhoneFix": "+842462736321"
+                    },
+                    "PhoneMobileList": {
+                      "PhoneMobile": [
+                        "+84961009686",
+                        "+84962712345",
+                        "+84983000369"
+                      ]
+                    },
+                    "EmailList": {
+                      "Email": [
+                        "ireg@viettel.com.vn",
+                        "hanhnguyen@viettel.com.vn",
+                        "ngocbich@viettel.com.vn",
+                        "namnt@viettel.com.vn"
+                      ]
+                    }
+                  }
+                },
+                "Other_Contact": {
+                  "ContactPerson": [
+                    {
+                      "Prefix": "Ms.",
+                      "GivenName": "Nguyen Thieu",
+                      "FamilyName": "Nam",
+                      "JobTitle": "Roaming Manager",
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84983000369"
+                      },
+                      "EmailList": {
+                        "Email": "namnt@viettel.com.vn"
+                      }
+                    },
+                    {
+                      "Prefix": "Ms",
+                      "GivenName": "Hanh",
+                      "FamilyName": "Nguyen Thuy",
+                      "JobTitle": "IR Technical Manager",
+                      "PhoneFixList": {
+                        "PhoneFix": "+842462736321"
+                      },
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84961009686"
+                      },
+                      "EmailList": {
+                        "Email": "hanhnguyen@viettel.com.vn"
+                      }
+                    },
+                    {
+                      "Prefix": "Ms",
+                      "GivenName": "Bich",
+                      "FamilyName": "Nguyen Ngoc",
+                      "JobTitle": "Commercial Roaming Manager",
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84962712345"
+                      },
+                      "EmailList": {
+                        "Email": "ngocbich@viettel.com.vn"
+                      }
+                    },
+                    {
+                      "Prefix": "Ms",
+                      "GivenName": "Tuyen",
+                      "FamilyName": "Tran Thi Kim",
+                      "JobTitle": "TADIG and Fraud Manager",
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84983600088"
+                      },
+                      "EmailList": {
+                        "Email": [
+                          "tuyentk@viettel.com.vn",
+                          "fraud@viettel.com.vn"
+                        ]
+                      }
+                    },
+                    {
+                      "GivenName": "(Level 2)",
+                      "FamilyName": "Commercial Escalation contact",
+                      "PhoneMobileList": {
+                        "PhoneMobile": "+84962712345"
+                      },
+                      "EmailList": {
+                        "Email": [
+                          "ngocbich@viettel.com.vn",
+                          "namnt@viettel.com.vn"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "IR21DistributionEmailAddressList": {
+                  "IR21DistributionEmailAddress": [
+                    "ireg@viettel.com.vn",
+                    "roaming@viettel.com.vn"
+                  ]
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2015-03-10",
+                      "Description": "Update new contact point"
+                    },
+                    {
+                      "Date": "2012-03-20",
+                      "Description": "Add new contact point"
+                    },
+                    {
+                      "Date": "2012-12-24",
+                      "Description": "Add new contact point"
+                    },
+                    {
+                      "Date": "2013-10-24",
+                      "Description": "Add new contact point "
+                    },
+                    {
+                      "Date": "2014-06-20",
+                      "Description": "New contact of NOC"
+                    },
+                    {
+                      "Date": "2017-07-13",
+                      "Description": "Change contact"
+                    },
+                    {
+                      "Date": "2017-10-25",
+                      "Description": "change contact"
+                    },
+                    {
+                      "Date": "2018-01-30",
+                      "Description": "change number in contact"
+                    },
+                    {
+                      "Date": "2019-01-22",
+                      "Description": "Change contact"
+                    },
+                    {
+                      "Date": "2021-04-22",
+                      "Description": "additional contact"
+                    },
+                    {
+                      "Date": "2022-01-26",
+                      "Description": "Update contacts"
+                    },
+                    {
+                      "Date": "2022-02-09",
+                      "Description": "update contact"
+                    },
+                    {
+                      "Date": "2024-11-29",
+                      "Description": "new contacts update"
+                    }
+                  ]
+                }
+              }
+            },
+            "M2MRoamingInfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "RoamingHubProviderInfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "VoIMSRoamingInfoSection": {
+              "VoIMSRoamingInfo": {
+                "EffectiveDateOfChange": "2023-04-18",
+                "SupportedVoIMSRoamingArchitectures": {
+                  "VoIMSRoamingArchitecturesSupportedAsVPMN": {
+                    "S8HRSupported": "true",
+                    "N9HRSupported": "false"
+                  },
+                  "VoIMSRoamingArchitecturesSupportedAsHPMN": {
+                    "S8HRSupported": "true",
+                    "N9HRSupported": "false"
+                  }
+                },
+                "MobilityAndVoiceContinuity": {
+                  "SRVCCTechnologySupportedAsVPMN": "Not supported",
+                  "SRVCCTechnologySupportedAsHPMN": "Not supported"
+                },
+                "S8HRN9HRRoamingConstraints": {
+                  "EmergencyCalls": {
+                    "VPLMNTechnologyStrategyForECList": {
+                      "VPLMNTechnologyStrategyForEC": "CS Fallback"
+                    },
+                    "LocalEmergencyNumbersInUseAtVPMNList": {
+                      "LocalEmergencyNumber": [
+                        {
+                          "Number": "113",
+                          "Service": "Policy",
+                          "UrnInformationList": {
+                            "UrnInformation": "urn:service:sos.policy"
+                          }
+                        },
+                        {
+                          "Number": "114",
+                          "Service": "Fire",
+                          "UrnInformationList": {
+                            "UrnInformation": "urn:service:sos.fire"
+                          }
+                        },
+                        {
+                          "Number": "115",
+                          "Service": "Ambulance",
+                          "UrnInformationList": {
+                            "UrnInformation": "urn:service:sos.ambulance"
+                          }
+                        }
+                      ]
+                    },
+                    "MMEAnnounceTheEmergencyNumberListTowardInboundRoamersUE": "false",
+                    "AMFAnnounceTheEmergencyNumberListTowardInboundRoamersUE": "false"
+                  },
+                  "LawfulInterception": {
+                    "DoesVPMNRequireEncryptionDeactivationByHPMNForIMSProcedures": "false"
+                  },
+                  "EPSQoSToBeEnforced": {
+                    "MaximumQoSProfileSupportedForIMSWellKnownAPN": "SIP"
+                  }
+                },
+                "ChangeHistory": {
+                  "ChangeHistoryItem": [
+                    {
+                      "Date": "2019-06-10",
+                      "Description": "Enable VoLTE"
+                    },
+                    {
+                      "Date": "2023-04-14",
+                      "Description": "Update Local Emergency number"
+                    },
+                    {
+                      "Date": "2023-04-18",
+                      "Description": "change SRVCC  infomation "
+                    }
+                  ]
+                }
+              }
+            },
+            "LPWARoamingInfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "FiveGSARoamingInfoSection": {
+              "SectionNA": "Section not applicable"
+            },
+            "SMSRoamingInfoSection": {
+              "SMSRoamingInfo": {
+                "EffectiveDateOfChange": "2024-11-29",
+                "SMSDeliveryMechanisms": {
+                  "SMSITWAsHPLMN": {
+                    "SMSOverIP": "false",
+                    "SMSOverNASViaSS7": "false",
+                    "SMSOverNASViaDiameter": "false",
+                    "SMSOverNASViaHTTPS": "false"
+                  },
+                  "SMSITWAsVPLMN": {
+                    "SMSOverIP": "false",
+                    "SMSOverNASViaSS7": "false",
+                    "SMSOverNASViaDiameter": "false",
+                    "SMSOverNASViaHTTPS": "false"
+                  }
+                }
+              }
+            }
+          },
+          "SupportedTechnologies": {
+            "GSM": {
+              "GSMFrequencyList": {
+                "GSMFrequencyItem": "GSM 900"
+              }
+            },
+            "UTRAFDD": {
+              "UTRAFDDFrequencyList": {
+                "UTRAFDDFrequencyItem": "None"
+              }
+            },
+            "UTRATDD": {
+              "UTRATDDFrequencyList": {
+                "UTRATDDFrequencyItem": "B - TDD 1900"
+              }
+            },
+            "EUTRA": {
+              "EUTRAFrequencyList": {
+                "EUTRAFrequencyItem": "3 - DCS 1800"
+              }
+            },
+            "EUTRA_MIoT_LTE_M": {
+              "EUTRA_MIoT_LTE_MFrequencyList": {
+                "EUTRA_MIoT_LTE_MFrequencyItem": "None"
+              }
+            },
+            "EUTRA_MIoT_NB_IOT": {
+              "EUTRA_MIoT_NB_IOTFrequencyList": {
+                "EUTRA_MIoT_NB_IOTFrequencyItem": "3 - DCS 1800"
+              }
+            },
+            "MIoT_NB_IoTDeploymentMode": {
+              "MIoT_NB_IoTDeploymentModeList": {
+                "MIoT_NB_IoTDeploymentModeItem": "2 - Guardband"
+              }
+            },
+            "EnDcBandCombination": "",
+            "FiveGNR": {
+              "FiveGNRFrequencyList": {
+                "FiveGNRFrequencyItem": "None"
+              }
+            }
+          },
+          "RadioNetworkServices": {
+            "Service2G": {
+              "Support": "false"
+            },
+            "Service3G": {
+              "Support": "false",
+              "PlannedClosureDate": "2022-12-31"
+            },
+            "Service4G": {
+              "Support": "false"
+            },
+            "ServiceMIoTLTEM": {
+              "Support": "false"
+            },
+            "ServiceMIoTNBIoT": {
+              "Support": "false"
+            },
+            "Service5GNR": {
+              "Support": "false"
+            }
+          },
+          "CoreNetworkServices": {
+            "ServiceCS": {
+              "Support": "false"
+            },
+            "ServicePS": {
+              "Support": "false"
+            },
+            "ServiceEPC": {
+              "Support": "false"
+            },
+            "ServiceVoIMS": {
+              "Support": "false"
+            },
+            "Service5GSA": {
+              "Support": "false"
+            }
+          },
+          "HostedNetworksInfo": {
+            "SectionNA": "Section not applicable"
+          }
+        }
+      }
+    }
+  }
+}
