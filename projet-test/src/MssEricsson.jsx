@@ -177,46 +177,51 @@ const MssEricsson = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-50">
-              <tr>
-                {columns.map((col, index) => (
-                  <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.map((row, rowIndex) => (
-                <tr key={rowIndex} className="hover:bg-gray-50">
-                  {columns.map((col, colIndex) => (
-                    <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {row[col.toLowerCase().replace(/ /g, '_')]}
-                    </td>
+        <>
+          <div className="flex flex-wrap items-center justify-between mb-2">
+            <span className="text-gray-600 text-sm">
+              {filteredData.length} entr{filteredData.length > 1 ? 'ées' : 'ée'} affich{filteredData.length > 1 ? 'ées' : 'ée'}
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
+                <tr>
+                  {columns.map((col, index) => (
+                    <th key={index} className="px-3 py-2 border-b font-semibold text-gray-700 text-center">{col}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="flex justify-between items-center mt-4 px-4">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-gray-600">Page {currentPage}</span>
-            <button
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              className="px-4 py-2 bg-gray-200 rounded"
-            >
-              Next
-            </button>
+              </thead>
+              <tbody>
+                {filteredData.map((row, rowIndex) => (
+                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    {columns.map((col, colIndex) => (
+                      <td key={colIndex} className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={row[col.toLowerCase().replace(/ /g, '_')] || ''}>
+                        {row[col.toLowerCase().replace(/ /g, '_')]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between items-center mt-4 px-4">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 border rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              >
+                Précédent
+              </button>
+              <span className="text-sm text-gray-700">Page {currentPage}</span>
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50"
+              >
+                Suivant
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       </div>
     );
   };

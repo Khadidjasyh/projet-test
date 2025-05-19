@@ -191,6 +191,7 @@ function AppLayout() {
               <Route path="/mss-ericsson" element={<MssEricsson />} />
               <Route path="/firewall-ips" element={<FirewallIPs />} />
               <Route path="/roaming-tests" element={<RoamingTests />} />
+              <Route path="/mme" element={<MmeImsi />} />
               <Route path="/ir21" element={<IR21Page />} />
               <Route path="/inbound-roaming-results" element={<InboundRoamingResults />} />
               <Route path="/outbound-roaming-results" element={<OutboundRoamingResults />} />

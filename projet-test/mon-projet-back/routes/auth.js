@@ -8,22 +8,40 @@ const nodemailer = require('nodemailer');
 
 // Check if admin exists
 router.get('/check-admin', async (req, res) => {
-  const admin = await User.findOne({ where: { role: 'admin' } });
-  res.json({ exists: !!admin });
+  try {
+    const admin = await User.findOne({ where: { role: 'admin' } });
+    res.json({ exists: !!admin });
+  } catch (error) {
+    console.error('Erreur lors du check-admin:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
 });
 
 // Create first admin account
 router.post('/create-admin', async (req, res) => {
-  const { name, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await User.create({
-    name,
-    email,
-    role: 'admin',
-    status: 'active',
-    password: hashedPassword
-  });
-  res.status(201).json(user);
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Missing required fields: name, email, and password' });
+    }
+    // Vérifie si un admin existe déjà avec ce mail
+    const existingAdmin = await User.findOne({ where: { email, role: 'admin' } });
+    if (existingAdmin) {
+      return res.status(400).json({ error: 'Admin already exists with this email' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      email,
+      role: 'admin',
+      status: 'active',
+      password: hashedPassword
+    });
+    res.status(201).json(user);
+  } catch (error) {
+    console.error('Erreur lors de la création de l\'admin:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
 });
 
 // Admin creates user account

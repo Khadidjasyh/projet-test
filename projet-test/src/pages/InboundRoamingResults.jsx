@@ -6,59 +6,19 @@ import { useNavigate } from 'react-router-dom';
 const InboundRoamingResults = () => {
   const navigate = useNavigate();
 
+  // Colonnes demandées : pays, opérateur, plmn, extraction IR21, vérification HSS (apn), vérification GT (msc/vlr), extraction mcc, extraction mnc, commentaires
   const results = {
     headers: [
+      "Pays",
       "Opérateur",
-      "Route Provisioning SCCP",
-      "VPLMN IR21 sur HPLMN MSS/MSC",
-      "Implémentation de l'IMSI",
-      "Conversion IMSI / MGT",
-      "Table de Routage (E.214 & E.212)",
-      "VPLMN MSISDN & MSRN (HPLMN)",
+      "PLMN",
+      "Extraction des données IR21",
+      "Vérification HSS (APN)",
+      "Vérification GT (MSC/VLR)",
+      "Extraction MCC/MNC",
       "Commentaires"
     ],
-    data: [
-      {
-        operateur: "Mobilis",
-        routeProvisioning: "✅ Réussi",
-        vplmnIr21: "✅ Réussi",
-        implementationImsi: "✅ Réussi",
-        conversionImsi: "✅ Réussi",
-        tableRoutage: "✅ Réussi",
-        vplmnMsisdn: "✅ Réussi",
-        commentaires: "Test effectué avec succès, aucune anomalie détectée."
-      },
-      {
-        operateur: "Orange",
-        routeProvisioning: "✅ Réussi",
-        vplmnIr21: "✅ Réussi",
-        implementationImsi: "✅ Réussi",
-        conversionImsi: "✅ Réussi",
-        tableRoutage: "✅ Réussi",
-        vplmnMsisdn: "✅ Réussi",
-        commentaires: "Aucune déviation dans les configurations. Service stable."
-      },
-      {
-        operateur: "Djezzy",
-        routeProvisioning: "✅ Réussi",
-        vplmnIr21: "✅ Réussi",
-        implementationImsi: "✅ Réussi",
-        conversionImsi: "✅ Réussi",
-        tableRoutage: "✅ Réussi",
-        vplmnMsisdn: "✅ Réussi",
-        commentaires: "Test conforme aux attentes, pas de problème majeur."
-      },
-      {
-        operateur: "Ooredoo",
-        routeProvisioning: "✅ Réussi",
-        vplmnIr21: "✅ Réussi",
-        implementationImsi: "✅ Réussi",
-        conversionImsi: "✅ Réussi",
-        tableRoutage: "✅ Réussi",
-        vplmnMsisdn: "✅ Réussi",
-        commentaires: "Les tests ont montré que tout fonctionne correctement."
-      }
-    ]
+    data:[]
   };
 
   const handleBack = () => {
@@ -121,12 +81,10 @@ const InboundRoamingResults = () => {
           <div className="text-sm text-gray-500">Tests réussis</div>
           <div className="text-2xl font-bold text-green-600">
             {results.data.filter(op => 
-              op.routeProvisioning.includes("Réussi") &&
-              op.vplmnIr21.includes("Réussi") &&
-              op.implementationImsi.includes("Réussi") &&
-              op.conversionImsi.includes("Réussi") &&
-              op.tableRoutage.includes("Réussi") &&
-              op.vplmnMsisdn.includes("Réussi")
+              op.ir21 && op.ir21.toLowerCase().includes("ok") &&
+              op.apn && op.apn !== "-" &&
+              op.gt && op.gt !== "-" &&
+              op.mcc && op.mnc && op.mcc !== "-" && op.mnc !== "-"
             ).length}
           </div>
         </div>
@@ -134,18 +92,25 @@ const InboundRoamingResults = () => {
           <div className="text-sm text-gray-500">Tests partiels</div>
           <div className="text-2xl font-bold text-yellow-600">
             {results.data.filter(op => 
-              !(op.routeProvisioning.includes("Réussi") &&
-              op.vplmnIr21.includes("Réussi") &&
-              op.implementationImsi.includes("Réussi") &&
-              op.conversionImsi.includes("Réussi") &&
-              op.tableRoutage.includes("Réussi") &&
-              op.vplmnMsisdn.includes("Réussi"))
+              !(op.ir21 && op.ir21.toLowerCase().includes("ok") &&
+              op.apn && op.apn !== "-" &&
+              op.gt && op.gt !== "-" &&
+              op.mcc && op.mnc && op.mcc !== "-" && op.mnc !== "-")
             ).length}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-500">Taux de réussite</div>
-          <div className="text-2xl font-bold text-blue-600">100%</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {results.data.length > 0 ? `${Math.round(
+              results.data.filter(op => 
+                op.ir21 && op.ir21.toLowerCase().includes("ok") &&
+                op.apn && op.apn !== "-" &&
+                op.gt && op.gt !== "-" &&
+                op.mcc && op.mnc && op.mcc !== "-" && op.mnc !== "-"
+              ).length * 100 / results.data.length
+            )}%` : "0%"}
+          </div>
         </div>
       </div>
 
@@ -168,30 +133,14 @@ const InboundRoamingResults = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {results.data.map((row, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {row.operateur}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {row.routeProvisioning}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {row.vplmnIr21}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {row.implementationImsi}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {row.conversionImsi}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {row.tableRoutage}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {row.vplmnMsisdn}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {row.commentaires}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.pays}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.operateur}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.plmn}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.ir21}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.apn}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.gt}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.mcc}/{row.mnc}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{row.commentaires}</td>
                 </tr>
               ))}
             </tbody>

@@ -70,15 +70,11 @@ async function extractDataFromXML(filePath) {
 
     const networkArray = Array.isArray(networks) ? networks : [networks];
 
-    // ✅ TADIG réel (prioritaire sur Sender)
+    // TADIG
     let tadig = '';
     if (organisationInfo?.TADIGSummaryList?.TADIGSummaryItem) {
       const summary = organisationInfo.TADIGSummaryList.TADIGSummaryItem;
-      if (Array.isArray(summary)) {
-        tadig = summary[0]?.TADIGCode;
-      } else {
-        tadig = summary.TADIGCode;
-      }
+      tadig = Array.isArray(summary) ? summary[0]?.TADIGCode : summary.TADIGCode;
     }
 
     if (!tadig && networkArray?.[0]?.TADIGCode) {
@@ -106,48 +102,41 @@ async function extractDataFromXML(filePath) {
       if (e212Node) {
         const mcc = e212Node.MCC || '';
         const mnc = (e212Node.MNC || '').padStart(2, '0');
-        if (mcc && mnc) extractedData.e212 += `${mcc}${mnc}, `;
+        if (mcc && mnc) extractedData.e212 = `${mcc}${mnc}`;
       }
 
       // E214
-      const e214Node = network.NetworkData?.RoutingInfoSection?.RoutingInfo?.CCITT_E214_MGT || network.RoutingInfo?.E214 || network.E214;
-      if (e214Node) {
-        const cc = e214Node.MGT_CC || e214Node.CC || '';
-        const nc = e214Node.MGT_NC || e214Node.NC || '';
-        if (cc && nc) extractedData.e214 += `${cc}${nc}, `;
+      const e214Series = network.NetworkData?.RoutingInfoSection?.RoutingInfo?.CCITT_E214_MGT || network.RoutingInfo?.E214 || network.E214;
+      if (e214Series) {
+        const mgtCC = e214Series.MGT_CC || '';
+        const mgtNC = e214Series.MGT_NC || '';
+        if (mgtCC && mgtNC) extractedData.e214 = `${mgtCC}${mgtNC}`;
       }
 
-      // ✅ APN avec regex + chemins alternatifs
-      let apnFound = false;
-      const apnRegex = /<APNOperatorIdentifier>(epc\.mnc\d{3}\.mcc\d{3})(?:\.3gppnetwork\.org)?<\/APNOperatorIdentifier>/i;
-      const match = xmlContent.match(apnRegex);
-      if (match && match[1]) {
-        extractedData.apn += match[1] + ', ';
-        apnFound = true;
-      }
-
-      if (!apnFound) {
-        const apnCandidates = [];
-
-        const list1 = network.PacketDataServiceInfoSection?.PacketDataServiceInfo?.APNOperatorIdentifierList?.APNOperatorIdentifierItem;
-        if (list1) apnCandidates.push(...(Array.isArray(list1) ? list1 : [list1]));
-
-        const list2 = network.APNList?.APN;
-        if (list2) apnCandidates.push(...(Array.isArray(list2) ? list2 : [list2]));
-
-        const list3 = network.APN;
-        if (list3) apnCandidates.push(...(Array.isArray(list3) ? list3 : [list3]));
-
-        for (const apnItem of apnCandidates) {
-          const apnValue = typeof apnItem === 'string' ? apnItem : apnItem?.APNOperatorIdentifier || apnItem?.Value || '';
-          if (apnValue && apnValue.includes('epc.mnc')) {
-            extractedData.apn += apnValue.split('.3gppnetwork.org')[0] + ', ';
-            apnFound = true;
+      // APNs
+      const apnSet = new Set();
+      function extractAPNs(obj) {
+        if (!obj) return;
+        if (Array.isArray(obj)) obj.forEach(extractAPNs);
+        else if (typeof obj === 'object') {
+          if (obj.APNOperatorIdentifierList) extractAPNs(obj.APNOperatorIdentifierList);
+          if (obj.APNOperatorIdentifierItem) {
+            const items = Array.isArray(obj.APNOperatorIdentifierItem) ? obj.APNOperatorIdentifierItem : [obj.APNOperatorIdentifierItem];
+            for (const item of items) {
+              if (item?.APNOperatorIdentifier) apnSet.add(item.APNOperatorIdentifier.trim());
+            }
+          }
+          for (const key in obj) {
+            if (typeof obj[key] === 'object') extractAPNs(obj[key]);
           }
         }
       }
+      extractAPNs(network);
+      if (apnSet.size > 0) {
+        extractedData.apn += Array.from(apnSet).join(', ') + ', ';
+      }
 
-      // IP (GRX/IPX Routing Section)
+      // IPs
       let ipRanges = [];
       const grx = network.NetworkData?.GRXIPXRoutingForDataRoamingSection?.GRXIPXRoutingForDataRoaming?.InterPMNBackboneIPList?.IPAddressOrRange;
       if (grx) ipRanges = grx;
@@ -177,12 +166,28 @@ async function extractDataFromXML(filePath) {
   }
 }
 
+// Création de la table si non existante
+async function createTableIfNotExists(db) {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS ir85_data (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      tadig VARCHAR(20),
+      pays VARCHAR(10),
+      e212 TEXT,
+      e214 TEXT,
+      apn TEXT,
+      ipaddress TEXT
+    )
+  `);
+}
+
 // Traitement principal
 async function processFiles() {
   let db;
   try {
     db = await mysql.createConnection(config.db);
     log('Connecté à la base de données');
+    await createTableIfNotExists(db);
 
     const files = fs.readdirSync(config.inputDir).filter(f => f.endsWith('.xml')).map(f => path.join(config.inputDir, f));
     log(`Fichiers XML trouvés: ${files.length}`);
@@ -195,30 +200,46 @@ async function processFiles() {
         const [existing] = await db.execute('SELECT tadig FROM ir85_data WHERE tadig = ?', [fileData.tadig]);
 
         if (existing.length > 0) {
-          await db.execute(`UPDATE ir85_data SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ? WHERE tadig = ?`, [
-            fileData.pays,
-            fileData.e212,
-            fileData.e214,
-            fileData.apn,
-            fileData.ips,
-            fileData.tadig
-          ]);
+          await db.execute(
+            `UPDATE ir85_data 
+             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ? 
+             WHERE tadig = ?`,
+            [
+              fileData.pays,
+              fileData.e212,
+              fileData.e214,
+              fileData.apn,
+              fileData.ips,
+              fileData.tadig
+            ]
+          );
           log(`Mise à jour : ${fileData.tadig}`);
         } else {
-          await db.execute(`INSERT INTO ir85_data (tadig, pays, e212, e214, apn, ipaddress) VALUES (?, ?, ?, ?, ?, ?)`, [
-            fileData.tadig,
-            fileData.pays,
-            fileData.e212,
-            fileData.e214,
-            fileData.apn,
-            fileData.ips
-          ]);
+          await db.execute(
+            `INSERT INTO ir85_data (tadig, pays, e212, e214, apn, ipaddress) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              fileData.tadig,
+              fileData.pays,
+              fileData.e212,
+              fileData.e214,
+              fileData.apn,
+              fileData.ips
+            ]
+          );
           log(`Insertion : ${fileData.tadig}`);
         }
       } catch (err) {
         log(`Erreur fichier ${file}: ${err.message}`, 'ERROR');
       }
     }
+
+    // Nettoyage APN (enlève ce qui suit la virgule)
+    await db.execute(
+      "UPDATE ir85_data SET apn = SUBSTRING_INDEX(apn, ',', 1) WHERE apn LIKE '%,%'"
+    );
+    log('Nettoyage des APN effectué');
+
   } catch (err) {
     log(`Erreur DB: ${err.message}`, 'ERROR');
   } finally {

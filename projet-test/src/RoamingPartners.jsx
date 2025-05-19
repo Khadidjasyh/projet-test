@@ -155,7 +155,7 @@ const RoamingPartners = () => {
       <h1 className="text-2xl font-bold mb-4">Situation Globale des Partenaires Roaming</h1>
       
       {/* Barre de recherche */}
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <input
           type="text"
           placeholder="Rechercher par IMSI, GT, Opérateur, MCC, MNC, Pays..."
@@ -165,51 +165,47 @@ const RoamingPartners = () => {
         />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-6 py-3 border-b text-left">ID</th>
-              <th className="px-6 py-3 border-b text-left">Opérateur</th>
-              <th className="px-6 py-3 border-b text-left">IMSI Prefix</th>
-              <th className="px-6 py-3 border-b text-left">MCC</th>
-              <th className="px-6 py-3 border-b text-left">MNC</th>
-              <th className="px-6 py-3 border-b text-left">IMSI Complet</th>
-              <th className="px-6 py-3 border-b text-left">GT</th>
-              <th className="px-6 py-3 border-b text-left">Pays</th>
-              <th className="px-6 py-3 border-b text-left">Bilatéral</th>
-              <th className="px-6 py-3 border-b text-left">Actions</th>
+      <div className="flex flex-wrap items-center justify-between mb-2">
+        <span className="text-gray-600 text-sm">
+          {sortedPartners.length} entr{sortedPartners.length > 1 ? 'ées' : 'ée'} affich{sortedPartners.length > 1 ? 'ées' : 'ée'}
+        </span>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-gray-100">
+            <tr>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">ID</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Opérateur</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI Prefix</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">MCC</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">MNC</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI Complet</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">GT</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Pays</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Bilatéral</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {sortedPartners.map((partner) => (
-              <tr key={partner.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 border-b">{partner.id}</td>
-                <td className="px-6 py-4 border-b">{partner.operateur}</td>
-                <td className="px-6 py-4 border-b">{partner.imsi_prefix}</td>
-                <td className="px-6 py-4 border-b">{partner.mcc}</td>
-                <td className="px-6 py-4 border-b">{partner.mnc}</td>
-                <td className="px-6 py-4 border-b">{buildIMSI(partner.mcc, partner.mnc)}</td>
-                <td className="px-6 py-4 border-b">{partner.gt}</td>
-                <td className="px-6 py-4 border-b">{partner.country || '-'}</td>
-                <td className="px-6 py-4 border-b">
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    partner.bilateral 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {partner.bilateral ? 'Oui' : 'Non'}
-                  </span>
+            {sortedPartners.map((partner, idx) => (
+              <tr key={partner.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={partner.id}>{partner.id}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={partner.operateur}>{partner.operateur}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[100px]" title={partner.imsi_prefix}>{partner.imsi_prefix}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={partner.mcc}>{partner.mcc}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={partner.mnc}>{partner.mnc}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[80px]" title={buildIMSI(partner.mcc, partner.mnc)}>{buildIMSI(partner.mcc, partner.mnc)}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[100px]" title={partner.gt}>{partner.gt}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={partner.country || '-'}>{partner.country || '-'}</td>
+                <td className="px-3 py-2 border-b text-center">
+                  <span className={`px-2 py-1 rounded-full text-sm ${partner.bilateral ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{partner.bilateral ? 'Oui' : 'Non'}</span>
                 </td>
-                <td className="px-6 py-4 border-b">
+                <td className="px-3 py-2 border-b text-center">
                   <button
                     onClick={() => handleImportIR21(partner.id, partner.operateur)}
                     disabled={importing[partner.id]}
-                    className={`px-4 py-2 rounded ${
-                      importing[partner.id]
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-700 text-white'
-                    }`}
+                    className={`px-4 py-2 rounded ${importing[partner.id] ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700 text-white'}`}
                   >
                     {importing[partner.id] ? 'Import...' : 'IR21'}
                   </button>

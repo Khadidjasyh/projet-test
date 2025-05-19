@@ -15,7 +15,7 @@ const MmeImsi = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5178/mme-imsi?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(searchTerm)}`
+          `http://localhost:5178/mme-imsi`
         );
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -75,33 +75,36 @@ const MmeImsi = () => {
           {error}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+        <>
+          <div className="flex flex-wrap items-center justify-between mb-2">
+            <span className="text-gray-600 text-sm">
+              {data.length} entr{data.length > 1 ? 'ées' : 'ée'} affich{data.length > 1 ? 'ées' : 'ée'}
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMSI</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">APN Opérateur</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chiffres à ajouter</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Info supplémentaire</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domaine HSS</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de création</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">ID</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">APN Opérateur</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Chiffres à ajouter</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Info supplémentaire</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Domaine HSS</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Date de création</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {data && data.length > 0 ? (
                   data.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.id || 'N/A'}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{item.imsi || 'N/A'}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{item.default_apn_operator_id || 'N/A'}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{item.digits_to_add || 'N/A'}</td>
-                      <td className="px-4 py-4 text-sm text-gray-500">{item.misc_info1 || 'N/A'}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{item.hss_realm_name || 'N/A'}</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(item.created_at)}
-                      </td>
+                    <tr key={item.id} className={item.id % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                      <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={item.id || 'N/A'}>{item.id || 'N/A'}</td>
+                      <td className="px-3 py-2 border-b text-center font-mono font-semibold truncate max-w-[120px] text-blue-800" title={item.imsi || 'N/A'}>{item.imsi || 'N/A'}</td>
+                      <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={item.default_apn_operator_id || 'N/A'}>{item.default_apn_operator_id || 'N/A'}</td>
+                      <td className="px-3 py-2 border-b text-center truncate max-w-[80px]" title={item.digits_to_add || 'N/A'}>{item.digits_to_add || 'N/A'}</td>
+                      <td className="px-3 py-2 border-b text-center truncate max-w-[150px]" title={item.misc_info1 || 'N/A'}>{item.misc_info1 || 'N/A'}</td>
+                      <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={item.hss_realm_name || 'N/A'}>{item.hss_realm_name || 'N/A'}</td>
+                      <td className="px-3 py-2 border-b text-center text-gray-500 truncate max-w-[110px]" title={formatDate(item.created_at)}>{formatDate(item.created_at)}</td>
                     </tr>
                   ))
                 ) : (
@@ -136,7 +139,7 @@ const MmeImsi = () => {
               </button>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

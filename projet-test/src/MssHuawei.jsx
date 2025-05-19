@@ -151,45 +151,52 @@ const MssHuawei = () => {
           <p className="text-gray-500 text-center p-4">No matching records found</p>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">IMSI Prefix</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">MSISDN Prefix</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">Network Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">Managed Object Group</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {paginatedData.map((row, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.imsi_prefix || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.msisdn_prefix || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.network_name || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.managed_object_group || '-'}</td>
+            <>
+              <div className="flex flex-wrap items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">
+                  {filteredData.length} entr{filteredData.length > 1 ? 'ées' : 'ée'} affich{filteredData.length > 1 ? 'ées' : 'ée'}
+                </span>
+              </div>
+              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                <table className="min-w-full text-sm">
+                  <thead className="sticky top-0 z-10 bg-gray-100">
+                    <tr>
+                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI Prefix</th>
+                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">MSISDN Prefix</th>
+                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Network Name</th>
+                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Managed Object Group</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex justify-between items-center mt-4 px-4">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-                disabled={currentPage === 1} 
-                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="text-gray-600">Page {currentPage} of {totalPages || 1}</span>
-              <button 
-                onClick={() => setCurrentPage(prev => prev + 1)} 
-                disabled={currentPage >= totalPages}
-                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+                  </thead>
+                  <tbody>
+                    {paginatedData.map((row, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                        <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.imsi_prefix || '-'}>{row.imsi_prefix || '-'}</td>
+                        <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.msisdn_prefix || '-'}>{row.msisdn_prefix || '-'}</td>
+                        <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={row.network_name || '-'}>{row.network_name || '-'}</td>
+                        <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={row.managed_object_group || '-'}>{row.managed_object_group || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-between items-center mt-4 px-4">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
+                  disabled={currentPage === 1} 
+                  className={`px-4 py-2 border rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  Précédent
+                </button>
+                <span className="text-sm text-gray-700">Page {currentPage} sur {totalPages || 1}</span>
+                <button 
+                  onClick={() => setCurrentPage(prev => prev + 1)} 
+                  disabled={currentPage >= totalPages}
+                  className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  Suivant
+                </button>
+              </div>
+            </>
           </>
         )}
       </div>

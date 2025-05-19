@@ -17,6 +17,17 @@ import {
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 // Données extraites du fichier Excel
 const operatorData = {
   "Afghanistan": ["Telecom Development Company Afghanistan Ltd.", "Etisalat Afghanistan", "MTN", "Afghan Wireless Communication Company"],
@@ -246,6 +257,8 @@ const RoamingTests = () => {
   const [showAuditTable, setShowAuditTable] = useState(false);
   // Nouveaux states pour l'audit table
   const [searchTerm, setSearchTerm] = useState('');
+  const [auditData, setAuditData] = useState([]);
+  
   const [selectedCountryFilter, setSelectedCountryFilter] = useState('Tous');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [showFilters, setShowFilters] = useState(false);
@@ -253,103 +266,48 @@ const RoamingTests = () => {
   const countries = Object.keys(operatorData);
   const operators = operatorData[selectedCountry] || [];
 
-  // Données spécifiques pour le premier test
-  const auditData = [
-    {
-      partenaire: "Orange France",
-      accord: "Bilatéral",
-      gsm: true,
-      camel: true,
-      gprs: true,
-      "3g": true,
-      lte: true,
-      parametresLte: true,
-      erreurs: false,
-      commentaires: "Aucun",
-      rapport: "Conforme, aucun écart identifié"
-    },
-    {
-      partenaire: "Vodafone UK",
-      accord: "Bilatéral",
-      gsm: true,
-      camel: false,
-      gprs: true,
-      "3g": true,
-      lte: true,
-      parametresLte: false,
-      erreurs: true,
-      commentaires: "CAMEL manquant",
-      rapport: "Non conforme – manque service CAMEL"
-    },
-    {
-      partenaire: "TIM Italie",
-      accord: "Unilatéral",
-      gsm: true,
-      camel: true,
-      gprs: false,
-      "3g": true,
-      lte: false,
-      parametresLte: null,
-      erreurs: true,
-      commentaires: "GPRS non activé",
-      rapport: "Partiel – GPRS manquant, pas de LTE"
-    },
-    {
-      partenaire: "T-Mobile US",
-      accord: "Bilatéral",
-      gsm: true,
-      camel: true,
-      gprs: true,
-      "3g": true,
-      lte: true,
-      parametresLte: true,
-      erreurs: false,
-      commentaires: "OK",
-      rapport: "Conforme – tous services activés"
-    },
-    {
-      partenaire: "MTN Afrique",
-      accord: "Bilatéral",
-      gsm: true,
-      camel: false,
-      gprs: false,
-      "3g": false,
-      lte: false,
-      parametresLte: false,
-      erreurs: true,
-      commentaires: "Plusieurs services indisponibles",
-      rapport: "Non conforme – nombreux services KO"
-    },
-    {
-      partenaire: "Telefonica ES",
-      accord: "Bilatéral",
-      gsm: true,
-      camel: true,
-      gprs: true,
-      "3g": true,
-      lte: true,
-      parametresLte: true,
-      erreurs: false,
-      commentaires: "OK",
-      rapport: "Conforme – pas de blocage détecté"
-    }
-  ];
 
-  const handleRunTest = (testId) => {
-    setTests(tests.map(test => 
-      test.id === testId 
-        ? { ...test, status: "running" } 
+
+  const handleRunTest = async (testId) => {
+    setTests(tests.map(test =>
+      test.id === testId
+        ? { ...test, status: "running" }
         : test
     ));
 
-    setTimeout(() => {
-      const randomStatus = Math.random() > 0.5 ? "success" : "failed";
-      setTests(tests.map(test => 
-        test.id === testId 
-          ? { ...test, status: randomStatus } 
-          : test
-      ));
-    }, 2000);
+    // Si c'est "Partenaires Roaming & Services", on va chercher les données
+    const test = tests.find(t => t.id === testId);
+    if (test && test.name === "Partenaires Roaming & Services") {
+      try {
+        const response = await fetch("http://localhost:5178/situation-globale");
+        if (!response.ok) throw new Error("Erreur lors de la récupération des données");
+        const data = await response.json();
+        setAuditData(data);
+        setTests(tests.map(test =>
+          test.id === testId
+            ? { ...test, status: "success" }
+            : test
+        ));
+        setShowAuditTable(true);
+      } catch (error) {
+        setTests(tests.map(test =>
+          test.id === testId
+            ? { ...test, status: "failed" }
+            : test
+        ));
+        alert("Erreur lors de la récupération des données de la situation globale.");
+      }
+    } else {
+      // Comportement inchangé pour les autres tests
+      setTimeout(() => {
+        const randomStatus = Math.random() > 0.5 ? "success" : "failed";
+        setTests(tests.map(test =>
+          test.id === testId
+            ? { ...test, status: randomStatus }
+            : test
+        ));
+      }, 2000);
+    }
   };
 
   const handleShowResults = (test) => {
@@ -383,6 +341,67 @@ const RoamingTests = () => {
     setShowResults(false);
     setSelectedTest(null);
   };
+
+  // Génération du rapport (TXT)
+  const handleGenerateReport = () => {
+    const nomTest = 'Partenaires Roaming & Services'; // adapter si besoin
+    const now = new Date();
+    const dateStr = now.toLocaleDateString();
+    const heureStr = now.toLocaleTimeString();
+    let report = `Rapport du test : ${nomTest}\nDate : ${dateStr}\nHeure : ${heureStr}\n\n`;
+    report += 'Tableau des résultats :\n';
+    report += 'Pays           | Opérateur                        | Commentaire\n';
+    report += '--------------------------------------------------------------\n';
+    auditData.forEach(row => {
+      // Même logique que dans le rendu du tableau pour le commentaire enrichi
+      const services = ['gsm','camel','gprs','troisg','lte'];
+      const missing = [];
+      for (let s of services) {
+        if (row[s] === undefined || row[s] === null || row[s] === '') missing.push(`${s.toUpperCase()} non disponible`);
+      }
+      let commentaireAuto = '';
+      if (missing.length === 0) {
+        commentaireAuto = 'Tous les services sont disponibles';
+      } else {
+        commentaireAuto = missing.join(', ');
+      }
+      let commentaire = row.commentaire;
+      if (commentaireAuto && commentaireAuto !== 'Tous les services sont disponibles') {
+        commentaire = commentaire ? `${commentaire}, ${commentaireAuto}` : commentaireAuto;
+      } else if (commentaireAuto === 'Tous les services sont disponibles' && (!commentaire || commentaire === '' || commentaire === undefined || commentaire === null)) {
+        commentaire = 'Tous les services sont disponibles';
+      }
+      // On n'affiche que si commentaire != 'Tous les services sont disponibles'
+      if (commentaire !== 'Tous les services sont disponibles') {
+        const pad = (v, n) => (v !== undefined && v !== null && v !== '' ? v : 'Aucun').toString().padEnd(n, ' ');
+        report += `${pad(row.pays,14)}| ${pad(row.operateur,30)}| ${commentaire}\n`;
+      }
+    });
+    report += '\nSolutions :\n'
+      + '- Activer CAMEL chez les partenaires prioritaires\n'
+      + '- Pour permettre le roaming des clients prépayés.\n'
+      + '- Lancer des tests de validation avec ces opérateurs.\n'
+      + '- Étendre la couverture Data (GPRS/3G/4G/LTE)\n'
+      + '- Prioriser les pays à fort trafic ou à potentiel élevé.\n'
+      + '- Activer le roaming data via hubs (BICS, Syniverse…).\n'
+      + '- Optimiser les accords de roaming\n'
+      + '- Mettre à jour les accords avec des opérateurs plus compatibles (CAMEL + LTE).\n'
+      + '- Résilier les accords obsolètes ou inactifs.\n'
+      + '- eci';
+    // Téléchargement
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rapport_${nomTest.replace(/\s+/g, '_').toLowerCase()}_${dateStr.replace(/\//g,'-')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  };
+
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -608,67 +627,64 @@ const RoamingTests = () => {
   };
 
   const renderTableView = () => (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white rounded-lg shadow">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {tests.map((test) => (
-            <tr key={test.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{test.name}</div>
-              </td>
-              <td className="px-6 py-4">
-                <div className="text-sm text-gray-500">{test.description}</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  {getStatusIcon(test.status)}
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                    test.status === "success" ? "bg-green-100 text-green-600" :
-                    test.status === "failed" ? "bg-red-100 text-red-600" :
-                    "bg-gray-100 text-gray-600"
-                  }`}>
-                    {test.status === "pending" ? "En attente" : 
-                     test.status === "running" ? "En cours" :
-                     test.status === "success" ? "Réussi" : "Échec"}
-                  </span>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleRunTest(test.id)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
-                    disabled={test.status === "running"}
-                  >
-                    {test.status === "running" ? (
-                      <FaSpinner className="animate-spin text-white" />
-                    ) : (
-                      getStatusIcon(test.status)
-                    )}
-                    <span>{test.status === "running" ? "En cours..." : "Lancer"}</span>
-                  </button>
-                  <button
-                    onClick={() => handleShowResults(test)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2"
-                  >
-                    <FaChartBar />
-                    <span>Résultats</span>
-                  </button>
-                </div>
-              </td>
+    <>
+      <div className="flex flex-wrap items-center justify-between mb-2">
+        <span className="text-gray-600 text-sm">
+          {tests.length} test{tests.length > 1 ? 's' : ''} affiché{tests.length > 1 ? 's' : ''}
+        </span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-gray-100">
+            <tr>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Test</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Description</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Statut</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {tests.map((test, idx) => (
+              <tr key={test.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[180px]" title={test.name}>{test.name}</td>
+                <td className="px-3 py-2 border-b text-center truncate max-w-[300px]" title={test.description}>{test.description}</td>
+                <td className="px-3 py-2 border-b text-center">
+                  {getStatusIcon(test.status)}
+                  <span className="ml-2">{test.status === "running" ? "En cours..." : test.status === "success" ? "Succès" : test.status === "failed" ? "Échoué" : test.status === "pending" ? "En attente" : test.status}</span>
+                </td>
+                <td className="px-3 py-2 border-b text-center">
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <button
+                      onClick={() => handleRunTest(test.id)}
+                      className={`flex-1 px-4 py-2 rounded-lg ${test.status === "running" ? "bg-gray-300 cursor-not-allowed text-gray-500" : "bg-green-600 text-white hover:bg-green-700"}`}
+                      disabled={test.status === "running"}
+                    >
+                      <FaPlay className="inline mr-1" /> Lancer
+                    </button>
+                    <button
+                      onClick={() => handleShowResults(test)}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2"
+                    >
+                      <FaChartBar />
+                      <span>Résultats</span>
+                    </button>
+                    {test.name === "Partenaires Roaming & Services" && (
+                      <button
+                        onClick={handleGenerateReport}
+                        className="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
+                      >
+                        <FaChartBar />
+                        <span>Générer un rapport</span>
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 
   const renderMapView = () => (
@@ -738,54 +754,46 @@ const RoamingTests = () => {
 
   const renderAuditTable = () => {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="p-6"
-      >
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={handleBackToTests}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <FaArrowLeft />
-              <span>Retour aux tests</span>
-            </button>
-            <div className="text-sm text-gray-500">
-              Total des partenaires : {auditData.length}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6">
+        {/* Bouton Générer un rapport en haut du tableau d'audit */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleGenerateReport}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <FaChartBar />
+            <span>Générer un rapport</span>
+          </button>
+        </div>
+
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-500">Total</div>
+            <div className="text-2xl font-bold text-gray-800">{auditData.length}</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-500">Bilatéraux</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {auditData.filter(p => p.accord === "Bilatéral").length}
             </div>
           </div>
-
-          {/* Statistiques */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Total</div>
-              <div className="text-2xl font-bold text-gray-800">{auditData.length}</div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-500">Unilatéraux</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {auditData.filter(p => p.accord === "Unilatéral").length}
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Bilatéraux</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {auditData.filter(p => p.accord === "Bilatéral").length}
-              </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-500">Conformes</div>
+            <div className="text-2xl font-bold text-green-600">
+              {auditData.filter(p => !p.erreurs).length}
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Unilatéraux</div>
-              <div className="text-2xl font-bold text-purple-600">
-                {auditData.filter(p => p.accord === "Unilatéral").length}
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Conformes</div>
-              <div className="text-2xl font-bold text-green-600">
-                {auditData.filter(p => !p.erreurs).length}
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="text-sm text-gray-500">Non Conformes</div>
-              <div className="text-2xl font-bold text-red-600">
-                {auditData.filter(p => p.erreurs).length}
-              </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-sm text-gray-500">Non Conformes</div>
+            <div className="text-2xl font-bold text-red-600">
+              {auditData.filter(p => p.erreurs).length}
             </div>
           </div>
         </div>
@@ -800,37 +808,51 @@ const RoamingTests = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partenaire</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accord</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opérateur</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PLMN</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GSM</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAMEL</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GPRS</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">3G</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LTE/4G</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paramètres LTE OK</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Erreurs détectées</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaires</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rapport</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LTE</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {auditData.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.partenaire}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.accord}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.gsm ? "✔️" : "❌"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.camel ? "✔️" : "❌"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.gprs ? "✔️" : "❌"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row["3g"] ? "✔️" : "❌"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.lte ? "✔️" : "❌"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {row.parametresLte === null ? "N/A" : row.parametresLte ? "✔️" : "❌"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.erreurs ? "❌" : "✔️"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.commentaires}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.rapport}</td>
-                  </tr>
-                ))}
+                {auditData.map((row, index) => {
+                  // Génération automatique du commentaire
+                  const services = ['gsm','camel','gprs','troisg','lte'];
+                  const missing = [];
+                  for (let s of services) {
+                    if (row[s] === undefined || row[s] === null || row[s] === '') missing.push(`${s.toUpperCase()} non disponible`);
+                  }
+                  let commentaireAuto = '';
+                  if (missing.length === 0) {
+                    commentaireAuto = 'Tous les services sont disponibles';
+                  } else {
+                    commentaireAuto = missing.join(', ');
+                  }
+                  let commentaire = row.commentaire;
+                  if (commentaireAuto && commentaireAuto !== 'Tous les services sont disponibles') {
+                    commentaire = commentaire ? `${commentaire}, ${commentaireAuto}` : commentaireAuto;
+                  } else if (commentaireAuto === 'Tous les services sont disponibles' && (!commentaire || commentaire === '' || commentaire === undefined || commentaire === null)) {
+                    commentaire = 'Tous les services sont disponibles';
+                  }
+                  return (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.pays}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.operateur}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.plmn}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.gsm !== undefined && row.gsm !== null && row.gsm !== '' ? row.gsm : 'Aucun'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.camel !== undefined && row.camel !== null && row.camel !== '' ? row.camel : 'Aucun'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.gprs !== undefined && row.gprs !== null && row.gprs !== '' ? row.gprs : 'Aucun'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.troisg !== undefined && row.troisg !== null && row.troisg !== '' ? row.troisg : 'Aucun'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.lte !== undefined && row.lte !== null && row.lte !== '' ? row.lte : 'Aucun'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{commentaire !== undefined && commentaire !== null && commentaire !== '' ? commentaire : 'Aucun'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -838,6 +860,7 @@ const RoamingTests = () => {
       </motion.div>
     );
   };
+
 
   if (showAuditTable) {
     return renderAuditTable();
@@ -934,5 +957,9 @@ const RoamingTests = () => {
     </motion.div>
   );
 };
+
+// (SUPPRIMÉ) Génération du rapport (TXT)
+// function handleGenerateReport() { ... }
+
 
 export default RoamingTests;

@@ -16,7 +16,7 @@ const config = {
   logFile: path.join(__dirname, 'ir21_import.log')
 };
 
-// Logger amélioré
+// Logger
 function log(message, level = 'INFO') {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] [${level}] ${message}\n`;
@@ -24,13 +24,12 @@ function log(message, level = 'INFO') {
   console[level === 'ERROR' ? 'error' : 'log'](message);
 }
 
-// Fonction d'extraction complète des données
+// Extraction XML
 async function extractDataFromXML(filePath) {
   try {
     const xmlContent = fs.readFileSync(filePath, 'utf8');
     const fileName = path.basename(filePath);
-    
-    // Parsing XML
+
     const parser = new xml2js.Parser({
       explicitArray: false,
       mergeAttrs: true,
@@ -64,59 +63,87 @@ async function extractDataFromXML(filePath) {
       e212: '',
       e214: '',
       apn: '',
-      ips: ''
+      ips: '',
+      date: null
     };
 
+    const dateMatch = fileName.match(/_(\d{8})/);
+    if (dateMatch) {
+      const [_, dateStr] = dateMatch;
+      extractedData.date = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+    } else if (fileHeader?.FileCreationDateTime) {
+      const dateStr = fileHeader.FileCreationDateTime;
+      if (dateStr.length >= 8) {
+        extractedData.date = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+      }
+    }
+
     for (const network of networkArray) {
-      // Extraction E212 (MCC/MNC)
       const routingInfo = network.NetworkData?.RoutingInfoSection?.RoutingInfo || {};
+
       const e212Series = routingInfo.CCITT_E212_NumberSeries;
       if (e212Series) {
         const mcc = e212Series.MCC || '';
         const mnc = e212Series.MNC ? e212Series.MNC.padStart(2, '0') : '00';
-        if (mcc && mnc) {
-          extractedData.e212 = `${mcc}${mnc}`;
-        }
+        if (mcc && mnc) extractedData.e212 += `${mcc}${mnc}`;
       }
 
-      // Extraction E214
       const e214Series = routingInfo.CCITT_E214_MGT;
       if (e214Series) {
         const mgtCC = e214Series.MGT_CC || '';
         const mgtNC = e214Series.MGT_NC || '';
-        if (mgtCC && mgtNC) {
-          extractedData.e214 = `${mgtCC}${mgtNC}`;
-        }
+        if (mgtCC && mgtNC) extractedData.e214 += `${mgtCC}${mgtNC}`;
       }
 
-      // Extraction APN (méthode robuste combinée)
-      const packetInfo = network.PacketDataServiceInfoSection?.PacketDataServiceInfo || {};
-      
-      // Méthode 1: Recherche regex directe
-      const apnRegex = /<APNOperatorIdentifier>(epc\.mnc\d{3}\.mcc\d{3})(?:\.3gppnetwork\.org)?<\/APNOperatorIdentifier>/i;
-      const regexMatch = xmlContent.match(apnRegex);
-      if (regexMatch && regexMatch[1]) {
-        extractedData.apn = regexMatch[1];
-      } else {
-        // Méthode 2: Parsing XML classique
-        const apnList = packetInfo.APNOperatorIdentifierList?.APNOperatorIdentifierItem || [];
-        const apns = Array.isArray(apnList) ? apnList : [apnList];
-        for (const apnItem of apns) {
-          if (apnItem?.APNOperatorIdentifier?.includes('epc.mnc')) {
-            extractedData.apn = apnItem.APNOperatorIdentifier.split('.3gppnetwork.org')[0];
-            break;
+      let apnSet = new Set();
+
+      function extractAPNs(obj) {
+        if (!obj) return;
+        if (Array.isArray(obj)) {
+          obj.forEach(extractAPNs);
+        } else if (typeof obj === 'object') {
+          if (obj.APNOperatorIdentifierList) extractAPNs(obj.APNOperatorIdentifierList);
+          if (obj.APNOperatorIdentifierItem) {
+            const items = Array.isArray(obj.APNOperatorIdentifierItem) ? obj.APNOperatorIdentifierItem : [obj.APNOperatorIdentifierItem];
+            for (const item of items) {
+              if (item.APNOperatorIdentifier) {
+                apnSet.add(item.APNOperatorIdentifier.trim());
+              }
+            }
+          }
+          for (const key in obj) {
+            if (typeof obj[key] === 'object') extractAPNs(obj[key]);
           }
         }
       }
 
-      // Extraction IP
-      const ipSection = network.NetworkData?.GRXIPXRoutingForDataRoamingSection?.GRXIPXRoutingForDataRoaming || {};
-      const ipRanges = ipSection.InterPMNBackboneIPList?.IPAddressOrRange || [];
-      const ipList = Array.isArray(ipRanges) ? ipRanges : [ipRanges];
-      extractedData.ips = ipList.map(ip => ip.IPAddressRange || ip.IPAddress).filter(Boolean).join(', ');
+      extractAPNs(network);
+      extractedData.apn = Array.from(apnSet).join(', ');
+
+      function extractAllIPs(obj) {
+        let ips = [];
+        if (typeof obj === 'object' && obj !== null) {
+          for (const key in obj) {
+            const value = obj[key];
+            if (typeof value === 'string' && (key.toLowerCase().includes('ipaddressrange') || key.toLowerCase().includes('ipaddress'))) {
+              if (/^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/.test(value) || /^[a-fA-F0-9:]+(\/\d{1,3})?$/.test(value)) {
+                ips.push(value);
+              }
+            } else if (typeof value === 'object') {
+              ips = ips.concat(extractAllIPs(value));
+            }
+          }
+        } else if (Array.isArray(obj)) {
+          for (const item of obj) {
+            ips = ips.concat(extractAllIPs(item));
+          }
+        }
+        return ips;
+      }
+
+      extractedData.ips = extractAllIPs(network).filter(Boolean).join(', ');
     }
 
-    // Validation des données extraites
     if (!extractedData.e212 && !extractedData.e214 && !extractedData.apn && !extractedData.ips) {
       log(`Aucune donnée valide trouvée dans ${fileName}`, 'WARN');
       return null;
@@ -125,9 +152,25 @@ async function extractDataFromXML(filePath) {
     return extractedData;
 
   } catch (error) {
-    log(`Erreur lors de l'extraction des données depuis ${path.basename(filePath)}: ${error.message}`, 'ERROR');
+    log(`Erreur lors de l'extraction depuis ${path.basename(filePath)}: ${error.message}`, 'ERROR');
     return null;
   }
+}
+
+// Création de la table si absente
+async function createTableIfNotExists(db) {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS ir21_data (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      tadig VARCHAR(20),
+      pays VARCHAR(10),
+      e212 TEXT,
+      e214 TEXT,
+      apn TEXT,
+      ipaddress TEXT,
+      date DATE
+    )
+  `);
 }
 
 // Traitement principal
@@ -136,6 +179,8 @@ async function processFiles() {
   try {
     db = await mysql.createConnection(config.db);
     log('Connecté à la base de données avec succès');
+
+    await createTableIfNotExists(db);
 
     const files = fs.readdirSync(config.inputDir)
       .filter(file => file.endsWith('.xml'))
@@ -148,17 +193,15 @@ async function processFiles() {
         const fileData = await extractDataFromXML(file);
         if (!fileData) continue;
 
-        // Vérifier si l'enregistrement existe déjà
         const [existing] = await db.execute(
           'SELECT tadig FROM ir21_data WHERE tadig = ?', 
           [fileData.tadig]
         );
 
         if (existing.length > 0) {
-          // Mise à jour de l'enregistrement existant
           await db.execute(
             `UPDATE ir21_data 
-             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?
+             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?, date = ?
              WHERE tadig = ?`,
             [
               fileData.pays,
@@ -166,31 +209,39 @@ async function processFiles() {
               fileData.e214,
               fileData.apn,
               fileData.ips,
+              fileData.date,
               fileData.tadig
             ]
           );
           log(`Mise à jour réussie pour ${fileData.tadig}`, 'INFO');
         } else {
-          // Insertion d'un nouvel enregistrement
           await db.execute(
             `INSERT INTO ir21_data 
-             (tadig, pays, e212, e214, apn, ipaddress) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
+             (tadig, pays, e212, e214, apn, ipaddress, date) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
               fileData.tadig,
               fileData.pays,
               fileData.e212,
               fileData.e214,
               fileData.apn,
-              fileData.ips
+              fileData.ips,
+              fileData.date
             ]
           );
           log(`Insertion réussie pour ${fileData.tadig}`, 'INFO');
         }
       } catch (error) {
-        log(`Erreur lors du traitement de ${path.basename(file)}: ${error.message}`, 'ERROR');
+        log(`Erreur fichier ${path.basename(file)}: ${error.message}`, 'ERROR');
       }
     }
+
+    // Nettoyage des APN
+    await db.execute(
+      "UPDATE ir21_data SET apn = SUBSTRING_INDEX(apn, ',', 1) WHERE apn LIKE '%,%'"
+    );
+    log('Nettoyage des APN effectué', 'INFO');
+
   } catch (error) {
     log(`Erreur de connexion à la base de données: ${error.message}`, 'ERROR');
   } finally {
@@ -199,14 +250,14 @@ async function processFiles() {
   }
 }
 
-// Initialisation
+// Lancement
 function init() {
   try {
-    fs.writeFileSync(config.logFile, ''); // Réinitialiser le fichier de log
+    fs.writeFileSync(config.logFile, '');
     log('Démarrage du script IR21 Import');
     processFiles();
   } catch (error) {
-    console.error('Erreur lors de l\'initialisation:', error);
+    console.error('Erreur d\'initialisation:', error);
   }
 }
 

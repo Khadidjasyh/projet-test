@@ -78,31 +78,29 @@ const FirewallIPs = () => {
         <p>No firewall IP entries found.</p>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">IP Range</th>
+      {/* Résumé du nombre d'entrées */}
+      <div className="flex flex-wrap items-center justify-between mb-2">
+        <span className="text-gray-600 text-sm">
+          {filteredData.length} entr{filteredData.length > 1 ? 'ées' : 'ée'} affich{filteredData.length > 1 ? 'ées' : 'ée'}
+        </span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-gray-100">
+            <tr>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700">Nom</th>
+              <th className="px-3 py-2 border-b font-semibold text-gray-700">IP Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((item, idx) => (
+              <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                <td className="px-3 py-2 border-b truncate max-w-[200px]" title={item.nom || item.identifiant || 'N/A'}>{item.nom || item.identifiant || 'N/A'}</td>
+                <td className="px-3 py-2 border-b font-mono text-blue-800 truncate max-w-[180px]" title={item.cidr_complet || 'N/A'}>{item.cidr_complet || 'N/A'}</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-700">{item.nom || item.identifiant || 'N/A'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{item.cidr_complet || 'N/A'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Affichage du nombre total d'entrées */}
-        <div className="flex justify-end items-center mt-4">
-          <span className="text-gray-600">Total: {filteredData.length} entrées</span>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

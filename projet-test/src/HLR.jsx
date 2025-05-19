@@ -147,39 +147,39 @@ const HlrPage = () => {
                     {searchTerm ? "Aucun résultat pour votre recherche dans NS" : "Aucune donnée disponible"}
                 </div>
             ) : (
-                <div className="border rounded-lg overflow-hidden">
-                    <div className="overflow-auto" style={{ maxHeight: '60vh' }}>
-                        <table className="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead className="bg-gray-50">
+                <>
+                    <div className="flex flex-wrap items-center justify-between mb-2">
+                        <span className="text-gray-600 text-sm">
+                            {filteredData.length} entr{filteredData.length > 1 ? 'ées' : 'ée'} affich{filteredData.length > 1 ? 'ées' : 'ée'}
+                        </span>
+                    </div>
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table className="min-w-full text-sm">
+                            <thead className="sticky top-0 z-10 bg-gray-100">
                                 <tr>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">TT</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">NP</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">NA</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">NS</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">GTRC</th>
-                                    <th className="px-3 py-2 text-left font-medium text-gray-500">
-                                        <BsCalendarDate className="inline mr-1" />
-                                        Date
-                                    </th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">TT</th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">NP</th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">NA</th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">NS</th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">GTRC</th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center"><BsCalendarDate className="inline mr-1" />Date</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody>
                                 {filteredData.map((row, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50">
-                                        <td className="px-3 py-2 whitespace-nowrap">{row.tt}</td>
-                                        <td className="px-3 py-2 whitespace-nowrap">{row.np}</td>
-                                        <td className="px-3 py-2 whitespace-nowrap">{row.na}</td>
-                                        <td className="px-3 py-2 whitespace-nowrap font-medium">{row.ns}</td>
-                                        <td className="px-3 py-2 whitespace-nowrap">{row.gtrc}</td>
-                                        <td className="px-3 py-2 whitespace-nowrap text-gray-500">
-                                            {row.imported_date || row.created_at}
-                                        </td>
+                                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                                        <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={row.tt}>{row.tt}</td>
+                                        <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={row.np}>{row.np}</td>
+                                        <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={row.na}>{row.na}</td>
+                                        <td className="px-3 py-2 border-b text-center font-mono font-semibold truncate max-w-[90px] text-blue-800" title={row.ns}>{row.ns}</td>
+                                        <td className="px-3 py-2 border-b text-center truncate max-w-[90px]" title={row.gtrc}>{row.gtrc}</td>
+                                        <td className="px-3 py-2 border-b text-center text-gray-500 truncate max-w-[110px]" title={row.imported_date || row.created_at}>{row.imported_date || row.created_at}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </>
             )}
         </div>
     );

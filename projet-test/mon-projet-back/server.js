@@ -27,22 +27,6 @@ const log = (message) => {
   logStream.write(logMessage);
 };
 
-// Configuration de Sequelize
-const { Sequelize } = require('sequelize');
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-  host: process.env.DB_HOST,
-  dialect: 'mysql',
-  logging: console.log
-});
-
-// Test de la connexion à la base de données
-sequelize.authenticate()
-  .then(() => {
-    console.log('Connection has been established successfully.');
-  })
-  .catch(err => {
-    console.error('Unable to connect to the database:', err);
-  });
 
 // Initialisation de l'application Express
 const app = express();
@@ -156,8 +140,9 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// CORS: Autorise le frontend local
 app.use(cors({
-  origin: '*', // Permettre toutes les origines pendant le développement
+  origin: 'http://localhost:5177',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -291,6 +276,75 @@ app.get('/situation-globale', (req, res) => {
     res.json(results);
   });
 });
+
+app.get('/outbound-roaming', (req, res) => {
+  const query = `
+    SELECT 
+      sg.pays, 
+      sg.operateur, 
+      sg.plmn,
+
+      -- Résultat extraction IR21 / IR85
+      CASE 
+        WHEN i.tadig IS NOT NULL THEN 'réussit' 
+        ELSE 'erreur' 
+      END AS extraction_ir21,
+
+      CASE 
+        WHEN ir85.tadig IS NOT NULL THEN 'réussit'
+        ELSE 'erreur'
+      END AS extraction_ir85,
+
+      -- Champs pour vérification APN/EPC
+      COALESCE(i.apn, ir85.apn) AS apn,
+      COALESCE(i.e212, ir85.e212) AS e212,
+
+      -- Vérification GT (MSC/VLR)
+      CASE
+        WHEN COALESCE(i.e214, ir85.e214) IS NOT NULL AND COALESCE(i.e214, ir85.e214) != '' THEN 'reussi'
+        ELSE 'aucun'
+      END AS verification_gt_msc,
+
+      h.epc,
+      h.imsi_prefix,
+
+      -- Comparaison flexible APN vs EPC
+      CASE 
+        WHEN (
+          (i.apn IS NOT NULL AND (
+            i.apn LIKE CONCAT('%', REPLACE(h.epc, 'epc.', ''), '%') 
+            OR i.apn LIKE CONCAT('%', h.epc, '%')
+          ))
+          OR
+          (ir85.apn IS NOT NULL AND (
+            ir85.apn LIKE CONCAT('%', REPLACE(h.epc, 'epc.', ''), '%') 
+            OR ir85.apn LIKE CONCAT('%', h.epc, '%')
+          ))
+        ) THEN 'correct'
+        ELSE 'erreur'
+      END AS comparaison_apn_epc,
+
+      -- Extraction MCC/MNC depuis e212 format mccXXX.mncYYY
+      SUBSTRING_INDEX(SUBSTRING_INDEX(COALESCE(i.e212, ir85.e212), '.', 1), 'mcc', -1) AS mcc,
+      SUBSTRING_INDEX(SUBSTRING_INDEX(COALESCE(i.e212, ir85.e212), '.', -1), 'mnc', -1) AS mnc
+
+    FROM situation_globales sg
+    LEFT JOIN ir21_data i ON sg.plmn = i.tadig
+    LEFT JOIN ir85_data ir85 ON sg.plmn = ir85.tadig
+    LEFT JOIN hss_data h ON h.imsi_prefix IN (i.e212, ir85.e212)
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des données Outbound Roaming:', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+    }
+
+    console.log(`✅ ${results.length} lignes récupérées pour Outbound Roaming`);
+    res.json(results);
+  });
+});
+
 
 // Route pour récupérer les nœuds réseau
 app.get("/network-nodes", (req, res) => {
@@ -524,7 +578,7 @@ app.get('/huawei/mobile-networks', (req, res) => {
 
 app.get('/hss', (req, res) => {
   console.log('GET /hss endpoint hit');
-  connection.query('SELECT epc, `3g`, hss_esm FROM hss_data', (err, results) => {
+  connection.query('SELECT epc, imsi_prefix, `3g`, hss_esm FROM hss_data', (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Erreur lors de la récupération des données HSS' });

@@ -108,7 +108,7 @@ function Sidebar() {
     { id: "mss-huawei", label: "MSS Huawei", icon: <BsTable /> },
     { id: "hlrr", label: "HLRR", icon: <FaNetworkWired /> },
     { id: "hss", label: "HSS", icon: <FaNetworkWired /> },
-    { id: "mme", label: "MME", icon: <FaNetworkWired /> },
+    { id: "mme", label: "MME", icon: <FaNetworkWired />, to: "/mme" },
     { id: "alerts", label: "Alertes", icon: <BsExclamationTriangle /> },
     { id: "firewall-ips", label: "Firewall", icon: <FaShieldAlt /> },
     { id: "reports", label: "Rapports", icon: <BsFileEarmarkBarGraph /> },

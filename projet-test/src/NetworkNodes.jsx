@@ -344,118 +344,49 @@ const NetworkNodes = () => {
 
         {/* Tableau des nœuds */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('node_name')}
-                >
-                  Nom {getSortIcon('node_name')}
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('node_type')}
-                >
-                  Type {getSortIcon('node_type')}
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('vendor')}
-                >
-                  Constructeur {getSortIcon('vendor')}
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('imsi')}
-                >
-                  IMSI {getSortIcon('imsi')}
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('mcc')}
-                >
-                  MCC {getSortIcon('mcc')}
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('mnc')}
-                >
-                  MNC {getSortIcon('mnc')}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Statut
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedNodes.map((node) => (
-                <tr key={node.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">{node.node_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getNodeTypeColor(node.node_type)}`}>
-                      {node.node_type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getVendorColor(node.vendor)}`}>
-                      {node.vendor}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{node.imsi || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{node.mcc || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{node.mnc || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${node.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {node.active ? 'Actif' : 'Inactif'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleImport(node)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                        title="Importer"
-                      >
-                        <FaFileImport />
-                      </button>
-                      <button
-                        onClick={() => handleDownload(node)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Télécharger"
-                      >
-                        <FaFileExport />
-                      </button>
-                      <button
-                        onClick={() => handleExport(node)}
-                        className="text-yellow-600 hover:text-yellow-900"
-                        title="Exporter"
-                      >
-                        <FaFileDownload />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(node)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Supprimer"
-                      >
-                        <FaTrash />
-                      </button>
-                      <button
-                        onClick={() => handlePrint(node)}
-                        className="text-green-600 hover:text-green-900"
-                        title="Imprimer"
-                      >
-                        <FaPrint />
-                      </button>
-                    </div>
-                  </td>
+          <div className="flex flex-wrap items-center justify-between mb-2">
+            <span className="text-gray-600 text-sm">
+              {sortedNodes.length} entr{sortedNodes.length > 1 ? 'ées' : 'ée'} affich{sortedNodes.length > 1 ? 'ées' : 'ée'}
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
+                <tr>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('node_name')}>Nom {getSortIcon('node_name')}</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('node_type')}>Type {getSortIcon('node_type')}</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('vendor')}>Constructeur {getSortIcon('vendor')}</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('imsi')}>IMSI {getSortIcon('imsi')}</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('mcc')}>MCC {getSortIcon('mcc')}</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('mnc')}>MNC {getSortIcon('mnc')}</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Statut</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedNodes.map((node) => (
+                  <tr key={node.id} className={node.id % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={node.node_name}>{node.node_name}</td>
+                    <td className="px-3 py-2 border-b text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${getNodeTypeColor(node.node_type)}`}>{node.node_type}</span></td>
+                    <td className="px-3 py-2 border-b text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${getVendorColor(node.vendor)}`}>{node.vendor}</span></td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[100px]" title={node.imsi || '-'}>{node.imsi || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={node.mcc || '-'}>{node.mcc || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={node.mnc || '-'}>{node.mnc || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${node.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{node.active ? 'Actif' : 'Inactif'}</span></td>
+                    <td className="px-3 py-2 border-b text-center">
+                      <div className="flex space-x-2 justify-center">
+                        <button onClick={() => handleImport(node)} className="text-indigo-600 hover:text-indigo-900" title="Importer"><FaFileImport /></button>
+                        <button onClick={() => handleDownload(node)} className="text-blue-600 hover:text-blue-900" title="Télécharger"><FaFileExport /></button>
+                        <button onClick={() => handleExport(node)} className="text-yellow-600 hover:text-yellow-900" title="Exporter"><FaFileDownload /></button>
+                        <button onClick={() => handleDelete(node)} className="text-red-600 hover:text-red-900" title="Supprimer"><FaTrash /></button>
+                        <button onClick={() => handlePrint(node)} className="text-green-600 hover:text-green-900" title="Imprimer"><FaPrint /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
