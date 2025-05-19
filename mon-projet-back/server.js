@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'FireWall');
+    const uploadDir = path.join(__dirname, 'MME');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -1108,6 +1108,26 @@ app.delete('/api/firewall-ips/:id', async (req, res) => {
   }
 });
 
+// Create mme_imsi_analysis table if it doesn't exist
+const createMmeImsiTable = `
+CREATE TABLE IF NOT EXISTS mme_imsi_analysis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    imsi VARCHAR(32) NOT NULL UNIQUE,
+    default_apn_operator_id VARCHAR(100),
+    digits_to_add VARCHAR(20),
+    misc_info1 TEXT,
+    hss_realm_name VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`;
+
+connection.query(createMmeImsiTable, (error) => {
+    if (error) {
+        console.error('Error creating mme_imsi_analysis table:', error);
+    } else {
+        console.log('mme_imsi_analysis table created or already exists');
+    }
+});
+
 // Add MME file upload endpoint
 app.post('/api/upload-mme', upload.single('file'), async (req, res) => {
   if (!req.file) {
@@ -1134,6 +1154,7 @@ app.post('/api/upload-mme', upload.single('file'), async (req, res) => {
     
     let successCount = 0;
     let errorCount = 0;
+    let duplicateCount = 0;
 
     for (const block of imsiBlocks) {
       try {
@@ -1161,30 +1182,69 @@ app.post('/api/upload-mme', upload.single('file'), async (req, res) => {
           }
         });
 
-        // Insert into database
-        await new Promise((resolve, reject) => {
-          const query = 'INSERT INTO mme_imsi_analysis (imsi, default_apn_operator_id, digits_to_add, misc_info1, hss_realm_name) VALUES (?, ?, ?, ?, ?)';
-          const values = [
-            parsedData.imsi,
-            parsedData.default_apn_operator_id,
-            parsedData.digits_to_add,
-            parsedData.misc_info1,
-            parsedData.hss_realm_name
-          ];
-          
-          console.log('Inserting data:', values);
-          
-          connection.query(query, values, (error) => {
-            if (error) {
-              console.error('Database error:', error);
-              errorCount++;
-              reject(error);
-            } else {
-              successCount++;
-              resolve();
-            }
+        // Check if IMSI already exists
+        const checkQuery = 'SELECT id FROM mme_imsi_analysis WHERE imsi = ?';
+        const checkResult = await new Promise((resolve, reject) => {
+          connection.query(checkQuery, [parsedData.imsi], (error, results) => {
+            if (error) reject(error);
+            else resolve(results);
           });
         });
+
+        if (checkResult.length > 0) {
+          // Update existing record
+          const updateQuery = `
+            UPDATE mme_imsi_analysis 
+            SET default_apn_operator_id = ?,
+                digits_to_add = ?,
+                misc_info1 = ?,
+                hss_realm_name = ?
+            WHERE imsi = ?
+          `;
+          
+          await new Promise((resolve, reject) => {
+            connection.query(updateQuery, [
+              parsedData.default_apn_operator_id,
+              parsedData.digits_to_add,
+              parsedData.misc_info1,
+              parsedData.hss_realm_name,
+              parsedData.imsi
+            ], (error) => {
+              if (error) {
+                console.error('Error updating MME data:', error);
+                reject(error);
+              } else {
+                successCount++;
+                resolve();
+              }
+            });
+          });
+        } else {
+          // Insert new record
+          const insertQuery = `
+            INSERT INTO mme_imsi_analysis 
+            (imsi, default_apn_operator_id, digits_to_add, misc_info1, hss_realm_name) 
+            VALUES (?, ?, ?, ?, ?)
+          `;
+          
+          await new Promise((resolve, reject) => {
+            connection.query(insertQuery, [
+              parsedData.imsi,
+              parsedData.default_apn_operator_id,
+              parsedData.digits_to_add,
+              parsedData.misc_info1,
+              parsedData.hss_realm_name
+            ], (error) => {
+              if (error) {
+                console.error('Error inserting MME data:', error);
+                reject(error);
+              } else {
+                successCount++;
+                resolve();
+              }
+            });
+          });
+        }
       } catch (blockError) {
         console.error('Error processing block:', blockError);
         errorCount++;
@@ -1237,26 +1297,6 @@ app.delete('/api/mme-imsi/:id', async (req, res) => {
     console.error('Error deleting MME entry:', error);
     res.status(500).json({ error: 'Error deleting MME entry' });
   }
-});
-
-// Create mme_imsi_analysis table if it doesn't exist
-const createMmeImsiTable = `
-CREATE TABLE IF NOT EXISTS mme_imsi_analysis (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    imsi VARCHAR(50),
-    default_apn_operator_id VARCHAR(50),
-    digits_to_add VARCHAR(50),
-    misc_info1 VARCHAR(255),
-    hss_realm_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)`;
-
-connection.query(createMmeImsiTable, (error) => {
-    if (error) {
-        console.error('Error creating mme_imsi_analysis table:', error);
-    } else {
-        console.log('mme_imsi_analysis table created or already exists');
-    }
 });
 
 // Démarrer le serveur
