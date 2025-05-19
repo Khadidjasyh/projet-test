@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BsSearch, BsUpload } from 'react-icons/bs';
+import { BsSearch, BsUpload, BsTrash } from 'react-icons/bs';
 import axios from 'axios';
 
 const FirewallIPs = () => {
@@ -8,35 +8,22 @@ const FirewallIPs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [uploadStatus, setUploadStatus] = useState({ message: '', type: '' });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState(null);
   const fileInputRef = useRef(null);
 
   const fetchData = async () => {
     try {
-      console.log('Fetching firewall IPs from backend...');
       const response = await fetch('http://localhost:5178/firewall-ips');
       
-      console.log('Response status:', response.status);
-      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Response not OK:', errorText);
-        throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
+        throw new Error(`Network response was not ok: ${response.status}`);
       }
       
       const result = await response.json();
-      console.log('Firewall IPs data received:', result);
-      
-      if (!Array.isArray(result)) {
-        console.error('Expected array but got:', typeof result);
-        setError('Invalid data format received from server');
-        setData([]);
-        return;
-      }
-      
       setData(result);
     } catch (err) {
       setError(`Error fetching firewall IPs: ${err.message}`);
-      console.error('Error details:', err);
     } finally {
       setLoading(false);
     }
@@ -50,10 +37,8 @@ const FirewallIPs = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const allowedExtensions = ['.txt'];
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
-    if (!allowedExtensions.includes(ext)) {
-      setUploadStatus({ message: 'Veuillez sélectionner un fichier .txt.', type: 'error' });
+    if (!file.name.toLowerCase().endsWith('.txt')) {
+      setUploadStatus({ message: 'Please select a .txt file', type: 'error' });
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -64,24 +49,49 @@ const FirewallIPs = () => {
     formData.append('file', file);
 
     try {
-      setUploadStatus({ message: 'Importation en cours...', type: 'info' });
+      setUploadStatus({ message: 'Uploading...', type: 'info' });
       const response = await axios.post('http://localhost:5178/api/upload-firewall', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       if (response.data.success) {
         setUploadStatus({ message: response.data.message, type: 'success' });
-        fetchData();
+        fetchData(); // Refresh the data after successful upload
       } else {
-        throw new Error(response.data.error || 'Erreur lors de l\'importation');
+        throw new Error(response.data.error || 'Upload failed');
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de l\'importation du fichier', type: 'error' });
+      setUploadStatus({ 
+        message: error.response?.data?.error || error.message || 'Error uploading file', 
+        type: 'error' 
+      });
     } finally {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.delete(`http://localhost:5178/api/firewall-ips/${id}`);
+      if (response.data.success) {
+        setUploadStatus({ message: 'Entry deleted successfully', type: 'success' });
+        fetchData(); // Refresh the data
+      }
+    } catch (error) {
+      setUploadStatus({ 
+        message: error.response?.data?.error || 'Error deleting entry', 
+        type: 'error' 
+      });
+    }
+    setDeleteModalOpen(false);
+    setEntryToDelete(null);
+  };
+
+  const openDeleteModal = (entry) => {
+    setEntryToDelete(entry);
+    setDeleteModalOpen(true);
   };
 
   const filteredData = data.filter(entry =>
@@ -93,7 +103,7 @@ const FirewallIPs = () => {
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Firewall IPs</h1>
-        <p className="text-gray-600">Explore the list of imported firewall IP entries</p>
+        <p className="text-gray-600">Manage and view firewall IP entries</p>
       </div>
 
       <div className="mb-4 flex items-center space-x-4">
@@ -104,7 +114,6 @@ const FirewallIPs = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-            aria-label="Search firewall IPs"
           />
           <BsSearch className="absolute left-3 top-3 text-gray-400" />
         </div>
@@ -121,7 +130,7 @@ const FirewallIPs = () => {
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center"
         >
           <BsUpload className="mr-2" />
-          <span>Importer Firewall</span>
+          <span>Import Firewall</span>
         </label>
       </div>
 
@@ -148,14 +157,24 @@ const FirewallIPs = () => {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">IP Range</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">CIDR</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredData.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-700">{item.nom || item.identifiant || 'N/A'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{item.nom || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{item.cidr_complet || 'N/A'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">
+                    <button
+                      onClick={() => openDeleteModal(item)}
+                      className="text-red-600 hover:text-red-800"
+                      title="Delete entry"
+                    >
+                      <BsTrash />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -163,9 +182,42 @@ const FirewallIPs = () => {
         </div>
 
         <div className="flex justify-end items-center mt-4">
-          <span className="text-gray-600">Total: {filteredData.length} entrées</span>
+          <span className="text-gray-600">Total: {filteredData.length} entries</span>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && entryToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <p className="mb-4">
+              Are you sure you want to delete the entry:
+              <br />
+              <strong>Name:</strong> {entryToDelete.nom}
+              <br />
+              <strong>CIDR:</strong> {entryToDelete.cidr_complet}
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setEntryToDelete(null);
+                }}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(entryToDelete.identifiant)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

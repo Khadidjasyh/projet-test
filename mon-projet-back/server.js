@@ -38,36 +38,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Configuration de multer pour le stockage des fichiers
+// Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Determine upload directory based on route or file type if needed
-    let uploadDir = path.join(__dirname, 'uploads'); // Default
-    if (req.originalUrl === '/api/upload-hlr') {
-      uploadDir = path.join(__dirname, 'HLR'); // Specific directory for HLR
-    } else if (req.originalUrl === '/api/upload-hss') { // Assuming HSS also has a similar route
-      uploadDir = path.join(__dirname, 'hss');
-    } else if (req.originalUrl === '/api/upload-ir21') { // Assuming IR21 also has a similar route
-      uploadDir = path.join(__dirname, 'IR21_xml');
-    } else if (req.originalUrl === '/api/upload-ir85') { // Assuming IR85 also has a similar route
-      uploadDir = path.join(__dirname, 'IR85_xml');
-    } else if (req.originalUrl === '/api/upload-mss') { // Assuming MSS also has a similar route
-      uploadDir = path.join(__dirname, 'MSS_Ericson');
-    } else if (req.originalUrl === '/api/upload-firewall') { // Assuming Firewall also has a similar route
-      uploadDir = path.join(__dirname, 'Firewall'); // Assuming 'Firewall' is the dir
-    } else if (req.originalUrl === '/api/upload-huawei-networks') { // Route pour Huawei
-      uploadDir = path.join(__dirname, 'MSS_Huawei');
-    }
-
-    // Créer le dossier s'il n'existe pas
+    const uploadDir = path.join(__dirname, 'FireWall');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    console.log('📁 Dossier de destination:', uploadDir);
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Use original filename for easier identification
     cb(null, file.originalname);
   }
 });
@@ -75,43 +55,10 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   fileFilter: function (req, file, cb) {
-    console.log('🔍 Vérification du fichier:', {
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      route: req.originalUrl // Log the route
-    });
-
-    // Define allowed extensions based on the route
-    let allowedExtensions = [];
-    if (req.originalUrl === '/api/upload-hlr') {
-      allowedExtensions = ['.log', '.txt'];
-    } else if (req.originalUrl === '/api/upload-hss') {
-      allowedExtensions = ['.log', '.txt'];
-    } else if (req.originalUrl === '/api/upload-ir21') {
-      allowedExtensions = ['.xml', '.ir21'];
-    } else if (req.originalUrl === '/api/upload-ir85') {
-      allowedExtensions = ['.xml', '.ir85'];
-    } else if (req.originalUrl === '/api/upload-mss') {
-      allowedExtensions = ['.log', '.txt'];
-    } else if (req.originalUrl === '/api/upload-firewall') {
-      allowedExtensions = ['.log', '.txt']; // Assuming log/txt for firewall
-    } else {
-      // Default allowed types if route doesn't match
-      allowedExtensions = ['.xml', '.pdf', '.ir21', '.log', '.txt'];
+    if (file.mimetype !== 'text/plain') {
+      return cb(new Error('Only .txt files are allowed'));
     }
-
-    const ext = path.extname(file.originalname).toLowerCase();
-
-    if (allowedExtensions.includes(ext)) {
-      console.log('✅ Type de fichier accepté for route', req.originalUrl, ':', ext);
-      cb(null, true);
-    } else {
-      console.error('❌ Type de fichier non supporté for route', req.originalUrl, ':', ext, '. Allowed:', allowedExtensions);
-      cb(new Error(`Format de fichier non supporté pour cette route. Utilisez l'un des formats suivants : ${allowedExtensions.join(', ')}.`));
-    }
-  },
-  limits: {
-    fileSize: 20 * 1024 * 1024 // Increased limit to 20MB
+    cb(null, true);
   }
 });
 
@@ -1094,6 +1041,222 @@ app.get('/api/huawei-networks/nodes', async (req, res) => {
       message: 'Erreur serveur' 
     });
   }
+});
+
+// Add new endpoint for firewall file upload
+app.post('/api/upload-firewall', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  try {
+    const filePath = req.file.path;
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    const lines = content.split('\n');
+
+    for (const line of lines) {
+      if (line.trim() && !line.startsWith('address-set') && !line.startsWith('}')) {
+        const match = line.trim().match(/^address\s+(\S+)\s+([\d\.\/]+);?$/);
+        if (match) {
+          const [_, nom, cidr_complet] = match;
+          let adresse_ip = cidr_complet;
+          let longueur_masque = 32;
+
+          if (cidr_complet.includes('/')) {
+            const parts = cidr_complet.split('/');
+            adresse_ip = parts[0];
+            longueur_masque = parseInt(parts[1], 10);
+          }
+
+          await new Promise((resolve, reject) => {
+            connection.query(
+              'INSERT INTO firewall_ips (nom, adresse_ip, longueur_masque, cidr_complet) VALUES (?, ?, ?, ?)',
+              [nom, adresse_ip, longueur_masque, cidr_complet],
+              (error) => {
+                if (error) reject(error);
+                else resolve();
+              }
+            );
+          });
+        }
+      }
+    }
+
+    res.json({ success: true, message: 'File uploaded and processed successfully' });
+  } catch (error) {
+    console.error('Error processing firewall file:', error);
+    res.status(500).json({ error: 'Error processing firewall file' });
+  }
+});
+
+// Add delete endpoint for firewall entries
+app.delete('/api/firewall-ips/:id', async (req, res) => {
+  const id = req.params.id;
+  
+  try {
+    await new Promise((resolve, reject) => {
+      connection.query('DELETE FROM firewall_ips WHERE identifiant = ?', [id], (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+    
+    res.json({ success: true, message: 'Firewall entry deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting firewall entry:', error);
+    res.status(500).json({ error: 'Error deleting firewall entry' });
+  }
+});
+
+// Add MME file upload endpoint
+app.post('/api/upload-mme', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    console.error('No file uploaded');
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  console.log('Received MME file:', {
+    filename: req.file.originalname,
+    path: req.file.path,
+    size: req.file.size
+  });
+
+  try {
+    const filePath = req.file.path;
+    console.log('Reading MME file from:', filePath);
+    
+    const content = await fs.promises.readFile(filePath, 'utf-8');
+    console.log('File content length:', content.length);
+    
+    // Split the content into IMSI blocks
+    const imsiBlocks = content.split('IMSI:').slice(1);
+    console.log('Number of IMSI blocks:', imsiBlocks.length);
+    
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const block of imsiBlocks) {
+      try {
+        const lines = block.trim().split('\n');
+        const imsi = lines[0].trim();
+        
+        const parsedData = {
+          imsi: imsi,
+          default_apn_operator_id: '',
+          digits_to_add: '',
+          misc_info1: '',
+          hss_realm_name: ''
+        };
+        
+        lines.slice(1).forEach(line => {
+          const trimmedLine = line.trim();
+          if (trimmedLine.startsWith('dn (DefaultAPNOperatorID)')) {
+            parsedData.default_apn_operator_id = trimmedLine.split(/\s+/)[2];
+          } else if (trimmedLine.startsWith('ad (DigitsToAdd)')) {
+            parsedData.digits_to_add = trimmedLine.split(/\s+/)[2];
+          } else if (trimmedLine.startsWith('m1 (MiscInfo1)')) {
+            parsedData.misc_info1 = trimmedLine.split(/\s+/).slice(2).join(' ').replace(/_/g, ' ').trim();
+          } else if (trimmedLine.startsWith('rn (HssRealmName)')) {
+            parsedData.hss_realm_name = trimmedLine.split(/\s+/)[2];
+          }
+        });
+
+        // Insert into database
+        await new Promise((resolve, reject) => {
+          const query = 'INSERT INTO mme_imsi_analysis (imsi, default_apn_operator_id, digits_to_add, misc_info1, hss_realm_name) VALUES (?, ?, ?, ?, ?)';
+          const values = [
+            parsedData.imsi,
+            parsedData.default_apn_operator_id,
+            parsedData.digits_to_add,
+            parsedData.misc_info1,
+            parsedData.hss_realm_name
+          ];
+          
+          console.log('Inserting data:', values);
+          
+          connection.query(query, values, (error) => {
+            if (error) {
+              console.error('Database error:', error);
+              errorCount++;
+              reject(error);
+            } else {
+              successCount++;
+              resolve();
+            }
+          });
+        });
+      } catch (blockError) {
+        console.error('Error processing block:', blockError);
+        errorCount++;
+      }
+    }
+
+    console.log('Processing complete:', {
+      successCount,
+      errorCount,
+      totalBlocks: imsiBlocks.length
+    });
+
+    if (successCount > 0) {
+      res.json({ 
+        success: true, 
+        message: `Successfully processed ${successCount} entries from MME file`,
+        details: {
+          successCount,
+          errorCount,
+          totalBlocks: imsiBlocks.length
+        }
+      });
+    } else {
+      throw new Error('No valid entries were processed from the file');
+    }
+  } catch (error) {
+    console.error('Error processing MME file:', error);
+    res.status(500).json({ 
+      error: 'Error processing MME file',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Add MME delete endpoint
+app.delete('/api/mme-imsi/:id', async (req, res) => {
+  const id = req.params.id;
+  
+  try {
+    await new Promise((resolve, reject) => {
+      connection.query('DELETE FROM mme_imsi_analysis WHERE id = ?', [id], (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+    
+    res.json({ success: true, message: 'MME entry deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting MME entry:', error);
+    res.status(500).json({ error: 'Error deleting MME entry' });
+  }
+});
+
+// Create mme_imsi_analysis table if it doesn't exist
+const createMmeImsiTable = `
+CREATE TABLE IF NOT EXISTS mme_imsi_analysis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    imsi VARCHAR(50),
+    default_apn_operator_id VARCHAR(50),
+    digits_to_add VARCHAR(50),
+    misc_info1 VARCHAR(255),
+    hss_realm_name VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`;
+
+connection.query(createMmeImsiTable, (error) => {
+    if (error) {
+        console.error('Error creating mme_imsi_analysis table:', error);
+    } else {
+        console.log('mme_imsi_analysis table created or already exists');
+    }
 });
 
 // Démarrer le serveur
