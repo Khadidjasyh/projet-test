@@ -1,133 +1,123 @@
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const multer = require('multer');
+const express = require('express');
+const router = express.Router();
 
-// Database connection configuration
-const pool = mysql.createPool({
+// Configuration de la base de données
+const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "Aaa!121212", // Ensure this is correct or use env
-  database: process.env.DB_NAME || "mon_projet_db",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  password: process.env.DB_PASSWORD || "Aaa!121212",
+  database: process.env.DB_NAME || "mon_projet_db"
+};
+
+// Configuration du stockage des fichiers
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, 'HLR');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, 'hlr_' + Date.now() + path.extname(file.originalname));
+  }
 });
 
-// Regex and parsing logic based on your format "TT NP NA NS GTRC"
-const parseHlrData = (text) => {
-  const entries = [];
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
-
-  // Find the line that starts the data section (e.g., "TT   NP  NA   NS  GTRC")
-  const dataStartIndex = lines.findIndex(line => line.startsWith('TT'));
-
-  if (dataStartIndex === -1) {
-    console.warn('⚠️ No HLR data header found (expected line starting with "TT NP NA NS GTRC")');
-    return [];
-  }
-
-  // Process lines after the header
-  const dataLines = lines.slice(dataStartIndex + 1);
-
-  for (const line of dataLines) {
-    // Stop if a line starts with 'OPERATING' or similar footer
-    if (line.startsWith('OPERATING') || line.startsWith('---')) {
-        break;
-    }
-
-    // Split by one or more spaces, filter out empty strings
-    const columns = line.split(/\s+/).filter(col => col !== '');
-
-    // Expecting 5 columns based on "TT NP NA NS GTRC"
-    if (columns.length === 5) {
-      entries.push({
-        tt: columns[0],
-        np: columns[1],
-        na: columns[2],
-        ns: columns[3],
-        gtrc: columns[4],
-      });
+const upload = multer({ 
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/plain' || file.mimetype === 'application/octet-stream') {
+      cb(null, true);
     } else {
-      console.warn(`⚠️ Skipping line with incorrect number of columns (${columns.length} instead of 5): "${line}"`);
+      cb(new Error('Seuls les fichiers .log sont acceptés'));
     }
   }
-  return entries;
-};
+});
 
-const importHLRData = async (filePath, nodeName) => {
-  let connection;
+// Fonction pour parser le fichier HLR
+async function parseHLRFile(filePath) {
   try {
-    connection = await pool.getConnection();
-    const content = await fs.readFile(filePath, 'utf-8');
-    const entries = parseHlrData(content);
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    const lines = content.split('\n');
+    const hlrData = [];
 
-    if (entries.length === 0) {
-      console.log(`⚠️ No HLR entries found in ${path.basename(filePath)}`);
-      return { success: false, message: 'No HLR entries found or incorrect format' };
+    for (const line of lines) {
+      if (line.trim()) {
+        // Supposons que le format est: TT NP NA NS GTRC
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 5) {
+          hlrData.push({
+            tt: parts[0],
+            np: parts[1],
+            na: parts[2],
+            ns: parts[3],
+            gtrc: parts[4]
+          });
+        }
+      }
     }
 
-    // Insert entries into the database
-    const query = `
-        INSERT INTO hlr
-        (node_name, tt, np, na, ns, gtrc, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, NOW())
-    `;
-    let importedCount = 0;
-    for (const entry of entries) {
-        // Add nodeName to the entry before insertion
-        await connection.execute(query, [
-            nodeName, // Use the nodeName derived from the filename
-            entry.tt,
-            entry.np,
-            entry.na,
-            entry.ns,
-            entry.gtrc
-        ]);
-        importedCount++;
-    }
-
-    console.log(`✅ Successfully imported ${importedCount} entries from ${path.basename(filePath)} for node ${nodeName}`);
-    return { success: true, message: `${importedCount} entries imported for node ${nodeName}` };
-
-  } catch (err) {
-    console.error('❌ Error during HLR import:', err.message);
-    // Log more details about the error
-    if (err.sqlMessage) {
-        console.error('SQL Error:', err.sqlMessage);
-        console.error('SQL Query:', err.sql);
-    }
-    return { success: false, message: `Import failed: ${err.message}` };
-  } finally {
-    if (connection) connection.release();
-  }
-};
-
-// Function to create table (ensure this is called on server startup or first import)
-// Keeping this here, but server.js also seems to handle table creation
-async function createTable() {
-  let connection;
-  try {
-    connection = await pool.getConnection();
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS hlr_data (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        node_name VARCHAR(255),
-        tt VARCHAR(255),
-        np VARCHAR(255),
-        na VARCHAR(255),
-        ns VARCHAR(255),
-        gtrc VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("✅ hlr_data table ensured to exist.");
-  } catch (err) {
-    console.error('❌ Error creating hlr_data table:', err.message);
-  } finally {
-    if (connection) connection.release();
+    return hlrData;
+  } catch (error) {
+    console.error('Erreur lors de la lecture du fichier:', error);
+    throw error;
   }
 }
 
-// Export functions for use in your backend application (e.g., in a route handler)
-// The server route will call importHLRData directly.
-module.exports = { importHLRData, createTable, pool, parseHlrData }; // Export parse function for potential testing 
+// Route pour l'importation du fichier HLR
+router.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: 'Aucun fichier n\'a été uploadé' });
+  }
+
+  try {
+    // Parser le fichier
+    const hlrData = await parseHLRFile(req.file.path);
+
+    // Connexion à la base de données
+    const connection = await mysql.createConnection(dbConfig);
+
+    // Insérer les données dans la base
+    for (const data of hlrData) {
+      await connection.execute(
+        'INSERT INTO hlr (tt, np, na, ns, gtrc) VALUES (?, ?, ?, ?, ?)',
+        [data.tt, data.np, data.na, data.ns, data.gtrc]
+      );
+    }
+
+    await connection.end();
+
+    // Supprimer le fichier après import
+    await fs.promises.unlink(req.file.path);
+
+    res.json({
+      success: true,
+      message: `${hlrData.length} enregistrements HLR ont été importés avec succès`
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'import:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur lors de l\'import du fichier HLR: ' + error.message
+    });
+  }
+});
+
+// Route pour récupérer les données HLR
+router.get('/hlr', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute('SELECT * FROM hlr ORDER BY id DESC');
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données HLR:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des données HLR' });
+  }
+});
+
+module.exports = router; 

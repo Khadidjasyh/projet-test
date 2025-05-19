@@ -42,60 +42,55 @@ async function processLogFiles() {
     console.log('Current directory:', __dirname);
     console.log('Looking for log files in directory:', logDir);
     
-    // List all files in the directory
+    // Lister tous les fichiers .log du dossier
+    let files = [];
     try {
-        const files = fs.readdirSync(logDir);
-        console.log('Files found in directory:', files);
+        files = fs.readdirSync(logDir).filter(f => f.endsWith('.log'));
+        console.log('Log files found in directory:', files);
     } catch (error) {
         console.error('Error reading directory:', error);
     }
-    
-    const ericssonNodes = ['BCORN1', 'BCMUS1', 'BCCNM1', 'BCCNE1', 'BCBMR1', 'BCANA1'];
 
-    // First check if any log files exist
-    const existingFiles = ericssonNodes.filter(node => {
-        const filePath = path.join(logDir, `${node}.log`);
-        const exists = fs.existsSync(filePath);
-        console.log(`Checking for ${node}.log: ${exists ? 'Found' : 'Not found'}`);
-        return exists;
-    });
-
-    if (existingFiles.length === 0) {
-        console.error('No log files found in the current directory. Please ensure the following files exist:');
-        ericssonNodes.forEach(node => console.log(`- ${node}.log`));
+    if (files.length === 0) {
+        console.error('No .log files found in the directory.');
         connection.end();
         return;
     }
 
-    console.log(`Found ${existingFiles.length} log files to process:`, existingFiles);
-
-    for (const node of existingFiles) {
-        const filePath = path.join(logDir, `${node}.log`);
-        console.log(`\nProcessing ${node} log file at: ${filePath}`);
-
+    let importedCount = 0;
+    for (const file of files) {
+        const filePath = path.join(logDir, file);
+        let fileContent = '';
         try {
-            const fileContent = fs.readFileSync(filePath, 'utf8');
-            console.log(`Successfully read file ${node}.log (${fileContent.length} characters)`);
-            
-            // Process IMSI Analysis
-            console.log(`\nStarting IMSI Analysis for ${node}...`);
-            await parseImsiAnalysis(fileContent, node);
-            
-            // Process B-Number Analysis
-            console.log(`\nStarting B-Number Analysis for ${node}...`);
-            await parseBNumberAnalysis(fileContent, node);
-            
-            // Process GT Series
-            console.log(`\nStarting GT Series for ${node}...`);
-            await parseGTSeries(fileContent, node);
-
+            fileContent = fs.readFileSync(filePath, 'utf8');
         } catch (error) {
-            console.error(`Error processing ${node}:`, error);
-            console.error(`Please ensure the file exists at: ${filePath}`);
+            console.error(`Error reading file ${file}:`, error);
+            continue;
+        }
+        // Vérification du format MSS Ericsson
+        if (
+            fileContent.includes('IMSIS') ||
+            fileContent.includes('<anbsp:b=32;') ||
+            fileContent.includes('<c7gsp;')
+        ) {
+            const node = file.replace('.log', '');
+            console.log(`\nProcessing MSS Ericsson log file: ${file}`);
+            try {
+                // Process IMSI Analysis
+                await parseImsiAnalysis(fileContent, node);
+                // Process B-Number Analysis
+                await parseBNumberAnalysis(fileContent, node);
+                // Process GT Series
+                await parseGTSeries(fileContent, node);
+                importedCount++;
+            } catch (error) {
+                console.error(`Error processing ${file}:`, error);
+            }
+        } else {
+            console.log(`File ${file} ignored: not recognized as a valid MSS Ericsson log.`);
         }
     }
-    
-    console.log('All files processed');
+    console.log(`Imported ${importedCount} MSS Ericsson log file(s).`);
     connection.end();
 }
 

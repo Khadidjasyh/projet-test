@@ -15,6 +15,8 @@ const path = require("path");
 const authRoutes = require('./routes/auth');
 const User = require('./models/User');
 const UserReport = require('./models/UserReport');
+const hlrRoutes = require('./importHLR');
+const { importHuaweiMSSData } = require('./importHuaweiNetworks');
 
 // Configuration de la journalisation
 const logStream = fs.createWriteStream(path.join(__dirname, 'server.log'), { flags: 'a' });
@@ -39,7 +41,24 @@ app.use((req, res, next) => {
 // Configuration de multer pour le stockage des fichiers
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, 'uploads');
+    // Determine upload directory based on route or file type if needed
+    let uploadDir = path.join(__dirname, 'uploads'); // Default
+    if (req.originalUrl === '/api/upload-hlr') {
+      uploadDir = path.join(__dirname, 'HLR'); // Specific directory for HLR
+    } else if (req.originalUrl === '/api/upload-hss') { // Assuming HSS also has a similar route
+      uploadDir = path.join(__dirname, 'hss');
+    } else if (req.originalUrl === '/api/upload-ir21') { // Assuming IR21 also has a similar route
+      uploadDir = path.join(__dirname, 'IR21_xml');
+    } else if (req.originalUrl === '/api/upload-ir85') { // Assuming IR85 also has a similar route
+      uploadDir = path.join(__dirname, 'IR85_xml');
+    } else if (req.originalUrl === '/api/upload-mss') { // Assuming MSS also has a similar route
+      uploadDir = path.join(__dirname, 'MSS_Ericson');
+    } else if (req.originalUrl === '/api/upload-firewall') { // Assuming Firewall also has a similar route
+      uploadDir = path.join(__dirname, 'Firewall'); // Assuming 'Firewall' is the dir
+    } else if (req.originalUrl === '/api/upload-huawei-networks') { // Route pour Huawei
+      uploadDir = path.join(__dirname, 'MSS_Huawei');
+    }
+
     // Créer le dossier s'il n'existe pas
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -48,10 +67,8 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Garder le nom de fichier original
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    // Use original filename for easier identification
+    cb(null, file.originalname);
   }
 });
 
@@ -60,23 +77,41 @@ const upload = multer({
   fileFilter: function (req, file, cb) {
     console.log('🔍 Vérification du fichier:', {
       originalname: file.originalname,
-      mimetype: file.mimetype
+      mimetype: file.mimetype,
+      route: req.originalUrl // Log the route
     });
-    
-    // Vérifier les types de fichiers acceptés
-    const allowedTypes = ['.xml', '.pdf', '.ir21', '.log', '.txt'];
+
+    // Define allowed extensions based on the route
+    let allowedExtensions = [];
+    if (req.originalUrl === '/api/upload-hlr') {
+      allowedExtensions = ['.log', '.txt'];
+    } else if (req.originalUrl === '/api/upload-hss') {
+      allowedExtensions = ['.log', '.txt'];
+    } else if (req.originalUrl === '/api/upload-ir21') {
+      allowedExtensions = ['.xml', '.ir21'];
+    } else if (req.originalUrl === '/api/upload-ir85') {
+      allowedExtensions = ['.xml', '.ir85'];
+    } else if (req.originalUrl === '/api/upload-mss') {
+      allowedExtensions = ['.log', '.txt'];
+    } else if (req.originalUrl === '/api/upload-firewall') {
+      allowedExtensions = ['.log', '.txt']; // Assuming log/txt for firewall
+    } else {
+      // Default allowed types if route doesn't match
+      allowedExtensions = ['.xml', '.pdf', '.ir21', '.log', '.txt'];
+    }
+
     const ext = path.extname(file.originalname).toLowerCase();
-    
-    if (allowedTypes.includes(ext)) {
-      console.log('✅ Type de fichier accepté:', ext);
+
+    if (allowedExtensions.includes(ext)) {
+      console.log('✅ Type de fichier accepté for route', req.originalUrl, ':', ext);
       cb(null, true);
     } else {
-      console.error('❌ Type de fichier non supporté:', ext);
-      cb(new Error('Format de fichier non supporté. Utilisez un fichier XML, PDF, IR21, LOG ou TXT.'));
+      console.error('❌ Type de fichier non supporté for route', req.originalUrl, ':', ext, '. Allowed:', allowedExtensions);
+      cb(new Error(`Format de fichier non supporté pour cette route. Utilisez l'un des formats suivants : ${allowedExtensions.join(', ')}.`));
     }
   },
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB max
+    fileSize: 20 * 1024 * 1024 // Increased limit to 20MB
   }
 });
 
@@ -89,136 +124,77 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
-// Route pour l'import des fichiers HLR
-app.post('/import-hlr', upload.single('file'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'Aucun fichier n\'a été uploadé' });
-    }
+// Route pour l'upload de fichiers HLR
+app.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Aucun fichier n\'a été uploadé' });
+  }
 
-    try {
-        const filePath = req.file.path;
-        console.log('Fichier HLR reçu:', filePath);
+  try {
+    const filePath = req.file.path;
+    const nodeName = path.basename(req.file.originalname, path.extname(req.file.originalname));
+    console.log(`Traitement du fichier HLR: ${filePath} pour le nœud ${nodeName}`);
 
-        // Lire le contenu du fichier
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        
-        // Log des premières lignes du fichier pour le débogage
-        console.log('Aperçu du contenu du fichier:');
-        console.log(fileContent.substring(0, 500)); // Afficher les premiers 500 caractères
-        
-        // Parser le contenu du fichier de log HLR
-        const lines = fileContent.split('\n');
-        console.log(`Nombre de lignes dans le fichier: ${lines.length}`);
-        const hlrData = [];
+    // Lire le contenu du fichier
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    const lines = content.split('\n');
+    const hlrData = [];
 
-        console.log('Analyse du fichier Ericsson HLR:', filePath);
-        console.log(`Nombre de lignes dans le fichier: ${lines.length}`);
-        
-        // Si le fichier a du contenu, acceptons-le même sans motifs spécifiques
-        if (lines.length > 0) {
-            console.log('Contenu détecté dans le fichier, création d\'entrées par défaut');
-            
-            // Créer au moins une entrée valide pour assurer que l'importation réussit
-            hlrData.push({
-                tt: "1",
-                np: "1",
-                na: "1",
-                ns: "1",
-                gtrc: "1",
-                imported_date: new Date().toISOString().slice(0, 10) // Ajouter la date d'importation
-            });
-            
-            // Tentative d'analyse pour chaque ligne (si le format correspond)
-            for (const line of lines) {
-                if (line.trim()) {
-                    // Pattern pour extraire les informations des logs HLR
-                    // Exemple de log: "TT: 1, NP: 2, NA: 3, NS: 4, GTRC: 5"
-                    const ttMatch = line.match(/TT:\s*(\d+)/);
-                    const npMatch = line.match(/NP:\s*(\d+)/);
-                    const naMatch = line.match(/NA:\s*(\d+)/);
-                    const nsMatch = line.match(/NS:\s*(\d+)/);
-                    const gtrcMatch = line.match(/GTRC:\s*(\d+)/);
-
-                    if (ttMatch && npMatch) {
-                        hlrData.push({
-                            tt: ttMatch[1],
-                            np: npMatch[1],
-                            na: naMatch ? naMatch[1] : null,
-                            ns: nsMatch ? nsMatch[1] : null,
-                            gtrc: gtrcMatch ? gtrcMatch[1] : null,
-                            imported_date: new Date().toISOString().slice(0, 10) // Ajouter la date d'importation
-                        });
-                    }
-                }
-            }
+    // Parser les données
+    for (const line of lines) {
+      if (line.trim()) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 5) {
+          hlrData.push({
+            tt: parts[0],
+            np: parts[1],
+            na: parts[2],
+            ns: parts[3],
+            gtrc: parts[4],
+            node_name: nodeName
+          });
         }
-
-        // Ajouter une colonne imported_date si elle n'existe pas encore, puis insérer les données
-        connection.query('SHOW COLUMNS FROM hlr LIKE "imported_date"', (err, result) => {
-            if (err) {
-                console.error("Erreur lors de la vérification de la colonne imported_date:", err);
-                return res.status(500).json({ error: 'Erreur lors de la vérification de la structure de la table' });
-            }
-            
-            // Fonction pour insérer les données une fois que la structure est prête
-            const insertData = () => {
-                if (hlrData.length > 0) {
-                    // S'assurer que toutes les entrées ont une date d'importation valide
-                    const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
-                    hlrData.forEach(item => {
-                        if (!item.imported_date) {
-                            item.imported_date = currentDate;
-                        }
-                    });
-                    
-                    // Insérer les données dans la base de données
-                    const query = 'INSERT INTO hlr (tt, np, na, ns, gtrc, imported_date) VALUES ?';
-                    const values = hlrData.map(item => [item.tt, item.np, item.na, item.ns, item.gtrc, item.imported_date]);
-                    
-                    connection.query(query, [values], (error, results) => {
-                        if (error) {
-                            console.error('Erreur lors de l\'insertion des données HLR:', error);
-                            return res.status(500).json({ error: 'Erreur lors de l\'import des données HLR' });
-                        }
-                        
-                        // Supprimer le fichier temporaire
-                        fs.unlinkSync(filePath);
-                        
-                        res.json({ 
-                            message: 'Import HLR réussi', 
-                            importedCount: hlrData.length,
-                            importedDate: new Date().toISOString().slice(0, 10)
-                        });
-                    });
-                } else {
-                    console.log('❌ Aucune donnée valide trouvée dans le fichier selon le format attendu');
-                    console.log('Format attendu: "TT: <numéro>, NP: <numéro>, ..."');
-                    res.status(400).json({ error: 'Aucune donnée valide trouvée dans le fichier de log' });
-                }
-            };
-            
-            if (result.length === 0) {
-                // La colonne n'existe pas, la créer d'abord
-                connection.query('ALTER TABLE hlr ADD COLUMN imported_date DATE', (alterErr) => {
-                    if (alterErr) {
-                        console.error("Erreur lors de l'ajout de la colonne imported_date:", alterErr);
-                        return res.status(500).json({ error: 'Erreur lors de la modification de la structure de la table' });
-                    }
-                    console.log("Colonne imported_date ajoutée avec succès!");
-                    // Après avoir créé la colonne, insérer les données
-                    insertData();
-                });
-            } else {
-                // La colonne existe déjà, insérer directement les données
-                insertData();
-            }
-        });
-        
-        // Le code d'insertion des données a été déplacé dans la fonction insertData ci-dessus
-    } catch (error) {
-        console.error('Erreur lors du traitement du fichier HLR:', error);
-        res.status(500).json({ error: 'Erreur lors du traitement du fichier HLR' });
+      }
     }
+
+    if (hlrData.length === 0) {
+      throw new Error('Aucune donnée HLR valide trouvée dans le fichier');
+    }
+
+    // Insérer les données dans la base
+    for (const data of hlrData) {
+      await new Promise((resolve, reject) => {
+        connection.query(
+          'INSERT INTO hlr (tt, np, na, ns, gtrc, node_name) VALUES (?, ?, ?, ?, ?, ?)',
+          [data.tt, data.np, data.na, data.ns, data.gtrc, data.node_name],
+          (error) => {
+            if (error) reject(error);
+            else resolve();
+          }
+        );
+      });
+    }
+
+    // Ne pas supprimer le fichier après l'import
+    res.json({
+      success: true,
+      message: `${hlrData.length} enregistrements HLR ont été importés avec succès`
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'import HLR:', error);
+    // Supprimer le fichier en cas d'erreur
+    if (req.file && req.file.path) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (unlinkError) {
+        console.error('Erreur lors de la suppression du fichier:', unlinkError);
+      }
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Erreur lors de l\'import du fichier HLR: ' + error.message
+    });
+  }
 });
 
 // Connexion à MySQL
@@ -608,11 +584,9 @@ app.get('/huawei/mobile-networks', (req, res) => {
   });
 });
 
-
-
-app.get('/hss', (req, res) => {
+app.get('/hss', async (req, res) => {
   console.log('GET /hss endpoint hit');
-  connection.query('SELECT epc, `3g`, hss_esm FROM hss_data', (err, results) => {
+  connection.query('SELECT id, node_name, epc, `3g`, hss_esm, created_at FROM hss_data', (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Erreur lors de la récupération des données HSS' });
@@ -631,7 +605,7 @@ app.get('/ir21', async (req, res) => {
         return res.status(500).json({ error: 'Erreur lors de la récupération des données IR21' });
       }
       console.log('Données IR21 envoyées:', results);
-      res.json(results);
+      res.json({ data: results });
     });
   } catch (error) {
     console.error('Erreur lors de la récupération des données IR21 :', error);
@@ -754,7 +728,7 @@ app.get("/mme-imsi", (req, res) => {
 
 app.get('/hlrr', (req, res) => {
   // Utiliser le style de callback standard pour MySQL
-  connection.query('SELECT id, tt, np, na, ns, gtrc, created_at FROM hlr ORDER BY id DESC', (error, rows) => {
+  connection.query('SELECT id, tt, np, na, ns, gtrc, node_name, created_at FROM hlr ORDER BY id DESC', (error, rows) => {
     if (error) {
       console.error('Error fetching HLR data:', error);
       return res.status(500).json({ error: 'Failed to fetch HLR data' });
@@ -768,6 +742,7 @@ app.get('/hlrr', (req, res) => {
       na: row.na || '',
       ns: row.ns || '',
       gtrc: row.gtrc || '',
+      node_name: row.node_name || '', // Assurez-vous que node_name est inclus et gère les valeurs nulles
       created_at: row.created_at || null
     }));
     
@@ -791,6 +766,7 @@ CREATE TABLE IF NOT EXISTS hlr (
     na VARCHAR(50),
     ns VARCHAR(50),
     gtrc VARCHAR(50),
+    node_name VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`;
 
@@ -802,22 +778,322 @@ connection.query(createHlrTable, (error) => {
     }
 });
 
-// Ajout de la colonne created_at à la table hlr
-const addCreatedAtColumn = `
-ALTER TABLE hlr 
-ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`;
+// Ajout de la colonne node_name à la table hlr si elle n'existe pas
+// Correction de la syntaxe IF NOT EXISTS qui n'est pas supportée pour ADD COLUMN dans certaines versions MySQL
+const checkColumnExistsQuery = "SHOW COLUMNS FROM hlr LIKE 'node_name'";
 
-connection.query(addCreatedAtColumn, (error) => {
+connection.query(checkColumnExistsQuery, (error, results) => {
     if (error) {
-        // Si l'erreur est due à la colonne existante, on l'ignore
-        if (error.code === 'ER_DUP_FIELDNAME') {
-            console.log('Colonne created_at déjà existante');
-        } else {
-            console.error('Erreur lors de l\'ajout de la colonne created_at:', error);
-        }
-    } else {
-        console.log('Colonne created_at ajoutée avec succès');
+        console.error('Erreur lors de la vérification de l\'existence de la colonne node_name:', error);
+        return;
     }
+
+    // Si la colonne n'existe pas, l'ajouter
+    if (results.length === 0) {
+        const addColumnQuery = "ALTER TABLE hlr ADD COLUMN node_name VARCHAR(255)";
+        connection.query(addColumnQuery, (alterError) => {
+            if (alterError) {
+                console.error('Erreur lors de l\'ajout de la colonne node_name:', alterError);
+            } else {
+                console.log('Colonne node_name ajoutée avec succès');
+            }
+        });
+    } else {
+        console.log('Colonne node_name déjà existante');
+    }
+});
+
+// Route pour supprimer un nœud HLR
+app.delete('/api/hlr/node/:nodeName', async (req, res) => {
+  const nodeName = req.params.nodeName;
+  
+  try {
+    // Supprimer les données de la base
+      await new Promise((resolve, reject) => {
+      connection.query('DELETE FROM hlr WHERE node_name = ?', [nodeName], (error) => {
+        if (error) reject(error);
+        else resolve();
+        });
+      });
+
+    // Supprimer les fichiers associés
+    const hlrDir = path.join(__dirname, 'HLR');
+    if (fs.existsSync(hlrDir)) {
+      const files = fs.readdirSync(hlrDir);
+      for (const file of files) {
+        if (file.includes(nodeName)) {
+          const filePath = path.join(hlrDir, file);
+          try {
+            await fs.promises.unlink(filePath);
+            console.log(`Fichier supprimé: ${filePath}`);
+  } catch (error) {
+            console.error(`Erreur lors de la suppression du fichier ${filePath}:`, error);
+          }
+        }
+      }
+    }
+
+    res.json({ success: true, message: 'Nœud HLR supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du nœud HLR:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la suppression du nœud' });
+  }
+});
+
+// Routes HLR
+app.get('/api/hlr', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM hlr ORDER BY id DESC';
+  connection.query(query, (error, results) => {
+    if (error) {
+        console.error('Erreur lors de la récupération des données HLR:', error);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des données HLR' });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données HLR:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des données HLR' });
+  }
+});
+
+app.get('/api/hlr/nodes', (req, res) => {
+  const query = 'SELECT DISTINCT node_name FROM hlr WHERE node_name IS NOT NULL AND node_name != ""';
+  
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('Erreur lors de la récupération des nœuds HLR:', error);
+      return res.status(500).json({ success: false, message: 'Erreur lors de la récupération des nœuds' });
+    }
+    res.json({ success: true, nodes: results.map(row => row.node_name) });
+  });
+});
+
+// Route pour l'importation des réseaux Huawei
+app.post('/api/upload-huawei-networks', upload.single('file'), async (req, res) => {
+  console.log('Route /api/upload-huawei-networks appelée');
+  
+  if (!req.file) {
+    console.error('Aucun fichier n\'a été uploadé');
+    return res.status(400).json({ 
+      success: false,
+      message: 'Aucun fichier n\'a été uploadé' 
+    });
+  }
+
+  console.log('Fichier reçu:', {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    path: req.file.path
+  });
+
+  try {
+    // Lire le contenu du fichier
+    const content = await fs.promises.readFile(req.file.path, 'utf8');
+    console.log('Contenu du fichier lu, taille:', content.length);
+
+    // Parser les données
+    const lines = content.split('\n');
+    const huaweiData = [];
+    const nodeName = path.basename(req.file.originalname, path.extname(req.file.originalname));
+
+    // Pattern pour les lignes de données Huawei
+    const regex = /^\s*(\d+)\s+(\d+)\s+(.+?)\s{2,}(\S+)\s*$/;
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      
+      console.log('Analyse de la ligne:', line);
+      const match = line.match(regex);
+      
+      if (match) {
+        const [, imsi_prefix, msisdn_prefix, network_name, managed_object_group] = match;
+        huaweiData.push({
+          imsi_prefix: imsi_prefix.trim(),
+          msisdn_prefix: msisdn_prefix.trim(),
+          network_name: network_name.trim(),
+          managed_object_group: managed_object_group.trim(),
+          node_name: nodeName
+        });
+      }
+    }
+
+    if (huaweiData.length === 0) {
+      throw new Error('Aucune donnée valide trouvée dans le fichier');
+    }
+
+    console.log(`Nombre d'entrées à importer: ${huaweiData.length}`);
+
+    // Insérer les données dans la base
+    let successCount = 0;
+    for (const data of huaweiData) {
+      try {
+      await new Promise((resolve, reject) => {
+          connection.query(
+            'INSERT INTO huawei_mobile_networks (imsi_prefix, msisdn_prefix, network_name, managed_object_group, node_name) VALUES (?, ?, ?, ?, ?)',
+            [data.imsi_prefix, data.msisdn_prefix, data.network_name, data.managed_object_group, data.node_name],
+            (error) => {
+              if (error) reject(error);
+              else {
+                successCount++;
+          resolve();
+              }
+            }
+          );
+        });
+      } catch (err) {
+        console.error('Erreur lors de l\'insertion:', err);
+      }
+    }
+
+    console.log(`Importation terminée : ${successCount} entrées importées avec succès`);
+        res.json({ 
+          success: true,
+      message: `Importation terminée : ${successCount} entrées importées avec succès`
+      });
+
+    } catch (error) {
+    console.error('Erreur lors de l\'import des réseaux Huawei:', error);
+        res.status(500).json({ 
+          success: false,
+      error: 'Erreur lors de l\'import du fichier: ' + error.message
+    });
+  }
+});
+
+// Route pour récupérer les réseaux Huawei
+app.get('/api/huawei-networks', async (req, res) => {
+  try {
+    // Vérifier si la table existe
+    const checkTableQuery = `SHOW TABLES LIKE 'huawei_mobile_networks'`;
+    connection.query(checkTableQuery, (checkError, checkResults) => {
+      if (checkError) {
+        console.error('Erreur lors de la vérification de la table:', checkError);
+        return res.status(500).json({ 
+          error: 'Erreur lors de la vérification de la table',
+          details: checkError.message
+        });
+      }
+
+      if (checkResults.length === 0) {
+        console.error("La table 'huawei_mobile_networks' n'existe pas");
+        return res.status(404).json({ 
+          error: 'Table non trouvée',
+          details: "La table 'huawei_mobile_networks' n'existe pas dans la base de données"
+        });
+      }
+
+      // Si la table existe, exécuter la requête
+      const query = 'SELECT * FROM huawei_mobile_networks ORDER BY id DESC';
+      connection.query(query, (error, results) => {
+        if (error) {
+          console.error('Erreur lors de la récupération des données:', error);
+          return res.status(500).json({ 
+            error: 'Erreur lors de la récupération des données',
+            details: error.message
+          });
+        }
+        
+        console.log(`Nombre de réseaux trouvés : ${results.length}`);
+        if (results.length > 0) {
+          console.log('Premier réseau :', JSON.stringify(results[0], null, 2));
+        }
+        
+        res.json(results);
+      });
+    });
+  } catch (err) {
+    console.error('Erreur serveur:', err);
+    res.status(500).json({ 
+      error: 'Erreur serveur',
+      details: err.message
+    });
+  }
+});
+
+// Création de la table huawei_mobile_networks si elle n'existe pas
+const createHuaweiNetworksTable = `
+CREATE TABLE IF NOT EXISTS huawei_mobile_networks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    imsi_prefix VARCHAR(20),
+    msisdn_prefix VARCHAR(20),
+    network_name VARCHAR(255),
+    managed_object_group VARCHAR(100),
+    node_name VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`;
+
+connection.query(createHuaweiNetworksTable, (error) => {
+    if (error) {
+        console.error('Erreur lors de la création de la table huawei_mobile_networks:', error);
+    } else {
+        console.log('Table huawei_mobile_networks créée ou déjà existante');
+    }
+});
+
+// Route pour supprimer un nœud Huawei
+app.delete('/api/huawei-networks/node/:nodeName', async (req, res) => {
+  const nodeName = req.params.nodeName;
+  console.log('Suppression du nœud Huawei:', nodeName);
+  
+  try {
+  // Supprimer les données de la base
+    await new Promise((resolve, reject) => {
+      connection.query('DELETE FROM huawei_mobile_networks WHERE node_name = ?', [nodeName], (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+
+    // Supprimer les fichiers associés
+    const huaweiDir = path.join(__dirname, 'MSS_Huawei');
+    if (fs.existsSync(huaweiDir)) {
+      const files = fs.readdirSync(huaweiDir);
+      for (const file of files) {
+        if (file.includes(nodeName)) {
+          const filePath = path.join(huaweiDir, file);
+          try {
+            await fs.promises.unlink(filePath);
+            console.log(`Fichier supprimé: ${filePath}`);
+          } catch (error) {
+            console.error(`Erreur lors de la suppression du fichier ${filePath}:`, error);
+          }
+        }
+      }
+    }
+
+    res.json({ success: true, message: 'Nœud Huawei supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du nœud Huawei:', error);
+    res.status(500).json({ success: false, message: 'Erreur lors de la suppression du nœud' });
+  }
+});
+
+// Route pour récupérer les nœuds Huawei disponibles
+app.get('/api/huawei-networks/nodes', async (req, res) => {
+  try {
+    const query = 'SELECT DISTINCT node_name FROM huawei_mobile_networks WHERE node_name IS NOT NULL AND node_name != "" ORDER BY node_name';
+    connection.query(query, (error, results) => {
+      if (error) {
+        console.error('Erreur lors de la récupération des nœuds:', error);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Erreur lors de la récupération des nœuds' 
+        });
+      }
+      res.json({ 
+        success: true, 
+        nodes: results.map(row => row.node_name) 
+      });
+    });
+  } catch (error) {
+    console.error('Erreur serveur:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erreur serveur' 
+    });
+  }
 });
 
 // Démarrer le serveur

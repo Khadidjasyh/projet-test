@@ -28,7 +28,7 @@ import SignIn from './SignIn';
 import AdminCreation from './AdminCreation';
 import CreateAccount from './CreateAccount';
 import Activation from './Activation';
-import HlrPage from "./HLR";
+import HlrPage from "./HlrPage";
 import IR85Page from './IR85Page';
 import Profile from './Profile';
 import AdminPanel from './AdminPanel';

@@ -47,14 +47,15 @@ const importHSSData = async () => {
       if (path.extname(file) === '.log') {
         const filePath = path.join(hssFolder, file);
         const content = await fs.readFile(filePath, 'utf-8');
+        const nodeName = path.basename(file, '.log');
         const entries = parseHSSData(content);
 
         for (const { epc, '3g': g3, hss_esm } of entries) {
           await connection.execute(
             `INSERT INTO hss_data 
-             (epc, \`3g\`, hss_esm) 
-             VALUES (?, ?, ?)`,
-            [epc, g3, hss_esm]
+             (node_name, epc, \`3g\`, hss_esm) 
+             VALUES (?, ?, ?, ?)`,
+            [nodeName, epc, g3, hss_esm]
           );
         }
         console.log(`✅ ${entries.length} entrées importées depuis ${file}`);

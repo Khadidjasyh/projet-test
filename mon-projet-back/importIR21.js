@@ -64,56 +64,118 @@ async function extractDataFromXML(filePath) {
       e212: '',
       e214: '',
       apn: '',
-      ips: ''
+      ips: '',
+      date: null
     };
 
+    // Extraction de la date depuis le nom du fichier
+    const dateMatch = fileName.match(/_(\d{8})/);
+    if (dateMatch) {
+      const dateStr = dateMatch[1];
+      const year = dateStr.substring(0, 4);
+      const month = dateStr.substring(4, 6);
+      const day = dateStr.substring(6, 8);
+      extractedData.date = `${year}-${month}-${day}`;
+    }
+
+    // Si pas de date dans le nom du fichier, essayer de l'extraire du contenu XML
+    if (!extractedData.date) {
+      if (fileHeader?.FileCreationDateTime) {
+        const dateStr = fileHeader.FileCreationDateTime;
+        // Format attendu: YYYYMMDDHHMMSS
+        if (dateStr && dateStr.length >= 8) {
+          const year = dateStr.substring(0, 4);
+          const month = dateStr.substring(4, 6);
+          const day = dateStr.substring(6, 8);
+          extractedData.date = `${year}-${month}-${day}`;
+        }
+      }
+    }
+
     for (const network of networkArray) {
-      // Extraction E212 (MCC/MNC)
+      // Extraction E212 (MCC/MNC) - Format modifié pour concaténation simple
       const routingInfo = network.NetworkData?.RoutingInfoSection?.RoutingInfo || {};
       const e212Series = routingInfo.CCITT_E212_NumberSeries;
       if (e212Series) {
         const mcc = e212Series.MCC || '';
         const mnc = e212Series.MNC ? e212Series.MNC.padStart(2, '0') : '00';
         if (mcc && mnc) {
-          extractedData.e212 = `${mcc}${mnc}`;
+          extractedData.e212 += `${mcc}${mnc}`;  // Format changé ici
         }
       }
 
-      // Extraction E214
+      // Extraction E214 - Format modifié pour concaténation simple
       const e214Series = routingInfo.CCITT_E214_MGT;
       if (e214Series) {
         const mgtCC = e214Series.MGT_CC || '';
         const mgtNC = e214Series.MGT_NC || '';
         if (mgtCC && mgtNC) {
-          extractedData.e214 = `${mgtCC}${mgtNC}`;
+          extractedData.e214 += `${mgtCC}${mgtNC}`;  // Format changé ici
         }
       }
 
-      // Extraction APN (méthode robuste combinée)
-      const packetInfo = network.PacketDataServiceInfoSection?.PacketDataServiceInfo || {};
-      
-      // Méthode 1: Recherche regex directe
-      const apnRegex = /<APNOperatorIdentifier>(epc\.mnc\d{3}\.mcc\d{3})(?:\.3gppnetwork\.org)?<\/APNOperatorIdentifier>/i;
-      const regexMatch = xmlContent.match(apnRegex);
-      if (regexMatch && regexMatch[1]) {
-        extractedData.apn = regexMatch[1];
-      } else {
-        // Méthode 2: Parsing XML classique
-        const apnList = packetInfo.APNOperatorIdentifierList?.APNOperatorIdentifierItem || [];
-        const apns = Array.isArray(apnList) ? apnList : [apnList];
-        for (const apnItem of apns) {
-          if (apnItem?.APNOperatorIdentifier?.includes('epc.mnc')) {
-            extractedData.apn = apnItem.APNOperatorIdentifier.split('.3gppnetwork.org')[0];
-            break;
+      // Extraction APN (parcours de toutes les APNOperatorIdentifierList)
+      let apnSet = new Set();
+      // Recherche structurée dans toutes les APNOperatorIdentifierList
+      function extractAPNsFromList(obj) {
+        if (!obj) return;
+        if (Array.isArray(obj)) {
+          obj.forEach(extractAPNsFromList);
+        } else if (typeof obj === 'object') {
+          if (obj.APNOperatorIdentifierList) {
+            extractAPNsFromList(obj.APNOperatorIdentifierList);
+          }
+          if (obj.APNOperatorIdentifierItem) {
+            const items = Array.isArray(obj.APNOperatorIdentifierItem) ? obj.APNOperatorIdentifierItem : [obj.APNOperatorIdentifierItem];
+            for (const item of items) {
+              if (item.APNOperatorIdentifier) {
+                apnSet.add(item.APNOperatorIdentifier.trim());
+              }
+            }
+          }
+          // Parcours récursif pour trouver d'autres listes imbriquées
+          for (const key in obj) {
+            if (typeof obj[key] === 'object') {
+              extractAPNsFromList(obj[key]);
+            }
           }
         }
       }
+      extractAPNsFromList(network);
+      // Si toujours rien, générer à partir du MCC/MNC
+      if (apnSet.size === 0 && extractedData.e212) {
+        const mccMatch = extractedData.e212.match(/mcc=(\d+)/);
+        const mncMatch = extractedData.e212.match(/mnc=(\d+)/);
+        if (mccMatch && mncMatch) {
+          apnSet.add(`epc.mnc${mncMatch[1]}.mcc${mccMatch[1]}`);
+        }
+      }
+      extractedData.apn = Array.from(apnSet).join(', ');
 
-      // Extraction IP
-      const ipSection = network.NetworkData?.GRXIPXRoutingForDataRoamingSection?.GRXIPXRoutingForDataRoaming || {};
-      const ipRanges = ipSection.InterPMNBackboneIPList?.IPAddressOrRange || [];
-      const ipList = Array.isArray(ipRanges) ? ipRanges : [ipRanges];
-      extractedData.ips = ipList.map(ip => ip.IPAddressRange || ip.IPAddress).filter(Boolean).join(', ');
+      // Extraction IPs et ranges (robuste, récursif, filtrage)
+      function extractAllIPs(obj) {
+        let ips = [];
+        if (typeof obj === 'object' && obj !== null) {
+          for (const key in obj) {
+            if (!obj.hasOwnProperty(key)) continue;
+            const value = obj[key];
+            if ((key.toLowerCase().includes('ipaddressrange') || key.toLowerCase().includes('ipaddress')) && typeof value === 'string') {
+              // Filtre : IPv4, IPv6, CIDR
+              if (/^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/.test(value) || /^[a-fA-F0-9:]+(\/\d{1,3})?$/.test(value)) {
+                ips.push(value);
+              }
+            } else if (typeof value === 'object') {
+              ips = ips.concat(extractAllIPs(value));
+            }
+          }
+        } else if (Array.isArray(obj)) {
+          for (const item of obj) {
+            ips = ips.concat(extractAllIPs(item));
+          }
+        }
+        return ips;
+      }
+      extractedData.ips = extractAllIPs(network).filter(Boolean).join(', ');
     }
 
     // Validation des données extraites
@@ -158,7 +220,7 @@ async function processFiles() {
           // Mise à jour de l'enregistrement existant
           await db.execute(
             `UPDATE ir21_data 
-             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?
+             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?, date = ?
              WHERE tadig = ?`,
             [
               fileData.pays,
@@ -166,6 +228,7 @@ async function processFiles() {
               fileData.e214,
               fileData.apn,
               fileData.ips,
+              fileData.date,
               fileData.tadig
             ]
           );
@@ -174,15 +237,16 @@ async function processFiles() {
           // Insertion d'un nouvel enregistrement
           await db.execute(
             `INSERT INTO ir21_data 
-             (tadig, pays, e212, e214, apn, ipaddress) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
+             (tadig, pays, e212, e214, apn, ipaddress, date) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
               fileData.tadig,
               fileData.pays,
               fileData.e212,
               fileData.e214,
               fileData.apn,
-              fileData.ips
+              fileData.ips,
+              fileData.date
             ]
           );
           log(`Insertion réussie pour ${fileData.tadig}`, 'INFO');
@@ -210,4 +274,5 @@ function init() {
   }
 }
 
+init();
 init();

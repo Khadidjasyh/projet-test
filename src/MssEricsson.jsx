@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { BsTable, BsSearch, BsFilter } from 'react-icons/bs';
+import React, { useState, useEffect, useRef } from 'react';
+import { BsTable, BsSearch, BsFilter, BsUpload, BsTrash } from 'react-icons/bs';
+import axios from 'axios';
 
 const MssEricsson = () => {
   const [imsiData, setImsiData] = useState([]);
@@ -13,6 +14,10 @@ const MssEricsson = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNode, setSelectedNode] = useState('');
   const [uniqueNodes, setUniqueNodes] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState({ message: '', type: '' });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState('');
+  const fileInputRef = useRef(null);
 
   // Fetch all unique nodes once when component mounts
   useEffect(() => {
@@ -227,12 +232,124 @@ const MssEricsson = () => {
     gt: ['Node Name', 'TT', 'NP', 'NA', 'NS', 'GTRC', 'Created At']
   };
 
+  // Import MSS Ericsson
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const allowedExtensions = ['.xml', '.log', '.txt'];
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    if (!allowedExtensions.includes(ext)) {
+      setUploadStatus({ message: 'Veuillez sélectionner un fichier XML, LOG ou TXT', type: 'error' });
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      setUploadStatus({ message: 'Import en cours...', type: 'info' });
+      const response = await axios.post('http://localhost:5178/api/upload-mss-ericsson', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.success) {
+        setUploadStatus({ message: response.data.message, type: 'success' });
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        throw new Error(response.data.error || 'Erreur lors de l\'import');
+      }
+    } catch (error) {
+      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de l\'import du fichier', type: 'error' });
+    }
+  };
+
+  // Suppression d'un node MSS
+  const handleDeleteNode = async () => {
+    if (!nodeToDelete) return;
+    try {
+      setUploadStatus({ message: 'Suppression en cours...', type: 'info' });
+      const response = await axios.delete(`http://localhost:5178/api/mss/node/${encodeURIComponent(nodeToDelete)}`);
+      if (response.data.success) {
+        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
+        setDeleteModalOpen(false);
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setUploadStatus({ message: response.data.error || 'Erreur lors de la suppression', type: 'error' });
+      }
+    } catch (error) {
+      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de la suppression', type: 'error' });
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">MSS Ericsson Data Analysis</h1>
         <p className="text-gray-600">View and analyze MSS Ericsson log data</p>
       </div>
+
+      {/* Boutons Importer & Supprimer un nœud */}
+      <div className="mb-6 flex items-center space-x-4">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".xml,.log,.txt"
+          className="hidden"
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <BsUpload className="mr-2" />
+          <span>Importer MSS Ericsson</span>
+        </button>
+        <button
+          onClick={() => setDeleteModalOpen(true)}
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <BsTrash className="mr-2" />
+          <span>Supprimer un nœud</span>
+        </button>
+      </div>
+
+      {/* Feedback utilisateur */}
+      {uploadStatus.message && (
+        <div className={`mb-4 p-3 rounded ${
+          uploadStatus.type === 'error' ? 'bg-red-100 text-red-700' :
+          uploadStatus.type === 'success' ? 'bg-green-100 text-green-700' :
+          'bg-blue-100 text-blue-700'
+        }`}>
+          {uploadStatus.message}
+        </div>
+      )}
+
+      {/* Modale de suppression de nœud */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Supprimer un nœud MSS</h2>
+            <select
+              value={nodeToDelete}
+              onChange={e => setNodeToDelete(e.target.value)}
+              className="w-full mb-4 p-2 border rounded"
+            >
+              <option value="">Sélectionner un nœud...</option>
+              {uniqueNodes.map(node => (
+                <option key={node} value={node}>{node}</option>
+              ))}
+            </select>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 rounded"
+              >Annuler</button>
+              <button
+                onClick={handleDeleteNode}
+                disabled={!nodeToDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
+              >Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6">
         <div className="flex space-x-4">
