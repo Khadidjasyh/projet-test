@@ -839,6 +839,59 @@ const RoamingTests = () => {
     );
   };
 
+  const handleGenerateReport = async () => {
+    try {
+      // Créer le contenu du rapport
+      const reportContent = `
+Rapport du test : ${selectedTest.type}
+Date : ${new Date().toLocaleDateString()}
+Heure : ${new Date().toLocaleTimeString()}
+
+Tableau des résultats :
+Pays           | Opérateur                        | Commentaire
+--------------------------------------------------------------
+${testResults.map(result => `${result.country.padEnd(15)} | ${result.operator.padEnd(35)} | ${result.issues.join(', ')}`).join('\n')}
+
+Solutions :
+${solutions.map(solution => `- ${solution}`).join('\n')}
+      `;
+
+      // Créer un objet FormData pour envoyer le fichier et les données
+      const formData = new FormData();
+      formData.append('report', new Blob([reportContent], { type: 'text/plain' }));
+      formData.append('title', `Rapport ${selectedTest.type}`);
+      formData.append('test_type', selectedTest.type);
+      formData.append('created_by', currentUser.name);
+      formData.append('total_operators', testResults.length);
+      formData.append('total_issues', testResults.reduce((acc, result) => acc + result.issues.length, 0));
+      formData.append('camel_issues', testResults.filter(result => result.issues.includes('CAMEL non disponible')).length);
+      formData.append('gprs_issues', testResults.filter(result => result.issues.includes('GPRS non disponible')).length);
+      formData.append('threeg_issues', testResults.filter(result => result.issues.includes('TROISG non disponible')).length);
+      formData.append('lte_issues', testResults.filter(result => result.issues.includes('LTE non disponible')).length);
+      formData.append('results_data', JSON.stringify(testResults));
+      formData.append('solutions', JSON.stringify(solutions));
+
+      // Envoyer les données au backend
+      const response = await fetch('http://localhost:5178/api/audit-reports', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la sauvegarde du rapport');
+      }
+
+      const data = await response.json();
+      alert('Rapport généré et sauvegardé avec succès');
+      
+      // Rediriger vers la page des rapports
+      navigate('/rapports-audit');
+    } catch (error) {
+      console.error('Erreur lors de la génération du rapport:', error);
+      alert('Erreur lors de la génération du rapport');
+    }
+  };
+
   if (showAuditTable) {
     return renderAuditTable();
   }

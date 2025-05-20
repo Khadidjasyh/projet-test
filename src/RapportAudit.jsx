@@ -15,7 +15,8 @@ import {
   PaperClipIcon,
   UserCircleIcon,
   CheckBadgeIcon,
-  TrashIcon
+  TrashIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 // Service simulé pour les données d'audit
@@ -26,72 +27,45 @@ const AuditService = {
     
     return [
       {
-        id: 'AUD-2023-001',
-        title: 'Audit Routage International',
-        date: '2023-10-15',
-        type: 'Réseau',
+        id: 'AUD-2024-001',
+        title: 'Audit Partenaires Roaming & Services',
+        test_type: 'Partenaires Roaming & Services',
+        date: '2024-05-19',
+        time: '18:39:15',
         status: 'Validé',
-        createdBy: 'Khadidja Sayah',
-        validatedBy: 'Lyna Nemiri',
-        findings: 12,
-        critical: 3,
-        medium: 5,
-        low: 4,
+        created_by: 'Khadidja Sayah',
+        validated_by: 'Lyna Nemiri',
+        total_operators: 150,
+        total_issues: 45,
+        camel_issues: 20,
+        gprs_issues: 15,
+        threeg_issues: 25,
+        lte_issues: 30,
+        results_data: {
+          operators: [
+            {
+              country: 'Afghanistan',
+              operator: 'Telecom Development Company Afghanistan Ltd.',
+              issues: ['CAMEL non disponible', 'GPRS non disponible', 'TROISG non disponible', 'LTE non disponible']
+            },
+            // ... autres opérateurs
+          ]
+        },
+        solutions: [
+          'Activer CAMEL chez les partenaires prioritaires',
+          'Pour permettre le roaming des clients prépayés',
+          'Lancer des tests de validation avec ces opérateurs',
+          'Étendre la couverture Data (GPRS/3G/4G/LTE)',
+          'Prioriser les pays à fort trafic ou à potentiel élevé'
+        ],
         attachments: [
           { name: 'Rapport_Complet.pdf', type: 'PDF', size: '2.4 MB' },
           { name: 'Annexes_Techniques.zip', type: 'Archive', size: '5.1 MB' }
-        ]
+        ],
+        validation_notes: 'Rapport validé après vérification des données',
+        implemented_changes: 'Mise à jour des accords avec les opérateurs prioritaires'
       },
-      {
-        id: 'AUD-2023-002',
-        title: 'Contrôle Qualité SMS',
-        date: '2023-11-02',
-        type: 'Service',
-        status: 'En cours',
-        createdBy: 'Yasmine Serial',
-        validatedBy: null,
-        findings: 8,
-        critical: 1,
-        medium: 4,
-        low: 3,
-        attachments: [
-          { name: 'Rapport_Intermediaire.docx', type: 'Document', size: '1.2 MB' }
-        ]
-      },
-      {
-        id: 'AUD-2023-003',
-        title: 'Audit Sécurité GGSN',
-        date: '2023-09-28',
-        type: 'Sécurité',
-        status: 'Rejeté',
-        createdBy: 'Hadil Khelif',
-        validatedBy: 'Yasmine Bechafi',
-        findings: 15,
-        critical: 5,
-        medium: 6,
-        low: 4,
-        attachments: [
-          { name: 'Rapport_Initial.pdf', type: 'PDF', size: '3.0 MB' },
-          { name: 'Preuves.zip', type: 'Archive', size: '8.7 MB' }
-        ]
-      },
-      {
-        id: 'AUD-2023-004',
-        title: 'Vérification Roaming Data',
-        date: '2023-12-10',
-        type: 'Réseau',
-        status: 'Validé',
-        createdBy: 'Lyna Nemiri',
-        validatedBy: 'Khadidja Sayah',
-        findings: 7,
-        critical: 0,
-        medium: 3,
-        low: 4,
-        attachments: [
-          { name: 'Rapport_Final.pdf', type: 'PDF', size: '1.8 MB' },
-          { name: 'Logs_Analyse.log', type: 'Log', size: '4.2 MB' }
-        ]
-      }
+      // ... autres rapports
     ];
   },
 
@@ -139,7 +113,7 @@ export default function RapportAudit() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     status: 'all',
-    type: 'all',
+    test_type: 'all',
     dateRange: ''
   });
   const [selectedReport, setSelectedReport] = useState(null);
@@ -179,26 +153,18 @@ export default function RapportAudit() {
   }, []);
 
   const filteredReports = reports.filter(report => {
-    // Filtre par terme de recherche
     if (searchTerm && !report.title.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    
-    // Filtre par statut
     if (filters.status !== 'all' && report.status !== filters.status) {
       return false;
     }
-    
-    // Filtre par type
-    if (filters.type !== 'all' && report.type !== filters.type) {
+    if (filters.test_type !== 'all' && report.test_type !== filters.test_type) {
       return false;
     }
-    
-    // Filtre par date
     if (filters.dateRange && !report.date.includes(filters.dateRange)) {
       return false;
     }
-    
     return true;
   });
 
@@ -328,6 +294,124 @@ export default function RapportAudit() {
     setSelectedReport(result);
   };
 
+  const handleDownloadReport = async (report) => {
+    try {
+      const response = await fetch(`http://localhost:5178/api/audit-reports/${report.id}/download`);
+      if (!response.ok) {
+        throw new Error('Erreur lors du téléchargement du rapport');
+      }
+      
+      // Récupérer le nom du fichier depuis les headers
+      const contentDisposition = response.headers.get('content-disposition');
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+        : `rapport_${report.id}.txt`;
+
+      // Créer un blob avec le contenu
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Créer un lien temporaire pour le téléchargement
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // Déclencher le téléchargement
+      document.body.appendChild(link);
+      link.click();
+      
+      // Nettoyer
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      alert('Erreur lors du téléchargement du rapport');
+    }
+  };
+
+  const renderReportDetails = (report) => {
+    return (
+      <div className="space-y-6">
+        {/* En-tête du rapport */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Rapport du test : {report.test_type}
+          </h2>
+          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>
+              <p>Date : {new Date(report.date).toLocaleDateString()}</p>
+              <p>Heure : {report.time}</p>
+            </div>
+            <div>
+              <p>Créé par : {report.created_by}</p>
+              {report.validated_by && <p>Validé par : {report.validated_by}</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Statistiques */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistiques</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded">
+              <p className="text-sm text-gray-600">Total Opérateurs</p>
+              <p className="text-2xl font-bold text-gray-900">{report.total_operators}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded">
+              <p className="text-sm text-gray-600">Total Problèmes</p>
+              <p className="text-2xl font-bold text-red-600">{report.total_issues}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded">
+              <p className="text-sm text-gray-600">CAMEL</p>
+              <p className="text-2xl font-bold text-yellow-600">{report.camel_issues}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded">
+              <p className="text-sm text-gray-600">LTE</p>
+              <p className="text-2xl font-bold text-blue-600">{report.lte_issues}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Résultats détaillés */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Résultats détaillés</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pays</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Opérateur</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Problèmes</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {report.results_data.operators.map((op, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{op.country}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{op.operator}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {op.issues.join(', ')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Solutions proposées */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Solutions proposées</h3>
+          <ul className="list-disc pl-5 space-y-2">
+            {report.solutions.map((solution, index) => (
+              <li key={index} className="text-gray-600">{solution}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -375,13 +459,13 @@ export default function RapportAudit() {
             
             <select
               className="p-2 border border-gray-300 rounded-md"
-              value={filters.type}
-              onChange={(e) => setFilters({...filters, type: e.target.value})}
+              value={filters.test_type}
+              onChange={(e) => setFilters({...filters, test_type: e.target.value})}
             >
-              <option value="all">Tous les types</option>
-              <option value="Réseau">Réseau</option>
-              <option value="Service">Service</option>
-              <option value="Sécurité">Sécurité</option>
+              <option value="all">Tous les types de test</option>
+              <option value="Partenaires Roaming & Services">Partenaires Roaming & Services</option>
+              <option value="Inbound Roaming">Inbound Roaming</option>
+              <option value="Outbound Roaming">Outbound Roaming</option>
             </select>
             
             <input
@@ -393,105 +477,76 @@ export default function RapportAudit() {
           </div>
         </div>
 
-        {/* Tableau des rapports */}
+        {/* Liste des rapports */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
           </div>
         ) : (
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="flex items-center">
-                      ID
-                      <SortIcon className="ml-1 h-4 w-4 text-gray-400" />
+          <div className="space-y-6">
+            {filteredReports.map((report) => (
+              <div key={report.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">{report.title}</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {new Date(report.date).toLocaleDateString()} à {report.time}
+                      </p>
                     </div>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Titre
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Findings
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredReports.map((report) => (
-                  <tr key={report.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {report.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="font-medium">{report.title}</div>
-                      <div className="text-gray-500">Créé par: {report.createdBy}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(report.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {report.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        {getSeverityBadge(report.critical, 'critical')}
-                        {getSeverityBadge(report.medium, 'medium')}
-                        {getSeverityBadge(report.low, 'low')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {getStatusIcon(report.status)}
-                        <span className="ml-1">{report.status}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setSelectedReport(report)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Voir détails"
-                        >
-                          <EyeIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Télécharger"
-                        >
-                          <DownloadIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          className="text-gray-600 hover:text-gray-900"
-                          title="Imprimer"
-                        >
-                          <PrinterIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        report.status === 'Validé' ? 'bg-green-100 text-green-800' :
+                        report.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {report.status}
+                      </span>
+                      <button
+                        onClick={() => handleDownloadReport(report)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Télécharger le rapport"
+                      >
+                        <DownloadIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => setSelectedReport(report)}
+                        className="text-green-600 hover:text-green-800"
+                        title="Voir les détails"
+                      >
+                        <EyeIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-50 p-3 rounded">
+                      <p className="text-sm text-gray-600">Opérateurs</p>
+                      <p className="text-lg font-semibold text-gray-900">{report.total_operators}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded">
+                      <p className="text-sm text-gray-600">Problèmes</p>
+                      <p className="text-lg font-semibold text-red-600">{report.total_issues}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded">
+                      <p className="text-sm text-gray-600">CAMEL</p>
+                      <p className="text-lg font-semibold text-yellow-600">{report.camel_issues}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded">
+                      <p className="text-sm text-gray-600">LTE</p>
+                      <p className="text-lg font-semibold text-blue-600">{report.lte_issues}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Modal de détails */}
         {selectedReport && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-auto">
               <div className="flex justify-between items-center border-b p-4 sticky top-0 bg-white">
                 <h2 className="text-xl font-bold text-green-600">
                   Détails du Rapport: {selectedReport.id}
@@ -500,123 +555,12 @@ export default function RapportAudit() {
                   onClick={() => setSelectedReport(null)}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  ✕
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
               
               <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Informations Générales</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Titre:</span> {selectedReport.title}</p>
-                      <p><span className="font-medium">Type:</span> {selectedReport.type}</p>
-                      <p><span className="font-medium">Date:</span> {new Date(selectedReport.date).toLocaleDateString()}</p>
-                      <p><span className="font-medium">Créé par:</span> {selectedReport.createdBy}</p>
-                      {selectedReport.validatedBy && (
-                        <p><span className="font-medium">Validé par:</span> {selectedReport.validatedBy}</p>
-                      )}
-                      <p><span className="font-medium">Test associé:</span> Test #{selectedReport.test_id}</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Statistiques</h3>
-                    <div className="space-y-2">
-                      <p><span className="font-medium">Total Findings:</span> {selectedReport.findings}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {getSeverityBadge(selectedReport.critical, 'critical')}
-                        {getSeverityBadge(selectedReport.medium, 'medium')}
-                        {getSeverityBadge(selectedReport.low, 'low')}
-                      </div>
-                      <p>
-                        <span className="font-medium">Statut:</span> 
-                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          selectedReport.status === 'Validé' ? 'bg-green-100 text-green-800' :
-                          selectedReport.status === 'Rejeté' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {selectedReport.status}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Détails de correction proposés</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="whitespace-pre-wrap">{selectedReport.correction_details}</p>
-                  </div>
-                </div>
-
-                {selectedReport.implemented_changes && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Changements implémentés</h3>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <ul className="list-disc pl-5 space-y-1">
-                        {selectedReport.implemented_changes.changes.map((change, i) => (
-                          <li key={i}>{change}</li>
-                        ))}
-                      </ul>
-                      {selectedReport.implemented_changes.validation_notes && (
-                        <div className="mt-2 pt-2 border-t">
-                          <p className="font-semibold">Notes de validation :</p>
-                          <p>{selectedReport.implemented_changes.validation_notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Pièces Jointes</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedReport.attachments.map((file, index) => (
-                      <div key={index} className="border rounded-lg p-3 flex justify-between items-center">
-                        <div className="flex items-center">
-                          <DocumentTextIcon className="h-8 w-8 text-gray-400 mr-3" />
-                          <div>
-                            <p className="font-medium">{file.name}</p>
-                            <p className="text-sm text-gray-500">{file.type} • {file.size}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => console.log(`Download ${file.name}`)}
-                          className="text-green-600 hover:text-green-800 p-1"
-                          title="Télécharger"
-                        >
-                          <DownloadIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="flex justify-end space-x-3 border-t pt-4">
-                  <button
-                    onClick={() => setSelectedReport(null)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Fermer
-                  </button>
-                  {currentUser?.role === 'Admin' && selectedReport.status === 'En cours' && (
-                    <>
-                      <button
-                        className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                        onClick={() => handleUpdateReport('Rejeté')}
-                      >
-                        Rejeter
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                        onClick={() => handleUpdateReport('Validé')}
-                      >
-                        Valider
-                      </button>
-                    </>
-                  )}
-                </div>
+                {renderReportDetails(selectedReport)}
               </div>
             </div>
           </div>

@@ -1299,6 +1299,159 @@ app.delete('/api/mme-imsi/:id', async (req, res) => {
   }
 });
 
+// Création de la table audit_reports si elle n'existe pas
+const createAuditReportsTable = `
+CREATE TABLE IF NOT EXISTS audit_reports (
+    id VARCHAR(50) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    test_type VARCHAR(100) NOT NULL,
+    date DATE NOT NULL,
+    time TIME NOT NULL,
+    status ENUM('En cours', 'Validé', 'Rejeté') DEFAULT 'En cours',
+    created_by VARCHAR(100) NOT NULL,
+    validated_by VARCHAR(100),
+    total_operators INT NOT NULL,
+    total_issues INT NOT NULL,
+    camel_issues INT NOT NULL,
+    gprs_issues INT NOT NULL,
+    threeg_issues INT NOT NULL,
+    lte_issues INT NOT NULL,
+    results_data JSON NOT NULL,
+    solutions JSON NOT NULL,
+    original_report_path VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`;
+
+connection.query(createAuditReportsTable, (err) => {
+    if (err) {
+        console.error('Erreur lors de la création de la table audit_reports:', err);
+    } else {
+        console.log('Table audit_reports créée ou déjà existante');
+    }
+});
+
+// Endpoint pour sauvegarder un nouveau rapport d'audit
+app.post('/api/audit-reports', upload.single('report'), async (req, res) => {
+    try {
+        const {
+            title,
+            test_type,
+            created_by,
+            total_operators,
+            total_issues,
+            camel_issues,
+            gprs_issues,
+            threeg_issues,
+            lte_issues,
+            results_data,
+            solutions
+        } = req.body;
+
+        // Générer un ID unique pour le rapport
+        const reportId = `AUD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+        
+        // Sauvegarder le fichier original
+        const originalReportPath = path.join(__dirname, 'reports', `${reportId}.txt`);
+        fs.writeFileSync(originalReportPath, req.file.buffer);
+
+        // Insérer les données dans la base de données
+        const query = `
+            INSERT INTO audit_reports (
+                id, title, test_type, date, time, created_by,
+                total_operators, total_issues, camel_issues, gprs_issues,
+                threeg_issues, lte_issues, results_data, solutions,
+                original_report_path
+            ) VALUES (?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            reportId,
+            title,
+            test_type,
+            created_by,
+            total_operators,
+            total_issues,
+            camel_issues,
+            gprs_issues,
+            threeg_issues,
+            lte_issues,
+            JSON.stringify(results_data),
+            JSON.stringify(solutions),
+            originalReportPath
+        ];
+
+        connection.query(query, values, (err, result) => {
+            if (err) {
+                console.error('Erreur lors de la sauvegarde du rapport:', err);
+                res.status(500).json({ error: 'Erreur lors de la sauvegarde du rapport' });
+                return;
+            }
+
+            res.status(201).json({
+                message: 'Rapport sauvegardé avec succès',
+                reportId: reportId
+            });
+        });
+    } catch (error) {
+        console.error('Erreur lors du traitement du rapport:', error);
+        res.status(500).json({ error: 'Erreur lors du traitement du rapport' });
+    }
+});
+
+// Endpoint pour récupérer tous les rapports
+app.get('/api/audit-reports', (req, res) => {
+    const query = 'SELECT * FROM audit_reports ORDER BY created_at DESC';
+    
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des rapports:', err);
+            res.status(500).json({ error: 'Erreur lors de la récupération des rapports' });
+            return;
+        }
+
+        // Convertir les champs JSON en objets
+        const reports = results.map(report => ({
+            ...report,
+            results_data: JSON.parse(report.results_data),
+            solutions: JSON.parse(report.solutions)
+        }));
+
+        res.json(reports);
+    });
+});
+
+// Endpoint pour télécharger un rapport
+app.get('/api/audit-reports/:id/download', (req, res) => {
+    const reportId = req.params.id;
+    
+    // Récupérer le chemin du fichier original
+    const query = 'SELECT original_report_path FROM audit_reports WHERE id = ?';
+    
+    connection.query(query, [reportId], (err, results) => {
+        if (err || results.length === 0) {
+            console.error('Erreur lors de la récupération du rapport:', err);
+            res.status(404).json({ error: 'Rapport non trouvé' });
+            return;
+        }
+
+        const filePath = results[0].original_report_path;
+        
+        // Vérifier si le fichier existe
+        if (!fs.existsSync(filePath)) {
+            res.status(404).json({ error: 'Fichier du rapport non trouvé' });
+            return;
+        }
+
+        // Envoyer le fichier
+        res.download(filePath, `rapport_${reportId}.txt`, (err) => {
+            if (err) {
+                console.error('Erreur lors de l\'envoi du fichier:', err);
+                res.status(500).json({ error: 'Erreur lors de l\'envoi du fichier' });
+            }
+        });
+    });
+});
+
 // Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
