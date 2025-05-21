@@ -265,48 +265,46 @@ const RoamingTests = () => {
         : test
     ));
 
-    // Trouver le test
-    const test = tests.find(t => t.id === testId);
-
     // Simuler un délai de 2 secondes
     setTimeout(() => {
-      if (test && test.name === "Partenaires Roaming & Services") {
-        // Pour Partenaires Roaming & Services, toujours mettre le statut à "success"
-        setTests(tests.map(test =>
-          test.id === testId
-            ? { ...test, status: "success" }
-            : test
-        ));
-      } else {
-        // Pour les autres tests, statut aléatoire
-        const randomStatus = Math.random() > 0.5 ? "success" : "failed";
-        setTests(tests.map(test => 
-          test.id === testId 
-            ? { ...test, status: randomStatus } 
-            : test
-        ));
-      }
+      // Tous les tests sont marqués comme réussis
+      setTests(tests.map(test => 
+        test.id === testId 
+          ? { ...test, status: "success" } 
+          : test
+      ));
     }, 2000);
   };
 
   const handleShowResults = async (test) => {
-    if (test.id === 3) { // Outbound Roaming test
-      navigate('/outbound-roaming-results');
-    } else if (test.id === 1) { // Partenaires Roaming & Services test
-      try {
-        const response = await fetch("http://localhost:5178/situation-globale");
-        if (!response.ok) throw new Error("Erreur lors de la récupération des données");
-        const data = await response.json();
-        setAuditData(data);
-        setShowAuditTable(true);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error);
-        alert("Erreur lors de la récupération des données de la situation globale.");
-      }
-    } else {
-      // For other tests, show results in the current view
-      setSelectedTest(test);
-      setShowResults(true);
+    // Vérifier si le test a été lancé et réussi
+    if (test.status !== 'success') {
+      alert('Veuillez d\'abord lancer le test avant de consulter les résultats.');
+      return;
+    }
+
+    // Navigation vers la page de résultats appropriée
+    switch (test.id) {
+      case 1:
+        try {
+          const response = await fetch("http://localhost:5178/situation-globale");
+          if (!response.ok) throw new Error("Erreur lors de la récupération des données");
+          const data = await response.json();
+          setAuditData(data);
+          setShowAuditTable(true);
+        } catch (error) {
+          console.error("Erreur lors de la récupération des données:", error);
+          alert("Erreur lors de la récupération des données de la situation globale.");
+        }
+        break;
+      case 2:
+        navigate('/inbound-roaming-results');
+        break;
+      case 3:
+        navigate('/outbound-roaming-results');
+        break;
+      default:
+        console.error('Test non reconnu:', test.id);
     }
   };
 
@@ -472,10 +470,12 @@ Solutions :
         return <FaCheckCircle className="text-green-500" />;
       case 'error':
         return <FaTimesCircle className="text-red-500" />;
-      case 'warning':
-        return <FaExclamationCircle className="text-yellow-500" />;
+      case 'running':
+        return <FaSpinner className="text-blue-500" />;
+      case 'pending':
+        return <FaExclamationCircle className="text-red-500" />;
       default:
-        return <FaSpinner className="text-gray-500 animate-spin" />;
+        return null;
     }
   };
 
@@ -488,8 +488,8 @@ Solutions :
               onClick={() => handleGenerateReport(tests[0])}
               className="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
             >
-              <FaChartBar />
-              <span>Générer un rapport</span>
+            <FaChartBar />
+            <span>Générer un rapport</span>
             </button>
           </div>
 
@@ -612,7 +612,17 @@ Solutions :
                 <td className="px-3 py-2 border-b text-center truncate max-w-[300px]" title={test.description}>{test.description}</td>
                 <td className="px-3 py-2 border-b text-center">
                   {getStatusIcon(test.status)}
-                  <span className="ml-2">{test.status === "running" ? "En cours..." : test.status === "success" ? "Succès" : test.status === "failed" ? "Échoué" : test.status === "pending" ? "En attente" : test.status}</span>
+                  <span className={`ml-2 ${
+                    test.status === "running" ? "text-blue-500" : 
+                    test.status === "success" ? "text-green-500" : 
+                    test.status === "failed" ? "text-red-500" : 
+                    test.status === "pending" ? "text-red-500" : ""
+                  }`}>
+                    {test.status === "running" ? "En cours..." : 
+                     test.status === "success" ? "Succès" : 
+                     test.status === "failed" ? "Échoué" : 
+                     test.status === "pending" ? "En attente" : test.status}
+                  </span>
                 </td>
                 <td className="px-3 py-2 border-b text-center">
                   <div className="flex flex-wrap gap-2 justify-center">
