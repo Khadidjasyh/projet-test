@@ -1415,7 +1415,7 @@ app.get('/current-user', async (req, res) => {
       name: user.name,
       role: user.role,
       permissions: user.role === 'admin' ? [
-        { resource_type: 'Report', access_level: 'Admin' }
+      { resource_type: 'Report', access_level: 'Admin' }
       ] : []
     });
   } catch (error) {

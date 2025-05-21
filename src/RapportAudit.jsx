@@ -204,23 +204,23 @@ const RapportAudit = () => {
 
   useEffect(() => {
     if (isAdmin) {
-      const loadData = async () => {
-        try {
+    const loadData = async () => {
+      try {
           const [reportsData, testsData] = await Promise.all([
-            fetchReports(),
-            fetch('http://localhost:5178/tests').then(res => res.json()),
-          ]);
-          setReports(reportsData);
-          setTests(testsData);
-          setLoading(false);
-        } catch (error) {
-          console.error("Erreur de chargement des données initiales:", error);
-          setError("Erreur lors du chargement des données.");
-          setLoading(false);
-        }
-      };
-      
-      loadData();
+          fetchReports(),
+          fetch('http://localhost:5178/tests').then(res => res.json()),
+        ]);
+        setReports(reportsData);
+        setTests(testsData);
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur de chargement des données initiales:", error);
+        setError("Erreur lors du chargement des données.");
+        setLoading(false);
+      }
+    };
+    
+    loadData();
     }
   }, [isAdmin]);
 
@@ -803,21 +803,21 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button
+                      <button
                           onClick={(e) => { e.stopPropagation(); handleDownload(report.id); }}
                           className="text-blue-600 hover:text-blue-900"
                           title="Télécharger"
-                        >
+                      >
                           <FaDownload />
-                        </button>
-                        <button
+                      </button>
+                      <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(report.id); }}
                           className="text-red-600 hover:text-red-900"
                           title="Supprimer"
-                        >
+                      >
                           <FaTrash />
-                        </button>
-                      </div>
+                      </button>
+                    </div>
                     </td>
                   </tr>
                   {expandedReportId === report.id && (
@@ -843,18 +843,18 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                                   
                                   if (Array.isArray(resultsData)) {
                                     return (
-                                      <ul className="list-disc list-inside">
+                              <ul className="list-disc list-inside">
                                         {resultsData.map((result, idx) => (
-                                          <li key={idx}>
+                                  <li key={idx}>
                                             Pays: {result.pays}, Opérateur: {result.operateur}
                                             {result.services_manquants && ` - Services manquants: ${result.services_manquants}`}
                                             {result.phase1 && ` - Phase 1: ${result.phase1}`}
                                             {result.phase2 && ` - Phase 2: ${result.phase2}`}
                                             {result.resultat && ` - Résultat: ${result.resultat}`}
                                             {result.commentaires && ` - Commentaires: ${result.commentaires}`}
-                                          </li>
-                                        ))}
-                                      </ul>
+                                  </li>
+                                ))}
+                              </ul>
                                     );
                                   } else if (resultsData.operators) {
                                     return (
@@ -875,7 +875,7 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                                   return <p>Erreur lors de l'affichage des résultats</p>;
                                 }
                               })()}
-                            </div>
+                  </div>
                           )}
 
                           {report.solutions && (
@@ -889,11 +889,11 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                                   
                                   if (Array.isArray(solutions)) {
                                     return (
-                                      <ul className="list-disc list-inside">
+                              <ul className="list-disc list-inside">
                                         {solutions.map((solution, idx) => (
-                                          <li key={idx}>{solution}</li>
-                                        ))}
-                                      </ul>
+                                  <li key={idx}>{solution}</li>
+                                ))}
+                              </ul>
                                     );
                                   }
                                   return <p>Aucune solution proposée</p>;
@@ -902,22 +902,22 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                                   return <p>Erreur lors de l'affichage des solutions</p>;
                                 }
                               })()}
-                            </div>
-                          )}
+          </div>
+        )}
 
                           {report.validation_notes && (
                             <div className="mb-4">
                               <h4 className="font-semibold mb-1">Notes de Validation:</h4>
                               <p>{report.validation_notes}</p>
-                            </div>
+              </div>
                           )}
 
                           {report.implemented_changes && (
                             <div className="mb-4">
                               <h4 className="font-semibold mb-1">Changements Implémentés:</h4>
                               <p>{report.implemented_changes}</p>
-                            </div>
-                          )}
+          </div>
+        )}
                         </motion.div>
                       </td>
                     </tr>
