@@ -6,7 +6,7 @@ const path = require("path");
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234", // 🔁 à adapter si besoin
+  password: "Aaa!121212", // Mot de passe vide par défaut
   database: "mon_projet_db",
 });
 

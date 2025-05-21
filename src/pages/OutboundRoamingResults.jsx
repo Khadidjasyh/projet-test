@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowLeft, FaDownload, FaPrint } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { generateReportFromTest } from '../RapportAudit';
 
 const OutboundRoamingResults = () => {
   const [data, setData] = useState([]);
@@ -96,7 +97,83 @@ const OutboundRoamingResults = () => {
   };
 
   const handleDownload = () => {
-    console.log('Téléchargement du rapport...');
+    try {
+      const now = new Date();
+      const dateStr = now.toLocaleString();
+      
+      // Préparation des données pour le rapport
+      const erreurs = data.filter(row => row.commentaires && row.commentaires.toLowerCase().includes("erreur"));
+      const erreurGlobale = erreurs.length > 0 ? erreurs[0].commentaires : "Aucune erreur majeure détectée.";
+
+      // Construction du tableau
+      const col1 = 'Pays';
+      const col2 = 'Opérateur';
+      const col3 = 'Commentaire';
+      const width1 = Math.max(col1.length, ...data.map(r => (r.pays || '').length));
+      const width2 = Math.max(col2.length, ...data.map(r => (r.operateur || '').length));
+      const width3 = Math.max(col3.length, ...data.map(r => (r.commentaires || '').length));
+
+      const pad = (txt, len) => (txt || '').padEnd(len, ' ');
+      const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
+      const sepLine = `|-${'-'.repeat(width1)}-|-${'-'.repeat(width2)}-|-${'-'.repeat(width3)}-|\n`;
+      let table = sep + sepLine;
+
+      data.forEach(row => {
+        table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.commentaires, width3)} |\n`;
+      });
+
+      const aide = `\n\n\n🔴 Commentaire : "Vérifie l'importation de l'IR21 ou l'IR85"
+Cause probable :
+L'extraction de l'IR21 a échoué (fichier manquant, mal structuré, ou mauvaise URL).
+
+Solutions :
+- Vérifie si le fichier IR.21 est bien importé et lisible dans ton application.
+- Assure-toi que le format XML du fichier respecte bien la norme IR.21.
+- Si tu utilises une API ou un système d'import, vérifie que le fichier IR.85 est également à jour.
+- Vérifie le nom du fichier et sa localisation.
+- S'assurer que les balises nécessaires sont bien présentes.
+
+🔴 Commentaire : "Impossible de faire l'extraction MCC/MNC"
+Cause probable :
+Les champs MCC ou MNC sont manquants ou mal formatés.
+
+Solutions :
+- Vérifie que la PLMN est bien renseignée sous la forme MCC+MNC.
+- Si la base de données contient une valeur comme mnc001, mcc208, extrais correctement les chiffres.
+- Si l'information n'est pas présente dans l'IR21, cherche-la manuellement.
+- Met en place une règle de validation en amont.
+
+🟡 Commentaire : "Extraction IR21 réussie, erreur dans la vérification HSS (APN)"
+Cause probable :
+Les données APN extraites de l'IR21 ne correspondent pas à celles présentes dans le HSS.
+
+Solutions :
+- Vérifie que l'APN déclaré dans l'IR21 correspond bien à celui provisionné.
+- Assure-toi que l'APN est bien activé pour le roaming.
+- Contrôle la casse et les caractères spéciaux.
+- Mets en place une table de correspondance APN IR21 <-> APN HSS.
+`;
+
+      const txt = `Nom du test : Test Outbound Roaming\n` +
+                  `Date : ${dateStr}\n` +
+                  `Erreur globale : ${erreurGlobale}\n\n` +
+                  table + aide;
+
+      // Création et téléchargement du fichier
+      const blob = new Blob([txt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport_outbound_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Erreur lors de la génération du rapport:", error);
+      alert("Une erreur est survenue lors de la génération du rapport.");
+    }
   };
 
   const handlePrint = () => {
@@ -114,74 +191,71 @@ const OutboundRoamingResults = () => {
           <div className="flex space-x-4">
             <button
               onClick={() => {
-                // Génération du rapport TXT
-                const testName = "Test Outbound Roaming";
-                const now = new Date();
-                const dateStr = now.toLocaleString();
+                try {
+                  // Génération du rapport TXT
+                  const testName = "Test Outbound Roaming";
+                  const now = new Date();
+                  const dateStr = now.toLocaleString();
 
-                // Erreur globale : on prend les commentaires "en erreur"
-                const erreurs = data.filter(row => row.commentaires && row.commentaires.toLowerCase().includes("erreur"));
-                const erreurGlobale = erreurs.length > 0 ? erreurs[0].commentaires : "Aucune erreur majeure détectée.";
+                  // Erreur globale : on prend les commentaires "en erreur"
+                  const erreurs = data.filter(row => row.commentaires && row.commentaires.toLowerCase().includes("erreur"));
+                  const erreurGlobale = erreurs.length > 0 ? erreurs[0].commentaires : "Aucune erreur majeure détectée.";
 
-                // Filtrer les lignes à exclure
-                const exclusion = "Extraction IR21 réussie, erreur dans la vérification HSS (APN), vérification GT réussie.";
-                const filtered = data.filter(row => row.commentaires !== exclusion);
+                  // Construction du tableau sous forme de tableau texte aligné
+                  const col1 = 'Pays';
+                  const col2 = 'Opérateur';
+                  const col3 = 'Commentaire';
+                  const width1 = Math.max(col1.length, ...data.map(r => (r.pays || '').length));
+                  const width2 = Math.max(col2.length, ...data.map(r => (r.operateur || '').length));
+                  const width3 = Math.max(col3.length, ...data.map(r => (r.commentaires || '').length));
 
-                // Construction du tableau sous forme de tableau texte aligné
-                const col1 = 'Pays';
-                const col2 = 'Opérateur';
-                const col3 = 'Commentaire';
-                const width1 = Math.max(col1.length, ...filtered.map(r => (r.pays || '').length));
-                const width2 = Math.max(col2.length, ...filtered.map(r => (r.operateur || '').length));
-                const width3 = Math.max(col3.length, ...filtered.map(r => (r.commentaires || '').length));
+                  const pad = (txt, len) => (txt || '').padEnd(len, ' ');
+                  const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
+                  const sepLine = `|-${'-'.repeat(width1)}-|-${'-'.repeat(width2)}-|-${'-'.repeat(width3)}-|\n`;
+                  let table = sep + sepLine;
+                  data.forEach(row => {
+                    table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.commentaires, width3)} |\n`;
+                  });
 
-                const pad = (txt, len) => (txt || '').padEnd(len, ' ');
-                const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
-                const sepLine = `|-${'-'.repeat(width1)}-|-${'-'.repeat(width2)}-|-${'-'.repeat(width3)}-|\n`;
-                let table = sep + sepLine;
-                filtered.forEach(row => {
-                  table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.commentaires, width3)} |\n`;
-                });
-
-                const aide = `\n\n\n🔴 Commentaire : "Vérifie l'importation de l'IR21 ou l'IR85"
+                  const aide = `\n\n\n🔴 Commentaire : "Vérifie l'importation de l'IR21 ou l'IR85"
 Cause probable :
-L’extraction de l’IR21 a échoué (fichier manquant, mal structuré, ou mauvaise URL).
+L'extraction de l'IR21 a échoué (fichier manquant, mal structuré, ou mauvaise URL).
 
 Solutions :
 - Vérifie si le fichier IR.21 est bien importé et lisible dans ton application.
 - Assure-toi que le format XML du fichier respecte bien la norme IR.21.
-- Si tu utilises une API ou un système d’import, vérifie que le fichier IR.85 est également à jour (car il peut contenir des données HSS).
-- Vérifie le nom du fichier et sa localisation : le script s’attend peut-être à une structure précise (ex: /ir21/<mcc_mnc>.xml).
-- S'assurer que les balises nécessaires (E212, GT, APN, IMSI ranges) sont bien présentes.
+- Si tu utilises une API ou un système d'import, vérifie que le fichier IR.85 est également à jour.
+- Vérifie le nom du fichier et sa localisation.
+- S'assurer que les balises nécessaires sont bien présentes.
 
 🔴 Commentaire : "Impossible de faire l'extraction MCC/MNC"
 Cause probable :
-Les champs MCC ou MNC sont manquants ou mal formatés dans la base de données ou le fichier IR.21.
+Les champs MCC ou MNC sont manquants ou mal formatés.
 
 Solutions :
-- Vérifie que la PLMN est bien renseignée sous la forme MCC+MNC (ex: 20801, 21407).
-- Si la base de données contient une valeur comme mnc001, mcc208, extrais correctement les 3 derniers chiffres pour le MNC, et les 3 premiers pour le MCC.
-- Si l’information n’est pas présente dans l’IR21, cherche-la manuellement ou via une base PLMN publique (comme la base de la GSMA).
-- Met en place une règle de validation en amont pour rejeter les opérateurs sans MCC/MNC valides.
+- Vérifie que la PLMN est bien renseignée sous la forme MCC+MNC.
+- Si la base de données contient une valeur comme mnc001, mcc208, extrais correctement les chiffres.
+- Si l'information n'est pas présente dans l'IR21, cherche-la manuellement.
+- Met en place une règle de validation en amont.
 
-🟡 Commentaire : "Extraction IR21 réussie, erreur dans la vérification HSS (APN), vérification GT réussie."
+🟡 Commentaire : "Extraction IR21 réussie, erreur dans la vérification HSS (APN)"
 Cause probable :
-Les données APN extraites de l’IR21 ne correspondent pas à celles présentes dans ton HSS (ou ne sont pas reconnues).
+Les données APN extraites de l'IR21 ne correspondent pas à celles présentes dans le HSS.
 
 Solutions :
-- Vérifie que l’APN déclaré dans l’IR21 correspond bien à celui provisionné dans le HSS.
-- Assure-toi que l’APN est bien activé pour le roaming.
-- Contrôle la casse, les éventuels caractères spéciaux, ou les différences entre internet et default.
-- Mets en place une table de correspondance APN IR21 <-> APN HSS si les noms varient.
+- Vérifie que l'APN déclaré dans l'IR21 correspond bien à celui provisionné.
+- Assure-toi que l'APN est bien activé pour le roaming.
+- Contrôle la casse et les caractères spéciaux.
+- Mets en place une table de correspondance APN IR21 <-> APN HSS.
 
 🔴 Commentaire : "Extraction IR21 et vérifications HSS et GT en erreur."
 Cause probable :
-Aucune des étapes clés n’a pu être validée (IR21 illisible, HSS non provisionné, GT manquant).
+Aucune des étapes clés n'a pu être validée (IR21 illisible, HSS non provisionné, GT manquant).
 
 Solutions :
-- Vérifie d’abord l’import du fichier IR21 (voir plus haut).
-- Inspecte les erreurs retournées par le HSS pour comprendre pourquoi l’APN ou l’IMSI ne sont pas acceptés.
-- Contrôle que le GT (Global Title) est bien présent dans l’IR21 et configuré dans ton MSC ou ta STP.
+- Vérifie d'abord l'import du fichier IR21.
+- Inspecte les erreurs retournées par le HSS.
+- Contrôle que le GT est bien présent dans l'IR21.
 - Si besoin, relance un import manuel pour cet opérateur.
 
 ⚠️ Commentaire : "Situation mixte, vérifier les données."
@@ -190,26 +264,30 @@ Des résultats contradictoires ou incomplets (extraction partielle, certains cha
 
 Solutions :
 - Vérifie les champs un à un (IR21, APN, GT, MCC/MNC).
-- Regarde les logs d’extraction : il peut s’agir d’un problème de formatage ou d’un champ manquant.
-- Ajoute une interface de contrôle manuel pour corriger ces cas ou une alerte automatique pour suivi.
+- Regarde les logs d'extraction.
+- Ajoute une interface de contrôle manuel pour corriger ces cas.
 `;
 
-                const txt =
-                  `Nom du test : ${testName}\n` +
-                  `Date : ${dateStr}\n` +
-                  `Erreur globale : ${erreurGlobale}\n\n` +
-                  table + aide;
+                  const txt = `Nom du test : ${testName}\n` +
+                            `Date : ${dateStr}\n` +
+                            `Erreur globale : ${erreurGlobale}\n\n` +
+                            table + aide;
 
-                // Création et téléchargement du fichier
-                const blob = new Blob([txt], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `rapport_outbound_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                  // Création et téléchargement du fichier
+                  const blob = new Blob([txt], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `rapport_outbound_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+
+                } catch (error) {
+                  console.error("Erreur lors de la génération du rapport:", error);
+                  alert("Une erreur est survenue lors de la génération du rapport.");
+                }
               }}
               className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
             >

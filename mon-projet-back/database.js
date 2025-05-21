@@ -28,6 +28,7 @@ const testConnection = async () => {
     
     // Charger les modèles avant de synchroniser
     const User = require('./models/User');
+    const AuditReport = require('./models/AuditReport');
     // Si vous avez d'autres modèles, require-les ici aussi
     // exemple: const Post = require('./models/Post');
 

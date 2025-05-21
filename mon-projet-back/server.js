@@ -17,6 +17,7 @@ const User = require('./models/User');
 const UserReport = require('./models/UserReport');
 const hlrRoutes = require('./importHLR');
 const { importHuaweiMSSData } = require('./importHuaweiNetworks');
+const auditRoutes = require('./routes/auditRoutes');
 
 // Configuration de la journalisation
 const logStream = fs.createWriteStream(path.join(__dirname, 'server.log'), { flags: 'a' });
@@ -55,10 +56,12 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   fileFilter: function (req, file, cb) {
-    if (file.mimetype !== 'text/plain') {
-      return cb(new Error('Only .txt files are allowed'));
+    // Accepter les fichiers .txt ou .log
+    if (file.originalname.endsWith('.txt') || file.originalname.endsWith('.log')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers .txt et .log sont autorisés pour l\'upload HLR'));
     }
-    cb(null, true);
   }
 });
 
@@ -70,6 +73,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Route pour l'upload de fichiers HLR
 app.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
@@ -108,33 +112,39 @@ app.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
       throw new Error('Aucune donnée HLR valide trouvée dans le fichier');
     }
 
+    console.log(`Parsing réussi. ${hlrData.length} lignes de données HLR extraites.`);
+    // Optionnel: Log les premières lignes pour inspection
+    // console.log('Premières lignes de données HLR:', hlrData.slice(0, 5));
+
     // Insérer les données dans la base
+    const insertQuery = 'INSERT INTO hlr (tt, np, na, ns, gtrc, node_name) VALUES (?, ?, ?, ?, ?, ?)';
     for (const data of hlrData) {
-      await new Promise((resolve, reject) => {
-        connection.query(
-          'INSERT INTO hlr (tt, np, na, ns, gtrc, node_name) VALUES (?, ?, ?, ?, ?, ?)',
-          [data.tt, data.np, data.na, data.ns, data.gtrc, data.node_name],
-          (error) => {
-            if (error) reject(error);
-            else resolve();
-          }
-        );
-      });
+      try {
+        // Log les données avant l'insertion
+        console.log('Insertion HLR - Données:', data);
+        await connection.execute(insertQuery, [data.tt, data.np, data.na, data.ns, data.gtrc, data.node_name]);
+        console.log('Insertion réussie pour une ligne.');
+      } catch (insertError) {
+        console.error('Erreur lors de l\'insertion d\'une ligne HLR:', data, insertError);
+        // Décider si on continue ou si on arrête tout en cas d'erreur d'insertion
+        // Pour l'instant, on log l'erreur et on continue avec la ligne suivante
+      }
     }
 
     // Ne pas supprimer le fichier après l'import
     res.json({
       success: true,
-      message: `${hlrData.length} enregistrements HLR ont été importés avec succès`
+      message: `${hlrData.length} enregistrements HLR ont été importés avec succès (les erreurs d'insertion individuelles ont été loggées)`
     });
   } catch (error) {
-    console.error('Erreur lors de l\'import HLR:', error);
+    console.error('Erreur fatale lors de l\'import HLR:', error);
     // Supprimer le fichier en cas d'erreur
     if (req.file && req.file.path) {
       try {
         await fs.promises.unlink(req.file.path);
+        console.log(`Fichier temporaire ${req.file.path} supprimé.`);
       } catch (unlinkError) {
-        console.error('Erreur lors de la suppression du fichier:', unlinkError);
+        console.error('Erreur lors de la suppression du fichier temporaire:', unlinkError);
       }
     }
     res.status(500).json({
@@ -142,6 +152,75 @@ app.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
       error: 'Erreur lors de l\'import du fichier HLR: ' + error.message
     });
   }
+});
+
+// New route for outbound roaming data
+app.get('/outbound-roaming', (req, res) => {
+  const query = `
+    SELECT 
+      sg.pays, 
+      sg.operateur, 
+      sg.plmn,
+
+      -- Résultat extraction IR21 / IR85
+      CASE 
+        WHEN i.tadig IS NOT NULL THEN 'réussit' 
+        ELSE 'erreur' 
+      END AS extraction_ir21,
+
+      CASE 
+        WHEN ir85.tadig IS NOT NULL THEN 'réussit'
+        ELSE 'erreur'
+      END AS extraction_ir85,
+
+      -- Champs pour vérification APN/EPC
+      COALESCE(i.apn, ir85.apn) AS apn,
+      COALESCE(i.e212, ir85.e212) AS e212,
+
+      -- Vérification GT (MSC/VLR)
+      CASE
+        WHEN COALESCE(i.e214, ir85.e214) IS NOT NULL AND COALESCE(i.e214, ir85.e214) != '' THEN 'reussi'
+        ELSE 'aucun'
+      END AS verification_gt_msc,
+
+      h.epc,
+      h.imsi_prefix,
+
+      -- Comparaison flexible APN vs EPC
+      CASE 
+        WHEN (
+          (i.apn IS NOT NULL AND (
+            i.apn LIKE CONCAT('%', REPLACE(h.epc, 'epc.', ''), '%') 
+            OR i.apn LIKE CONCAT('%', h.epc, '%')
+          ))
+          OR
+          (ir85.apn IS NOT NULL AND (
+            ir85.apn LIKE CONCAT('%', REPLACE(h.epc, 'epc.', ''), '%') 
+            OR ir85.apn LIKE CONCAT('%', h.epc, '%')
+          ))
+        ) THEN 'correct'
+        ELSE 'erreur'
+      END AS comparaison_apn_epc,
+
+      -- Extraction MCC/MNC depuis e212 format mccXXX.mncYYY
+      SUBSTRING_INDEX(SUBSTRING_INDEX(COALESCE(i.e212, ir85.e212), '.', 1), 'mcc', -1) AS mcc,
+      SUBSTRING_INDEX(SUBSTRING_INDEX(COALESCE(i.e212, ir85.e212), '.', -1), 'mnc', -1) AS mnc
+
+    FROM situation_globales sg
+    LEFT JOIN ir21_data i ON sg.plmn = i.tadig
+    LEFT JOIN ir85_data ir85 ON sg.plmn = ir85.tadig
+    LEFT JOIN hss_data h ON h.imsi_prefix IN (i.e212, ir85.e212)
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des données Outbound Roaming:', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+    }
+
+    console.log(`✅ ${results.length} lignes récupérées pour Outbound Roaming`);
+    res.json(results);
+  });
 });
 
 // Connexion à MySQL
@@ -280,20 +359,7 @@ app.get("/roaming-partners", (req, res) => {
 
 // Endpoint pour récupérer les données de la situation globale
 app.get('/situation-globale', (req, res) => {
-  const query = `
-    SELECT 
-      id,
-      pays,
-      operateur,
-      plmn,
-      gsm,
-      camel,
-      gprs,
-      troisg,
-      lte
-    FROM situation_globales
-  `;
-  
+  const query = 'SELECT * FROM situation_globales';
   connection.query(query, (error, results) => {
     if (error) {
       console.error('Erreur lors de la récupération des données:', error);
@@ -1299,157 +1365,102 @@ app.delete('/api/mme-imsi/:id', async (req, res) => {
   }
 });
 
-// Création de la table audit_reports si elle n'existe pas
-const createAuditReportsTable = `
-CREATE TABLE IF NOT EXISTS audit_reports (
-    id VARCHAR(50) PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    test_type VARCHAR(100) NOT NULL,
-    date DATE NOT NULL,
-    time TIME NOT NULL,
-    status ENUM('En cours', 'Validé', 'Rejeté') DEFAULT 'En cours',
-    created_by VARCHAR(100) NOT NULL,
-    validated_by VARCHAR(100),
-    total_operators INT NOT NULL,
-    total_issues INT NOT NULL,
-    camel_issues INT NOT NULL,
-    gprs_issues INT NOT NULL,
-    threeg_issues INT NOT NULL,
-    lte_issues INT NOT NULL,
-    results_data JSON NOT NULL,
-    solutions JSON NOT NULL,
-    original_report_path VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)`;
+// Routes audit
+app.use('/', auditRoutes);
 
-connection.query(createAuditReportsTable, (err) => {
-    if (err) {
-        console.error('Erreur lors de la création de la table audit_reports:', err);
-    } else {
-        console.log('Table audit_reports créée ou déjà existante');
+// Route pour vérifier les données de situation_globales
+app.get('/check-situation-globale', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM situation_globales LIMIT 5');
+    console.log('Données trouvées:', rows);
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Erreur lors de la vérification des données:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Route pour récupérer la liste des tests
+app.get('/tests', (req, res) => {
+  const query = 'SELECT id, name, description FROM tests ORDER BY id';
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('Erreur lors de la récupération des tests:', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des tests' });
     }
+    res.json(results);
+  });
 });
 
-// Endpoint pour sauvegarder un nouveau rapport d'audit
-app.post('/api/audit-reports', upload.single('report'), async (req, res) => {
-    try {
-        const {
-            title,
-            test_type,
-            created_by,
-            total_operators,
-            total_issues,
-            camel_issues,
-            gprs_issues,
-            threeg_issues,
-            lte_issues,
-            results_data,
-            solutions
-        } = req.body;
+// Route simulée pour l'utilisateur courant (à remplacer par une vraie logique d'authentification)
+app.get('/current-user', (req, res) => {
+  // Simuler un utilisateur connecté
+  const user = {
+    user_id: 1,
+    name: 'Admin User',
+    role: 'Admin',
+    permissions: [
+      { resource_type: 'Report', access_level: 'Admin' }
+    ] // Ajouter d'autres permissions si nécessaire
+  };
+  res.json(user);
+});
 
-        // Générer un ID unique pour le rapport
-        const reportId = `AUD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-        
-        // Sauvegarder le fichier original
-        const originalReportPath = path.join(__dirname, 'reports', `${reportId}.txt`);
-        fs.writeFileSync(originalReportPath, req.file.buffer);
-
-        // Insérer les données dans la base de données
-        const query = `
-            INSERT INTO audit_reports (
-                id, title, test_type, date, time, created_by,
-                total_operators, total_issues, camel_issues, gprs_issues,
-                threeg_issues, lte_issues, results_data, solutions,
-                original_report_path
-            ) VALUES (?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const values = [
-            reportId,
-            title,
-            test_type,
-            created_by,
-            total_operators,
-            total_issues,
-            camel_issues,
-            gprs_issues,
-            threeg_issues,
-            lte_issues,
-            JSON.stringify(results_data),
-            JSON.stringify(solutions),
-            originalReportPath
-        ];
-
-        connection.query(query, values, (err, result) => {
-            if (err) {
-                console.error('Erreur lors de la sauvegarde du rapport:', err);
-                res.status(500).json({ error: 'Erreur lors de la sauvegarde du rapport' });
-                return;
-            }
-
-            res.status(201).json({
-                message: 'Rapport sauvegardé avec succès',
-                reportId: reportId
-            });
-        });
-    } catch (error) {
-        console.error('Erreur lors du traitement du rapport:', error);
-        res.status(500).json({ error: 'Erreur lors du traitement du rapport' });
+// Route pour sauvegarder un rapport d'audit
+app.post('/save-audit-report', async (req, res) => {
+  try {
+    const reportData = req.body;
+    
+    // Validation des champs requis
+    if (!reportData.id || !reportData.test_id || !reportData.title || !reportData.date || !reportData.time) {
+      return res.status(400).json({ message: 'Champs requis manquants' });
     }
-});
 
-// Endpoint pour récupérer tous les rapports
-app.get('/api/audit-reports', (req, res) => {
-    const query = 'SELECT * FROM audit_reports ORDER BY created_at DESC';
-    
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error('Erreur lors de la récupération des rapports:', err);
-            res.status(500).json({ error: 'Erreur lors de la récupération des rapports' });
-            return;
-        }
+    // Préparation de la requête SQL
+    const sql = `
+      INSERT INTO audit_reports (
+        id, test_id, title, date, time, status, created_by, validated_by,
+        total_operators, total_issues, camel_issues, gprs_issues, threeg_issues, lte_issues,
+        results_data, solutions, attachments, validation_notes, implemented_changes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-        // Convertir les champs JSON en objets
-        const reports = results.map(report => ({
-            ...report,
-            results_data: JSON.parse(report.results_data),
-            solutions: JSON.parse(report.solutions)
-        }));
+    const values = [
+      reportData.id,
+      reportData.test_id,
+      reportData.title,
+      reportData.date,
+      reportData.time,
+      reportData.status,
+      reportData.created_by,
+      reportData.validated_by,
+      reportData.total_operators,
+      reportData.total_issues,
+      reportData.camel_issues,
+      reportData.gprs_issues,
+      reportData.threeg_issues,
+      reportData.lte_issues,
+      reportData.results_data,
+      reportData.solutions,
+      reportData.attachments,
+      reportData.validation_notes,
+      reportData.implemented_changes
+    ];
 
-        res.json(reports);
+    // Exécution de la requête
+    connection.query(sql, values, (error, results) => {
+      if (error) {
+        console.error('Erreur lors de la sauvegarde du rapport:', error);
+        return res.status(500).json({ message: 'Erreur lors de la sauvegarde du rapport' });
+      }
+      
+      console.log('Rapport sauvegardé avec succès:', results);
+      res.status(200).json({ message: 'Rapport sauvegardé avec succès', id: reportData.id });
     });
-});
-
-// Endpoint pour télécharger un rapport
-app.get('/api/audit-reports/:id/download', (req, res) => {
-    const reportId = req.params.id;
-    
-    // Récupérer le chemin du fichier original
-    const query = 'SELECT original_report_path FROM audit_reports WHERE id = ?';
-    
-    connection.query(query, [reportId], (err, results) => {
-        if (err || results.length === 0) {
-            console.error('Erreur lors de la récupération du rapport:', err);
-            res.status(404).json({ error: 'Rapport non trouvé' });
-            return;
-        }
-
-        const filePath = results[0].original_report_path;
-        
-        // Vérifier si le fichier existe
-        if (!fs.existsSync(filePath)) {
-            res.status(404).json({ error: 'Fichier du rapport non trouvé' });
-            return;
-        }
-
-        // Envoyer le fichier
-        res.download(filePath, `rapport_${reportId}.txt`, (err) => {
-            if (err) {
-                console.error('Erreur lors de l\'envoi du fichier:', err);
-                res.status(500).json({ error: 'Erreur lors de l\'envoi du fichier' });
-            }
-        });
-    });
+  } catch (error) {
+    console.error('Erreur lors du traitement de la requête:', error);
+    res.status(500).json({ message: 'Erreur lors du traitement de la requête' });
+  }
 });
 
 // Démarrer le serveur
