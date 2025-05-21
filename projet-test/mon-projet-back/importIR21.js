@@ -9,7 +9,7 @@ const config = {
   db: {
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: 'bechafiyasmine',
     database: 'mon_projet_db',
     connectionLimit: 10
   },

@@ -222,7 +222,7 @@ app.post('/import-hlr', upload.single('file'), async (req, res) => {
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "localhost",
   user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "1234",
+  password: process.env.DB_PASSWORD || "bechafiyasmine",
   database: process.env.DB_NAME || "mon_projet_db"
 });
 

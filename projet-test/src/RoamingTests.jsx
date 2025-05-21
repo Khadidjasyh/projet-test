@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import {
   FaPlay,
   FaCheckCircle,
@@ -250,6 +251,8 @@ const RoamingTests = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [showFilters, setShowFilters] = useState(false);
 
+  
+
   const countries = Object.keys(operatorData);
   const operators = operatorData[selectedCountry] || [];
 
@@ -335,30 +338,31 @@ const RoamingTests = () => {
     }
   ];
 
-  const handleRunTest = (testId) => {
-    setTests(tests.map(test => 
-      test.id === testId 
-        ? { ...test, status: "running" } 
-        : test
-    ));
+  const RoamingTests = () => {
+  const [tests, setTests] = useState([
+    { id: 1, name: "Inbound Roaming", status: "pending" }
+  ]);
 
-    setTimeout(() => {
-      const randomStatus = Math.random() > 0.5 ? "success" : "failed";
-      setTests(tests.map(test => 
-        test.id === testId 
-          ? { ...test, status: randomStatus } 
-          : test
-      ));
-    }, 2000);
-  };
+  const navigate = useNavigate();
+
+  
+
+  }
+
+   
 
   const handleShowResults = (test) => {
     if (test.name === "Partenaires Roaming & Services") {
       setShowAuditTable(true);
       setShowResults(false);
     } else if (test.name === "Inbound Roaming") {
-      navigate('/inbound-roaming-results');
-    } else if (test.name === "Outbound Roaming") {
+  if (test.status !== "success") {
+    alert("Veuillez d'abord lancer le test avant de consulter les résultats.");
+    return;
+  }
+  navigate('/Inboundroamingresults');
+  
+} else if (test.name === "Outbound Roaming") {
       navigate('/outbound-roaming-results');
     } else if (test.name === "Tests CAMEL Phase Service Inbound Roaming") {
       navigate('/camel-inbound-results');
@@ -557,6 +561,7 @@ const RoamingTests = () => {
       );
     }
 
+
     // Retourner le rendu par défaut pour les autres types de résultats
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -608,6 +613,10 @@ const RoamingTests = () => {
   };
 
   const renderTableView = () => (
+
+  
+
+
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white rounded-lg shadow">
         <thead className="bg-gray-50">
@@ -643,8 +652,9 @@ const RoamingTests = () => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleRunTest(test.id)}
+
+
+                  <button onClick={handleRunTest}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
                     disabled={test.status === "running"}
                   >
@@ -655,6 +665,9 @@ const RoamingTests = () => {
                     )}
                     <span>{test.status === "running" ? "En cours..." : "Lancer"}</span>
                   </button>
+
+
+
                   <button
                     onClick={() => handleShowResults(test)}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2"
@@ -670,6 +683,30 @@ const RoamingTests = () => {
       </table>
     </div>
   );
+
+  const handleRunTest = async () => {
+  // Trouve le test "Inbound Roaming"
+  const testIndex = tests.findIndex(t => t.name === "Inbound Roaming");
+  if (testIndex === -1) return;
+
+  setTests(tests.map((t, i) =>
+    i === testIndex ? { ...t, status: "running" } : t
+  ));
+
+  try {
+    const res = await axios.post('http://localhost:3000/api/inbound-roaming');
+    const results = res.data.data;
+    localStorage.setItem("inboundResults", JSON.stringify(results));
+    setTests(tests.map((t, i) =>
+      i === testIndex ? { ...t, status: "success" } : t
+    ));
+  } catch (err) {
+    setTests(tests.map((t, i) =>
+      i === testIndex ? { ...t, status: "failed" } : t
+    ));
+    alert("Erreur lors du lancement du test inbound.");
+  }
+};
 
   const renderMapView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -746,12 +783,17 @@ const RoamingTests = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <button
-              onClick={handleBackToTests}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <FaArrowLeft />
-              <span>Retour aux tests</span>
-            </button>
+  onClick={handleRunTest}
+  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
+  
+>
+  {test.status === "running" ? (
+    <FaSpinner className="animate-spin text-white" />
+  ) : (
+    getStatusIcon(test.status)
+  )}
+  <span>{test.status === "running" ? "En cours..." : "Lancer"}</span>
+</button>
             <div className="text-sm text-gray-500">
               Total des partenaires : {auditData.length}
             </div>

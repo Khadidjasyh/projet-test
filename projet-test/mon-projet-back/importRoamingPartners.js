@@ -6,7 +6,7 @@ const fs = require("fs");
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234",
+  password: "bechafiyasmine",
   database: "mon_projet_db",
 });
 
@@ -20,7 +20,7 @@ connection.connect((err) => {
 });
 
 function importRoamingPartners() {
-  const filePath = "/Users/macbok/mon-projet/projet-test/mon-projet-back/MMEs IMSI-GT Roaming Partner MAPPING.xlsx";
+  const filePath = "/Users/PC/projects/oudit/projet-test/projet-test/mon-projet-back/MMEs IMSI-GT Roaming Partner MAPPING.xlsx";
   const workbook = xlsx.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];

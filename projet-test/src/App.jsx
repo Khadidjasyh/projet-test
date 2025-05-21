@@ -17,7 +17,9 @@ import HelpCenter from "./HelpCenter";
 import MssEricsson from './MssEricsson';
 import MssHuawei from './MssHuawei';
 import RoamingTests from './RoamingTests';
-import InboundRoamingResults from './pages/InboundRoamingResults';
+
+import Inboundroamingresults from './Inboundroamingresults'; ///inbound roaming results
+
 import OutboundRoamingResults from './pages/OutboundRoamingResults';
 import CamelInboundResults from './pages/CamelInboundResults';
 import CamelOutboundResults from './pages/CamelOutboundResults';
@@ -98,12 +100,14 @@ function App() {
             <Route path="/firewall" element={<FirewallIPs />} />
             <Route path="/roaming-tests" element={<RoamingTests />} />
             <Route path="/ir21" element={<IR21Page />} />
-            <Route path="/inbound-roaming-results" element={<InboundRoamingResults />} />
+           
             <Route path="/outbound-roaming-results" element={<OutboundRoamingResults />} />
             <Route path="/camel-inbound-results" element={<CamelInboundResults />} />
             <Route path="/mss-huawei" element={<MssHuawei />} />
             <Route path="/camel-outbound-results" element={<CamelOutboundResults />} />
-            <Route path="/data-inbound-results" element={<DataInboundResults />} />
+
+            <Route path="/Inboundroamingresults" element={<Inboundroamingresults />} /> //pour le test inbound
+
             <Route path="/hss" element={<HssPage />} />
             <Route path="/mme-imsi" element={<MmeImsi />} />
             <Route path="/mme" element={<MmeImsi />} />

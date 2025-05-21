@@ -6,7 +6,7 @@ const mysql = require('mysql2/promise');
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: '1234',  // Updated to match your system password
+    password: 'bechafiyasmine',  // Updated to match your system password
     database: 'mon_projet_db'
 };
 
