@@ -13,6 +13,7 @@ const fs = require("fs");
 const xml2js = require("xml2js");
 const path = require("path");
 const authRoutes = require('./routes/auth');
+const firewallRoutes = require('./routes/firewall');
 const User = require('./models/User');
 const UserReport = require('./models/UserReport');
 
@@ -26,9 +27,24 @@ const log = (message) => {
   logStream.write(logMessage);
 };
 
+
 // Initialisation de l'application Express
 const app = express();
 const PORT = 5178;
+
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:5177',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Configuration des routes d'authentification
+app.use('/api/auth', authRoutes);
+app.use('/', firewallRoutes);
 
 // Middleware pour logger les requêtes
 app.use((req, res, next) => {
@@ -80,6 +96,18 @@ const upload = multer({
   }
 });
 
+// Initialisation de la base de données
+const sequelize = require('./database');
+
+// Synchroniser les modèles avec la base de données
+sequelize.sync({ force: false }) // force: false pour ne pas supprimer les données existantes
+  .then(() => {
+    console.log('Base de données synchronisée avec succès');
+  })
+  .catch(err => {
+    console.error('Erreur lors de la synchronisation de la base de données:', err);
+  });
+
 // Connexion à MySQL
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "localhost",
@@ -90,10 +118,10 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
   if (err) {
-    console.error("❌ Erreur de connexion MySQL :", err);
-  } else {
-    console.log("✅ Connecté à MySQL");
+    console.error('Erreur de connexion à MySQL:', err);
+    return;
   }
+  console.log(' Connecté à MySQL');
 });
 
 // Configuration de Nodemailer pour Gmail
@@ -112,8 +140,9 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// CORS: Autorise le frontend local
 app.use(cors({
-  origin: '*', // Permettre toutes les origines pendant le développement
+  origin: 'http://localhost:5177',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -247,6 +276,75 @@ app.get('/situation-globale', (req, res) => {
     res.json(results);
   });
 });
+
+app.get('/outbound-roaming', (req, res) => {
+  const query = `
+    SELECT 
+      sg.pays, 
+      sg.operateur, 
+      sg.plmn,
+
+      -- Résultat extraction IR21 / IR85
+      CASE 
+        WHEN i.tadig IS NOT NULL THEN 'réussit' 
+        ELSE 'erreur' 
+      END AS extraction_ir21,
+
+      CASE 
+        WHEN ir85.tadig IS NOT NULL THEN 'réussit'
+        ELSE 'erreur'
+      END AS extraction_ir85,
+
+      -- Champs pour vérification APN/EPC
+      COALESCE(i.apn, ir85.apn) AS apn,
+      COALESCE(i.e212, ir85.e212) AS e212,
+
+      -- Vérification GT (MSC/VLR)
+      CASE
+        WHEN COALESCE(i.e214, ir85.e214) IS NOT NULL AND COALESCE(i.e214, ir85.e214) != '' THEN 'reussi'
+        ELSE 'aucun'
+      END AS verification_gt_msc,
+
+      h.epc,
+      h.imsi_prefix,
+
+      -- Comparaison flexible APN vs EPC
+      CASE 
+        WHEN (
+          (i.apn IS NOT NULL AND (
+            i.apn LIKE CONCAT('%', REPLACE(h.epc, 'epc.', ''), '%') 
+            OR i.apn LIKE CONCAT('%', h.epc, '%')
+          ))
+          OR
+          (ir85.apn IS NOT NULL AND (
+            ir85.apn LIKE CONCAT('%', REPLACE(h.epc, 'epc.', ''), '%') 
+            OR ir85.apn LIKE CONCAT('%', h.epc, '%')
+          ))
+        ) THEN 'correct'
+        ELSE 'erreur'
+      END AS comparaison_apn_epc,
+
+      -- Extraction MCC/MNC depuis e212 format mccXXX.mncYYY
+      SUBSTRING_INDEX(SUBSTRING_INDEX(COALESCE(i.e212, ir85.e212), '.', 1), 'mcc', -1) AS mcc,
+      SUBSTRING_INDEX(SUBSTRING_INDEX(COALESCE(i.e212, ir85.e212), '.', -1), 'mnc', -1) AS mnc
+
+    FROM situation_globales sg
+    LEFT JOIN ir21_data i ON sg.plmn = i.tadig
+    LEFT JOIN ir85_data ir85 ON sg.plmn = ir85.tadig
+    LEFT JOIN hss_data h ON h.imsi_prefix IN (i.e212, ir85.e212)
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des données Outbound Roaming:', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+    }
+
+    console.log(`✅ ${results.length} lignes récupérées pour Outbound Roaming`);
+    res.json(results);
+  });
+});
+
 
 // Route pour récupérer les nœuds réseau
 app.get("/network-nodes", (req, res) => {
@@ -480,7 +578,7 @@ app.get('/huawei/mobile-networks', (req, res) => {
 
 app.get('/hss', (req, res) => {
   console.log('GET /hss endpoint hit');
-  connection.query('SELECT epc, `3g`, hss_esm FROM hss_data', (err, results) => {
+  connection.query('SELECT epc, imsi_prefix, `3g`, hss_esm FROM hss_data', (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Erreur lors de la récupération des données HSS' });
@@ -638,98 +736,6 @@ app.use('/auth', authRoutes);
 // Associations Sequelize pour les signalements
 User.hasMany(UserReport, { foreignKey: 'userId' });
 UserReport.belongsTo(User, { foreignKey: 'userId' });
-
-// Route pour sauvegarder un rapport d'audit
-app.post('/save-audit-report', (req, res) => {
-  const reportData = req.body;
-  
-  // Validation des données requises
-  if (!reportData.id || !reportData.test_id || !reportData.title || !reportData.date || !reportData.time) {
-    return res.status(400).json({ 
-      error: 'Données manquantes',
-      message: 'Les champs id, test_id, title, date et time sont obligatoires'
-    });
-  }
-
-  const query = `
-    INSERT INTO audit_reports (
-      id, test_id, title, date, time, status, created_by, validated_by,
-      total_operators, total_issues, camel_issues, gprs_issues, threeg_issues, lte_issues,
-      results_data, solutions, attachments, validation_notes, implemented_changes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  const values = [
-    reportData.id,
-    reportData.test_id,
-    reportData.title,
-    reportData.date,
-    reportData.time,
-    reportData.status || 'En cours',
-    reportData.created_by,
-    reportData.validated_by,
-    reportData.total_operators,
-    reportData.total_issues,
-    reportData.camel_issues,
-    reportData.gprs_issues,
-    reportData.threeg_issues,
-    reportData.lte_issues,
-    reportData.results_data,
-    reportData.solutions,
-    reportData.attachments,
-    reportData.validation_notes,
-    reportData.implemented_changes
-  ];
-
-  connection.query(query, values, (error, results) => {
-    if (error) {
-      console.error('Erreur lors de la sauvegarde du rapport:', error);
-      return res.status(500).json({ 
-        error: 'Erreur lors de la sauvegarde du rapport',
-        message: error.message
-      });
-    }
-
-    console.log('Rapport sauvegardé avec succès:', results);
-    res.status(200).json({ 
-      message: 'Rapport sauvegardé avec succès',
-      reportId: reportData.id
-    });
-  });
-});
-
-// Route pour récupérer tous les rapports d'audit
-app.get('/audit-reports', (req, res) => {
-  const query = `
-    SELECT 
-      id, test_id, title, date, time, status, created_by, validated_by,
-      total_operators, total_issues, camel_issues, gprs_issues, threeg_issues, lte_issues,
-      results_data, solutions, attachments, validation_notes, implemented_changes,
-      created_at, updated_at
-    FROM audit_reports
-    ORDER BY created_at DESC
-  `;
-
-  connection.query(query, (error, results) => {
-    if (error) {
-      console.error('Erreur lors de la récupération des rapports:', error);
-      return res.status(500).json({ 
-        error: 'Erreur lors de la récupération des rapports',
-        message: error.message
-      });
-    }
-
-    // Convertir les champs JSON en objets
-    const formattedResults = results.map(report => ({
-      ...report,
-      results_data: JSON.parse(report.results_data || '[]'),
-      solutions: JSON.parse(report.solutions || '{}'),
-      attachments: JSON.parse(report.attachments || '[]')
-    }));
-
-    res.status(200).json(formattedResults);
-  });
-});
 
 // Démarrer le serveur
 app.listen(PORT, () => {

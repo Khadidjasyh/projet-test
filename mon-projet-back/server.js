@@ -69,7 +69,7 @@ const upload = multer({
 app.use(cors({
   origin: '*', // Permettre toutes les origines pendant le développement
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'user-id'],
   credentials: true
 }));
 app.use(bodyParser.json());
@@ -1392,18 +1392,36 @@ app.get('/tests', (req, res) => {
   });
 });
 
-// Route simulée pour l'utilisateur courant (à remplacer par une vraie logique d'authentification)
-app.get('/current-user', (req, res) => {
-  // Simuler un utilisateur connecté
-  const user = {
-    user_id: 1,
-    name: 'Admin User',
-    role: 'Admin',
-    permissions: [
-      { resource_type: 'Report', access_level: 'Admin' }
-    ] // Ajouter d'autres permissions si nécessaire
-  };
-  res.json(user);
+// Route pour l'utilisateur courant
+app.get('/current-user', async (req, res) => {
+  try {
+    // Récupérer l'ID de l'utilisateur depuis le localStorage (envoyé dans les headers)
+    const userId = req.headers['user-id'];
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    // Récupérer l'utilisateur depuis la base de données
+    const user = await User.findByPk(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    // Renvoyer les données de l'utilisateur
+    res.json({
+      user_id: user.id,
+      name: user.name,
+      role: user.role,
+      permissions: user.role === 'admin' ? [
+        { resource_type: 'Report', access_level: 'Admin' }
+      ] : []
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // Route pour sauvegarder un rapport d'audit

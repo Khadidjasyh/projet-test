@@ -33,7 +33,7 @@ const InboundRoamingResults = () => {
     return '';
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     try {
       const now = new Date();
       const dateStr = now.toLocaleString();
@@ -44,7 +44,7 @@ const InboundRoamingResults = () => {
         ? `Détecté ${erreurs.length} problème(s) dans les tests inbound roaming`
         : "Aucune erreur majeure détectée.";
 
-      // Construction du tableau
+      // Construction du tableau pour le fichier texte
       const col1 = 'Pays';
       const col2 = 'Opérateur';
       const col3 = 'Phase 1';
@@ -117,6 +117,44 @@ Solutions :
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      // Préparation des données pour la sauvegarde dans la base de données
+      const reportData = {
+        id: `AUD_${Date.now()}`,
+        test_id: 2, // ID du test Inbound Roaming
+        title: `Rapport Inbound Roaming - ${now.toLocaleDateString()}`,
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().split(' ')[0],
+        status: 'En cours',
+        created_by: 'Système',
+        total_operators: data.length,
+        total_issues: erreurs.length,
+        results_data: JSON.stringify(data),
+        solutions: JSON.stringify([
+          "Vérifier le format de l'IMSI (15 chiffres maximum)",
+          "S'assurer que le préfixe est bien enregistré",
+          "Mettre à jour la base de données des préfixes",
+          "Vérifier le format du MGT (14 chiffres)",
+          "S'assurer que le MGT est bien enregistré",
+          "Mettre à jour la base de données des MGT"
+        ]),
+        validation_notes: erreurGlobale
+      };
+
+      // Sauvegarde dans la base de données
+      const response = await fetch('http://localhost:5178/audit-reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reportData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la sauvegarde du rapport');
+      }
+
+      alert('Rapport généré et sauvegardé avec succès !');
+
     } catch (error) {
       console.error("Erreur lors de la génération du rapport:", error);
       alert("Une erreur est survenue lors de la génération du rapport.");
@@ -137,23 +175,23 @@ Solutions :
       animate={{ opacity: 1 }}
       className="p-6 max-w-7xl mx-auto"
     >
-      <div className="flex justify-between items-center mb-6">
-        <button
+        <div className="flex justify-between items-center mb-6">
+          <button
           onClick={() => navigate('/roaming-tests')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <FaArrowLeft />
-          <span>Retour aux tests</span>
-        </button>
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <FaArrowLeft />
+            <span>Retour aux tests</span>
+          </button>
 
         <div className="text-right">
-          <button
+            <button
             onClick={handleGenerateReport}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2"
-          >
+            >
             <FaChartBar />
             <span>Générer un rapport</span>
-          </button>
+            </button>
         </div>
       </div>
 

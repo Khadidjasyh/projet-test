@@ -26,6 +26,7 @@ import {
   Legend
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import { generateReportFromTest } from '../src/RapportAudit';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 // Données extraites du fichier Excel
@@ -288,6 +289,7 @@ const RoamingTests = () => {
             ? { ...test, status: "success" }
             : test
         ));
+        setShowAuditTable(true);
       } catch (error) {
         setTests(tests.map(test =>
           test.id === testId
@@ -343,71 +345,30 @@ const RoamingTests = () => {
 
   const handleGenerateReport = async () => {
     try {
-      // Calcul des statistiques
-      const totalOperators = auditData.length;
-      const totalIssues = auditData.filter(row => 
-        !row.gsm || !row.camel || !row.gprs || !row.troisg || !row.lte
-      ).length;
-      const camelIssues = auditData.filter(row => !row.camel).length;
-      const gprsIssues = auditData.filter(row => !row.gprs).length;
-      const threegIssues = auditData.filter(row => !row.troisg).length;
-      const lteIssues = auditData.filter(row => !row.lte).length;
-
-      // Préparation des données du rapport
-      const reportData = {
-        id: `AUD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-        test_id: selectedTest ? selectedTest.id : 1,
-        title: selectedTest ? `${selectedTest.name} - Rapport d'audit` : 'Rapport d\'audit Roaming',
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toTimeString().split(' ')[0],
-        status: 'En cours',
-        created_by: 'Admin', // À remplacer par l'utilisateur connecté
-        validated_by: null,
-        total_operators: totalOperators,
-        total_issues: totalIssues,
-        camel_issues: camelIssues,
-        gprs_issues: gprsIssues,
-        threeg_issues: threegIssues,
-        lte_issues: lteIssues,
-        results_data: JSON.stringify(auditData),
-        solutions: JSON.stringify({
-          recommendations: [
-            "Vérifier les configurations CAMEL pour les opérateurs en erreur",
-            "Mettre à jour les accords GPRS manquants",
-            "Configurer les services 3G/4G pour les opérateurs concernés"
-          ]
-        }),
-        attachments: JSON.stringify([]),
-        validation_notes: null,
-        implemented_changes: null
+      // Préparer les données du test pour le rapport
+      const testResults = {
+        test_id: selectedTest.id,
+        test_type: selectedTest.name,
+        operators: auditData.map(row => ({
+          country: row.pays,
+          operator: row.operateur,
+          issues: ['gsm', 'camel', 'gprs', 'troisg', 'lte']
+            .filter(service => row[service] === undefined || row[service] === null || row[service] === '')
+            .map(service => `${service.toUpperCase()} non disponible`)
+        }))
       };
 
-      console.log('Envoi des données du rapport:', reportData);
-
-      // Envoi des données au backend pour sauvegarde
-      const response = await fetch('http://localhost:5178/save-audit-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reportData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la sauvegarde du rapport');
-      }
-
-      // Afficher un message de succès
-      alert('Rapport généré avec succès !');
-
-      // Redirection vers la page RapportAudit
-      navigate('/rapport-audit');
+      // Générer le rapport
+      const report = await generateReportFromTest(testResults);
+      
+      // Rediriger vers la page des rapports
+      navigate('/rapports');
     } catch (error) {
-      console.error('Erreur lors de la génération du rapport:', error);
-      alert('Une erreur est survenue lors de la génération du rapport: ' + error.message);
+      console.error("Erreur lors de la génération du rapport:", error);
+      // Afficher une notification d'erreur à l'utilisateur
     }
   };
+
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -674,12 +635,9 @@ const RoamingTests = () => {
                       <FaChartBar />
                       <span>Résultats</span>
                     </button>
-                    {test.name === "Outbound Roaming" && (
+                    {test.name === "Partenaires Roaming & Services" && (
                       <button
-                        onClick={() => {
-                          setSelectedTest(test);
-                          handleGenerateReport();
-                        }}
+                        onClick={handleGenerateReport}
                         className="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
                       >
                         <FaChartBar />
@@ -749,7 +707,7 @@ const RoamingTests = () => {
               </button>
               <button
                 onClick={() => handleShowResults(test)}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2"
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <FaChartBar />
                 <span>Résultats</span>
@@ -767,10 +725,7 @@ const RoamingTests = () => {
         {/* Bouton Générer un rapport en haut du tableau d'audit */}
         <div className="flex justify-end mb-4">
           <button
-            onClick={() => {
-              setSelectedTest(tests.find(t => t.name === "Partenaires Roaming & Services"));
-              handleGenerateReport();
-            }}
+            onClick={handleGenerateReport}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <FaChartBar />

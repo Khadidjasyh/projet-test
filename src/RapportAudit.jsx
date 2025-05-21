@@ -132,6 +132,8 @@ const RapportAudit = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [expandedReportId, setExpandedReportId] = useState(null);
   const [showNewReportModal, setShowNewReportModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userLoading, setUserLoading] = useState(true);
   const [newReport, setNewReport] = useState({
     title: '',
     test_id: '',
@@ -159,26 +161,68 @@ const RapportAudit = () => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const loadData = async () => {
+    const checkUserAccess = async () => {
       try {
-        const [reportsData, testsData, userData] = await Promise.all([
-          fetchReports(),
-          fetch('http://localhost:5178/tests').then(res => res.json()),
-          fetch('http://localhost:5178/current-user').then(res => res.json()),
-        ]);
-        setReports(reportsData);
-        setTests(testsData);
-        setCurrentUser(userData);
-        setLoading(false);
+        // Récupérer les données de l'utilisateur connecté depuis le localStorage
+        const userData = JSON.parse(localStorage.getItem('user'));
+        console.log('Données utilisateur depuis localStorage:', userData);
+        
+        if (!userData) {
+          throw new Error('Aucun utilisateur connecté');
+        }
+
+        // Appeler l'API avec l'ID de l'utilisateur dans les headers
+        const response = await fetch('http://localhost:5178/current-user', {
+          headers: {
+            'user-id': userData.id
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la vérification des droits');
+        }
+
+        const apiUserData = await response.json();
+        console.log('Données utilisateur depuis API:', apiUserData);
+        
+        // Vérification du rôle 'user' ou 'admin'
+        const hasAdminRole = apiUserData.role?.toLowerCase() === 'admin';
+        console.log('Rôle utilisateur:', apiUserData.role);
+        console.log('Est admin?', hasAdminRole);
+        
+        setIsAdmin(hasAdminRole);
+        setUserLoading(false);
       } catch (error) {
-        console.error("Erreur de chargement des données initiales:", error);
-        setError("Erreur lors du chargement des données.");
-        setLoading(false);
+        console.error('Erreur lors de la vérification des droits:', error);
+        setError('Erreur lors de la vérification des droits d\'accès');
+        setUserLoading(false);
       }
     };
-    
-    loadData();
+
+    checkUserAccess();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      const loadData = async () => {
+        try {
+          const [reportsData, testsData] = await Promise.all([
+            fetchReports(),
+            fetch('http://localhost:5178/tests').then(res => res.json()),
+          ]);
+          setReports(reportsData);
+          setTests(testsData);
+          setLoading(false);
+        } catch (error) {
+          console.error("Erreur de chargement des données initiales:", error);
+          setError("Erreur lors du chargement des données.");
+          setLoading(false);
+        }
+      };
+      
+      loadData();
+    }
+  }, [isAdmin]);
 
   const fetchReports = async () => {
     try {
@@ -225,17 +269,158 @@ const RapportAudit = () => {
 
   const handleDownload = async (reportId) => {
     try {
-      const response = await fetch(`http://localhost:5178/audit-reports/${reportId}/download`);
-      if (!response.ok) throw new Error('Erreur lors du téléchargement');
-      const blob = await response.blob();
+      // Récupérer le rapport depuis la base de données
+      const response = await fetch(`http://localhost:5178/audit-reports/${reportId}`);
+      if (!response.ok) throw new Error('Erreur lors de la récupération du rapport');
+      const report = await response.json();
+
+      // Préparer le contenu du rapport
+      const now = new Date();
+      const dateStr = now.toLocaleString();
+      let txt = '';
+
+      // Générer le contenu en fonction du type de test
+      if (report.test_id === 1) { // Partenaires Roaming
+        const resultsData = JSON.parse(report.results_data);
+        const solutions = JSON.parse(report.solutions);
+
+        // Construction du tableau
+        const col1 = 'Pays';
+        const col2 = 'Opérateur';
+        const col3 = 'Services Manquants';
+        const width1 = Math.max(col1.length, ...resultsData.map(r => (r.pays || '').length));
+        const width2 = Math.max(col2.length, ...resultsData.map(r => (r.operateur || '').length));
+        const width3 = Math.max(col3.length, ...resultsData.map(r => (r.services_manquants || '').length));
+
+        const pad = (txt, len) => (txt || '').padEnd(len, ' ');
+        const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
+        const sepLine = `|-${'-'.repeat(width1)}-|-${'-'.repeat(width2)}-|-${'-'.repeat(width3)}-|\n`;
+        let table = sep + sepLine;
+
+        resultsData.forEach(row => {
+          table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.services_manquants, width3)} |\n`;
+        });
+
+        const aide = `\n\n\n🔴 Services manquants détectés
+Cause probable :
+- Services non activés dans le système
+- Données manquantes dans la base
+- Configuration incomplète
+
+Solutions :
+${solutions.map(s => `- ${s}`).join('\n')}
+`;
+
+        txt = `Nom du test : ${report.title}\n` +
+              `Date : ${report.date} ${report.time}\n` +
+              `Statut : ${report.status}\n` +
+              `Créé par : ${report.created_by}\n` +
+              `Total opérateurs : ${report.total_operators}\n` +
+              `Total problèmes : ${report.total_issues}\n\n` +
+              table + aide;
+
+      } else if (report.test_id === 2) { // Inbound Roaming
+        const resultsData = JSON.parse(report.results_data);
+        const solutions = JSON.parse(report.solutions);
+
+        // Construction du tableau
+        const col1 = 'Pays';
+        const col2 = 'Opérateur';
+        const col3 = 'Phase 1 (E.212)';
+        const col4 = 'Phase 2 (E.214)';
+        const col5 = 'Résultat Final';
+        const col6 = 'Commentaires';
+
+        const widths = {
+          col1: Math.max(col1.length, ...resultsData.map(r => (r.pays || '').length)),
+          col2: Math.max(col2.length, ...resultsData.map(r => (r.operateur || '').length)),
+          col3: Math.max(col3.length, ...resultsData.map(r => (r.phase1 || '').length)),
+          col4: Math.max(col4.length, ...resultsData.map(r => (r.phase2 || '').length)),
+          col5: Math.max(col5.length, ...resultsData.map(r => (r.resultat || '').length)),
+          col6: Math.max(col6.length, ...resultsData.map(r => (r.commentaires || '').length))
+        };
+
+        const pad = (txt, len) => (txt || '').padEnd(len, ' ');
+        const sep = `| ${pad(col1, widths.col1)} | ${pad(col2, widths.col2)} | ${pad(col3, widths.col3)} | ${pad(col4, widths.col4)} | ${pad(col5, widths.col5)} | ${pad(col6, widths.col6)} |\n`;
+        const sepLine = `|-${'-'.repeat(widths.col1)}-|-${'-'.repeat(widths.col2)}-|-${'-'.repeat(widths.col3)}-|-${'-'.repeat(widths.col4)}-|-${'-'.repeat(widths.col5)}-|-${'-'.repeat(widths.col6)}-|\n`;
+        let table = sep + sepLine;
+
+        resultsData.forEach(row => {
+          table += `| ${pad(row.pays, widths.col1)} | ${pad(row.operateur, widths.col2)} | ${pad(row.phase1, widths.col3)} | ${pad(row.phase2, widths.col4)} | ${pad(row.resultat, widths.col5)} | ${pad(row.commentaires, widths.col6)} |\n`;
+        });
+
+        const aide = `\n\n\n🔴 Résultats des tests
+Cause probable :
+- Configuration incorrecte des paramètres E.212/E.214
+- Problèmes de connectivité avec les opérateurs partenaires
+- Données manquantes ou incorrectes dans la base
+
+Solutions :
+${solutions.map(s => `- ${s}`).join('\n')}
+`;
+
+        txt = `Nom du test : ${report.title}\n` +
+              `Date : ${report.date} ${report.time}\n` +
+              `Statut : ${report.status}\n` +
+              `Créé par : ${report.created_by}\n` +
+              `Total opérateurs : ${report.total_operators}\n` +
+              `Total problèmes : ${report.total_issues}\n\n` +
+              table + aide;
+
+      } else if (report.test_id === 3) { // Outbound Roaming
+        const resultsData = JSON.parse(report.results_data);
+        const solutions = JSON.parse(report.solutions);
+
+        // Construction du tableau
+        const col1 = 'Pays';
+        const col2 = 'Opérateur';
+        const col3 = 'Commentaires';
+
+        const widths = {
+          col1: Math.max(col1.length, ...resultsData.map(r => (r.pays || '').length)),
+          col2: Math.max(col2.length, ...resultsData.map(r => (r.operateur || '').length)),
+          col3: Math.max(col3.length, ...resultsData.map(r => (r.commentaires || '').length))
+        };
+
+        const pad = (txt, len) => (txt || '').padEnd(len, ' ');
+        const sep = `| ${pad(col1, widths.col1)} | ${pad(col2, widths.col2)} | ${pad(col3, widths.col3)} |\n`;
+        const sepLine = `|-${'-'.repeat(widths.col1)}-|-${'-'.repeat(widths.col2)}-|-${'-'.repeat(widths.col3)}-|\n`;
+        let table = sep + sepLine;
+
+        resultsData.forEach(row => {
+          table += `| ${pad(row.pays, widths.col1)} | ${pad(row.operateur, widths.col2)} | ${pad(row.commentaires, widths.col3)} |\n`;
+        });
+
+        const aide = `\n\n\n🔴 Résultats des tests
+Cause probable :
+- Problèmes de connectivité avec les opérateurs partenaires
+- Configuration incorrecte des paramètres de roaming
+- Données manquantes ou incorrectes dans la base
+
+Solutions :
+${solutions.map(s => `- ${s}`).join('\n')}
+`;
+
+        txt = `Nom du test : ${report.title}\n` +
+              `Date : ${report.date} ${report.time}\n` +
+              `Statut : ${report.status}\n` +
+              `Créé par : ${report.created_by}\n` +
+              `Total opérateurs : ${report.total_operators}\n` +
+              `Total problèmes : ${report.total_issues}\n\n` +
+              table + aide;
+      }
+
+      // Créer et télécharger le fichier
+      const blob = new Blob([txt], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `rapport_${reportId}.pdf`;
+      a.download = `rapport_${report.test_id}_${report.date.replace(/-/g, '')}.txt`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
       alert('Erreur lors du téléchargement du rapport');
@@ -402,6 +587,29 @@ const RapportAudit = () => {
     }
   };
 
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <FaSpinner className="animate-spin text-4xl text-green-600" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Accès Refusé</h2>
+          <p className="text-gray-600">
+            Vous n'avez pas les droits nécessaires pour accéder à cette page.
+            <br />
+            Cette page est réservée aux administrateurs.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -560,7 +768,11 @@ const RapportAudit = () => {
                 <React.Fragment key={report.id}>
                   <tr 
                     className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setExpandedReportId(expandedReportId === report.id ? null : report.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setExpandedReportId(expandedReportId === report.id ? null : report.id);
+                    }}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{report.title}</div>
@@ -591,68 +803,122 @@ const RapportAudit = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                      <button
+                        <button
                           onClick={(e) => { e.stopPropagation(); handleDownload(report.id); }}
                           className="text-blue-600 hover:text-blue-900"
                           title="Télécharger"
-                      >
+                        >
                           <FaDownload />
-                      </button>
-                      <button
+                        </button>
+                        <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(report.id); }}
                           className="text-red-600 hover:text-red-900"
                           title="Supprimer"
-                      >
+                        >
                           <FaTrash />
-                      </button>
-                    </div>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {expandedReportId === report.id && (
                     <tr>
                       <td colSpan="5" className="px-6 py-4 bg-gray-50">
-                        <div className="text-sm text-gray-800">
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="text-sm text-gray-800"
+                        >
                           <h3 className="text-lg font-semibold mb-2">Détails du Rapport</h3>
                           
-                          {report.results_data && report.results_data.length > 0 && (
+                          {report.results_data && (
                             <div className="mb-4">
                               <h4 className="font-semibold mb-1">Résultats Détaillés:</h4>
-                              <ul className="list-disc list-inside">
-                                {report.results_data.map((result, idx) => (
-                                  <li key={idx}>
-                                    Pays: {result.country}, Opérateur: {result.operator}, PLMN: {result.plmn} - Problèmes: {result.issues.join(', ' || 'Aucun')}
-                                  </li>
-                                ))}
-                              </ul>
-                  </div>
+                              {(() => {
+                                try {
+                                  const resultsData = typeof report.results_data === 'string' 
+                                    ? JSON.parse(report.results_data) 
+                                    : report.results_data;
+                                  
+                                  if (Array.isArray(resultsData)) {
+                                    return (
+                                      <ul className="list-disc list-inside">
+                                        {resultsData.map((result, idx) => (
+                                          <li key={idx}>
+                                            Pays: {result.pays}, Opérateur: {result.operateur}
+                                            {result.services_manquants && ` - Services manquants: ${result.services_manquants}`}
+                                            {result.phase1 && ` - Phase 1: ${result.phase1}`}
+                                            {result.phase2 && ` - Phase 2: ${result.phase2}`}
+                                            {result.resultat && ` - Résultat: ${result.resultat}`}
+                                            {result.commentaires && ` - Commentaires: ${result.commentaires}`}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    );
+                                  } else if (resultsData.operators) {
+                                    return (
+                                      <ul className="list-disc list-inside">
+                                        {resultsData.operators.map((operator, idx) => (
+                                          <li key={idx}>
+                                            Pays: {operator.country}, Opérateur: {operator.operator}
+                                            {operator.issues && operator.issues.length > 0 && 
+                                              ` - Problèmes: ${operator.issues.join(', ')}`}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    );
+                                  }
+                                  return <p>Aucun résultat détaillé disponible</p>;
+                                } catch (error) {
+                                  console.error('Erreur lors du parsing des résultats:', error);
+                                  return <p>Erreur lors de l'affichage des résultats</p>;
+                                }
+                              })()}
+                            </div>
                           )}
 
-                          {report.solutions && report.solutions.length > 0 && (
+                          {report.solutions && (
                             <div className="mb-4">
                               <h4 className="font-semibold mb-1">Solutions Proposées:</h4>
-                              <ul className="list-disc list-inside">
-                                {report.solutions.map((solution, idx) => (
-                                  <li key={idx}>{solution}</li>
-                                ))}
-                              </ul>
-          </div>
-        )}
+                              {(() => {
+                                try {
+                                  const solutions = typeof report.solutions === 'string'
+                                    ? JSON.parse(report.solutions)
+                                    : report.solutions;
+                                  
+                                  if (Array.isArray(solutions)) {
+                                    return (
+                                      <ul className="list-disc list-inside">
+                                        {solutions.map((solution, idx) => (
+                                          <li key={idx}>{solution}</li>
+                                        ))}
+                                      </ul>
+                                    );
+                                  }
+                                  return <p>Aucune solution proposée</p>;
+                                } catch (error) {
+                                  console.error('Erreur lors du parsing des solutions:', error);
+                                  return <p>Erreur lors de l'affichage des solutions</p>;
+                                }
+                              })()}
+                            </div>
+                          )}
 
                           {report.validation_notes && (
                             <div className="mb-4">
                               <h4 className="font-semibold mb-1">Notes de Validation:</h4>
                               <p>{report.validation_notes}</p>
-              </div>
+                            </div>
                           )}
 
                           {report.implemented_changes && (
                             <div className="mb-4">
                               <h4 className="font-semibold mb-1">Changements Implémentés:</h4>
                               <p>{report.implemented_changes}</p>
-          </div>
-        )}
-
-                        </div>
+                            </div>
+                          )}
+                        </motion.div>
                       </td>
                     </tr>
                   )}

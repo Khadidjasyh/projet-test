@@ -25,7 +25,7 @@ function AdminCreation() {
         <h2 className="text-2xl font-bold mb-4">Create Admin Account</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
+            <label className="block text-gray-700">Nom</label>
             <input
               type="text"
               value={name}

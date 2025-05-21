@@ -21,17 +21,78 @@ import {
 // Service simulé pour les données d'audit
 const AuditService = {
   async fetchAuditReports() {
-    try {
-      const response = await fetch('http://localhost:5178/audit-reports');
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des rapports');
+    // Simuler un délai de chargement
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return [
+      {
+        id: 'AUD-2023-001',
+        title: 'Audit Routage International',
+        date: '2023-10-15',
+        type: 'Réseau',
+        status: 'Validé',
+        createdBy: 'Khadidja Sayah',
+        validatedBy: 'Lyna Nemiri',
+        findings: 12,
+        critical: 3,
+        medium: 5,
+        low: 4,
+        attachments: [
+          { name: 'Rapport_Complet.pdf', type: 'PDF', size: '2.4 MB' },
+          { name: 'Annexes_Techniques.zip', type: 'Archive', size: '5.1 MB' }
+        ]
+      },
+      {
+        id: 'AUD-2023-002',
+        title: 'Contrôle Qualité SMS',
+        date: '2023-11-02',
+        type: 'Service',
+        status: 'En cours',
+        createdBy: 'Yasmine Serial',
+        validatedBy: null,
+        findings: 8,
+        critical: 1,
+        medium: 4,
+        low: 3,
+        attachments: [
+          { name: 'Rapport_Intermediaire.docx', type: 'Document', size: '1.2 MB' }
+        ]
+      },
+      {
+        id: 'AUD-2023-003',
+        title: 'Audit Sécurité GGSN',
+        date: '2023-09-28',
+        type: 'Sécurité',
+        status: 'Rejeté',
+        createdBy: 'Hadil Khelif',
+        validatedBy: 'Yasmine Bechafi',
+        findings: 15,
+        critical: 5,
+        medium: 6,
+        low: 4,
+        attachments: [
+          { name: 'Rapport_Initial.pdf', type: 'PDF', size: '3.0 MB' },
+          { name: 'Preuves.zip', type: 'Archive', size: '8.7 MB' }
+        ]
+      },
+      {
+        id: 'AUD-2023-004',
+        title: 'Vérification Roaming Data',
+        date: '2023-12-10',
+        type: 'Réseau',
+        status: 'Validé',
+        createdBy: 'Lyna Nemiri',
+        validatedBy: 'Khadidja Sayah',
+        findings: 7,
+        critical: 0,
+        medium: 3,
+        low: 4,
+        attachments: [
+          { name: 'Rapport_Final.pdf', type: 'PDF', size: '1.8 MB' },
+          { name: 'Logs_Analyse.log', type: 'Log', size: '4.2 MB' }
+        ]
       }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des rapports:', error);
-      return [];
-    }
+    ];
   },
 
   async fetchTestResults() {
@@ -712,75 +773,3 @@ export default function RapportAudit() {
     </div>
   );
 }
-
-// --- Robust generateReportFromTest ---
-export const generateReportFromTest = async (testResults) => {
-  try {
-    // Log pour debug
-    console.log('generateReportFromTest - testResults:', testResults);
-
-    // Vérifier que testResults existe
-    if (!testResults) {
-      throw new Error('Aucune donnée de test fournie');
-    }
-
-    // Vérifier que results_data est un tableau JSON valide
-    let resultsData = [];
-    try {
-      resultsData = typeof testResults.results_data === 'string' 
-        ? JSON.parse(testResults.results_data) 
-        : testResults.results_data;
-    } catch (e) {
-      console.error('Erreur lors du parsing de results_data:', e);
-      resultsData = [];
-    }
-
-    // Préparer les données du rapport
-    const reportData = {
-      id: testResults.id || `AUD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-      test_id: testResults.test_id || 3,
-      title: testResults.title || 'Rapport d\'audit Outbound Roaming',
-      date: testResults.date || new Date().toISOString().split('T')[0],
-      time: testResults.time || new Date().toTimeString().split(' ')[0],
-      status: testResults.status || 'En cours',
-      created_by: testResults.created_by || 'Admin',
-      validated_by: testResults.validated_by || null,
-      total_operators: testResults.total_operators || resultsData.length || 0,
-      total_issues: testResults.total_issues || 0,
-      camel_issues: testResults.camel_issues || 0,
-      gprs_issues: testResults.gprs_issues || 0,
-      threeg_issues: testResults.threeg_issues || 0,
-      lte_issues: testResults.lte_issues || 0,
-      results_data: JSON.stringify(resultsData),
-      solutions: testResults.solutions || JSON.stringify({ recommendations: [] }),
-      attachments: testResults.attachments || JSON.stringify([]),
-      validation_notes: testResults.validation_notes || null,
-      implemented_changes: testResults.implemented_changes || null
-    };
-
-    console.log('Envoi des données du rapport:', reportData);
-
-    // Envoyer les données au backend
-    const response = await fetch('http://localhost:5178/save-audit-report', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reportData)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Erreur lors de la sauvegarde du rapport');
-    }
-
-    // Afficher un message de succès
-    alert('Rapport généré avec succès !');
-    return true;
-
-  } catch (error) {
-    console.error('Erreur lors de la génération du rapport:', error);
-    alert('Une erreur est survenue lors de la génération du rapport: ' + error.message);
-    return false;
-  }
-};

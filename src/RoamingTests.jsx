@@ -301,7 +301,7 @@ const RoamingTests = () => {
         navigate('/inbound-roaming-results');
         break;
       case 3:
-        navigate('/outbound-roaming-results');
+      navigate('/outbound-roaming-results');
         break;
       default:
         console.error('Test non reconnu:', test.id);
@@ -321,83 +321,26 @@ const RoamingTests = () => {
     try {
       const now = new Date();
       const dateStr = now.toLocaleString();
-      let txt = '';
-      let fileName = '';
 
-      if (test.name === "Partenaires Roaming & Services") {
-        // Préparation des données pour le premier test
-        const erreurs = auditData.filter(row => 
-          ['gsm', 'camel', 'gprs', 'troisg', 'lte'].some(service => 
-            row[service] === undefined || row[service] === null || row[service] === ''
-          )
-        );
-        const erreurGlobale = erreurs.length > 0 
-          ? `Détecté ${erreurs.length} problème(s) de service(s) non disponible(s)`
-          : "Aucune erreur majeure détectée.";
+      if (test.id === 1) {
+        // Récupération des données pour le test Partenaires Roaming
+        const response = await fetch('http://localhost:5178/situation-globale');
+        if (!response.ok) throw new Error('Erreur lors de la récupération des données');
+        const data = await response.json();
 
-        // Construction du tableau
+        // Préparation des données pour le rapport
+        const missingServices = data.filter(row => row.services_manquants);
+        const erreurGlobale = missingServices.length > 0 
+          ? `Détecté ${missingServices.length} service(s) manquant(s)`
+          : "Aucun service manquant détecté.";
+
+        // Construction du tableau pour le fichier texte
         const col1 = 'Pays';
         const col2 = 'Opérateur';
-        const col3 = 'Services manquants';
-        const width1 = Math.max(col1.length, ...auditData.map(r => (r.pays || '').length));
-        const width2 = Math.max(col2.length, ...auditData.map(r => (r.operateur || '').length));
-        const width3 = Math.max(col3.length, ...auditData.map(r => {
-          const missingServices = ['gsm', 'camel', 'gprs', 'troisg', 'lte']
-            .filter(service => r[service] === undefined || r[service] === null || r[service] === '')
-            .map(service => service.toUpperCase());
-          return missingServices.join(', ').length;
-        }));
-
-        const pad = (txt, len) => (txt || '').padEnd(len, ' ');
-        const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
-        const sepLine = `|-${'-'.repeat(width1)}-|-${'-'.repeat(width2)}-|-${'-'.repeat(width3)}-|\n`;
-        let table = sep + sepLine;
-
-        auditData.forEach(row => {
-          const missingServices = ['gsm', 'camel', 'gprs', 'troisg', 'lte']
-            .filter(service => row[service] === undefined || row[service] === null || row[service] === '')
-            .map(service => service.toUpperCase());
-          table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(missingServices.join(', '), width3)} |\n`;
-        });
-
-        const aide = `\n\n\n🔴 Services manquants
-Cause probable :
-Un ou plusieurs services ne sont pas configurés ou ne sont pas disponibles pour l'opérateur.
-
-Solutions :
-- Vérifier la configuration des services dans la base de données
-- Contacter l'opérateur pour confirmer les services disponibles
-- Mettre à jour les informations de service dans le système
-- Vérifier les accords de roaming pour chaque service
-
-⚠️ Services partiellement disponibles
-Cause probable :
-Certains services sont configurés mais pas tous.
-
-Solutions :
-- Vérifier les accords de roaming spécifiques
-- Mettre à jour les configurations manquantes
-- Documenter les services disponibles et non disponibles
-`;
-
-        txt = `Nom du test : ${test.name}\n` +
-              `Date : ${dateStr}\n` +
-              `Erreur globale : ${erreurGlobale}\n\n` +
-              table + aide;
-        fileName = `rapport_partenaires_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
-
-      } else if (test.name === "Outbound Roaming") {
-        // Préparation des données pour le troisième test
-        const erreurs = data.filter(row => row.commentaires && row.commentaires.toLowerCase().includes("erreur"));
-        const erreurGlobale = erreurs.length > 0 ? erreurs[0].commentaires : "Aucune erreur majeure détectée.";
-
-        // Construction du tableau
-        const col1 = 'Pays';
-        const col2 = 'Opérateur';
-        const col3 = 'Commentaire';
+        const col3 = 'Services Manquants';
         const width1 = Math.max(col1.length, ...data.map(r => (r.pays || '').length));
         const width2 = Math.max(col2.length, ...data.map(r => (r.operateur || '').length));
-        const width3 = Math.max(col3.length, ...data.map(r => (r.commentaires || '').length));
+        const width3 = Math.max(col3.length, ...data.map(r => (r.services_manquants || '').length));
 
         const pad = (txt, len) => (txt || '').padEnd(len, ' ');
         const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
@@ -405,59 +348,81 @@ Solutions :
         let table = sep + sepLine;
 
         data.forEach(row => {
-          table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.commentaires, width3)} |\n`;
+          table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.services_manquants, width3)} |\n`;
         });
 
-        const aide = `\n\n\n🔴 Commentaire : "Vérifie l'importation de l'IR21 ou l'IR85"
+        const aide = `\n\n\n🔴 Services manquants détectés
 Cause probable :
-L'extraction de l'IR21 a échoué (fichier manquant, mal structuré, ou mauvaise URL).
+- Services non activés dans le système
+- Données manquantes dans la base
+- Configuration incomplète
 
 Solutions :
-- Vérifie si le fichier IR.21 est bien importé et lisible dans ton application.
-- Assure-toi que le format XML du fichier respecte bien la norme IR.21.
-- Si tu utilises une API ou un système d'import, vérifie que le fichier IR.85 est également à jour.
-- Vérifie le nom du fichier et sa localisation.
-- S'assurer que les balises nécessaires sont bien présentes.
-
-🔴 Commentaire : "Impossible de faire l'extraction MCC/MNC"
-Cause probable :
-Les champs MCC ou MNC sont manquants ou mal formatés.
-
-Solutions :
-- Vérifie que la PLMN est bien renseignée sous la forme MCC+MNC.
-- Si la base de données contient une valeur comme mnc001, mcc208, extrais correctement les chiffres.
-- Si l'information n'est pas présente dans l'IR21, cherche-la manuellement.
-- Met en place une règle de validation en amont.
-
-🟡 Commentaire : "Extraction IR21 réussie, erreur dans la vérification HSS (APN)"
-Cause probable :
-Les données APN extraites de l'IR21 ne correspondent pas à celles présentes dans le HSS.
-
-Solutions :
-- Vérifie que l'APN déclaré dans l'IR21 correspond bien à celui provisionné.
-- Assure-toi que l'APN est bien activé pour le roaming.
-- Contrôle la casse et les caractères spéciaux.
-- Mets en place une table de correspondance APN IR21 <-> APN HSS.
+- Vérifier l'activation des services dans le système
+- Compléter les données manquantes
+- Mettre à jour la configuration des services
+- Vérifier les accords de roaming avec les opérateurs
 `;
 
-        txt = `Nom du test : ${test.name}\n` +
-              `Date : ${dateStr}\n` +
-              `Erreur globale : ${erreurGlobale}\n\n` +
-              table + aide;
-        fileName = `rapport_outbound_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
+        const txt = `Nom du test : Partenaires Roaming & Services\n` +
+                    `Date : ${dateStr}\n` +
+                    `Erreur globale : ${erreurGlobale}\n\n` +
+                    table + aide;
+
+        // Création et téléchargement du fichier
+        const blob = new Blob([txt], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rapport_partenaires_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Préparation des données pour la sauvegarde dans la base de données
+        const simplifiedData = data.map(row => ({
+          pays: row.pays,
+          operateur: row.operateur,
+          services_manquants: row.services_manquants
+        }));
+
+        const reportData = {
+          id: `AUD_${Date.now()}`,
+          test_id: 1,
+          title: `Rapport Partenaires Roaming - ${now.toLocaleDateString()}`,
+          date: now.toISOString().split('T')[0],
+          time: now.toTimeString().split(' ')[0],
+          status: 'En cours',
+          created_by: 'Système',
+          total_operators: data.length,
+          total_issues: missingServices.length,
+          results_data: JSON.stringify(simplifiedData),
+          solutions: JSON.stringify([
+            "Vérifier l'activation des services dans le système",
+            "Compléter les données manquantes",
+            "Mettre à jour la configuration des services",
+            "Vérifier les accords de roaming avec les opérateurs"
+          ]),
+          validation_notes: erreurGlobale
+        };
+
+        // Sauvegarde dans la base de données
+        const saveResponse = await fetch('http://localhost:5178/audit-reports', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(reportData)
+        });
+
+        if (!saveResponse.ok) {
+          throw new Error('Erreur lors de la sauvegarde du rapport');
+        }
+
+        alert('Rapport généré et sauvegardé avec succès !');
       }
-
-      // Création et téléchargement du fichier
-      const blob = new Blob([txt], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
+      // ... existing code for other tests ...
     } catch (error) {
       console.error("Erreur lors de la génération du rapport:", error);
       alert("Une erreur est survenue lors de la génération du rapport.");
