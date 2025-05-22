@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FaPlay,
   FaCheckCircle,
@@ -26,6 +26,7 @@ import {
   Legend
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import { generateReportFromTest } from './RapportAudit';
 // Données extraites du fichier Excel
 const operatorData = {
   "Afghanistan": ["Telecom Development Company Afghanistan Ltd.", "Etisalat Afghanistan", "MTN", "Afghan Wireless Communication Company"],
@@ -207,52 +208,66 @@ const operatorData = {
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const RoamingTests = () => {
-  const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState("Afghanistan");
   const [selectedOperator, setSelectedOperator] = useState("Telecom Development Company Afghanistan Ltd.");
   const [tests, setTests] = useState([
-  {
-    id: 1,
-    name: "Partenaires Roaming & Services",
-    description: "Vérification des accords et services disponibles (GSM, CAMEL, GPRS, LTE).",
-    status: "pending"
-  },
-  {
-    id: 2,
-    name: "Inbound Roaming",
-    description: "Analyse du provisioning et de la configuration pour les visiteurs étrangers.",
-    status: "pending"
-  },
-  {
-    id: 3,
-    name: "Outbound Roaming",
-    description: "Test de connectivité pour les abonnés voyageant à l'étranger.",
-    status: "pending"
-  },
-  {
-    id: 4,
-    name: "Tests CAMEL Phase Service Inbound Roaming",
-    description: "Vérification des services CAMEL pour les visiteurs étrangers (USSD, VPN, etc.).",
-    status: "pending"
-  },
-  {
-    id: 5,
-    name: "Tests CAMEL Phase Service Outbound Roaming",
-    description: "Vérification des services CAMEL pour les abonnés à l'étranger (USSD, VPN, etc.).",
-    status: "pending"
-  },
-  {
-    id: 6,
-    name: "Tests Data Inbound Roaming",
-    description: "Vérification de la connectivité data (3G/4G) pour les visiteurs étrangers.",
-    status: "pending"
-  }
+    {
+      id: 1,
+      name: "Partenaires Roaming & Services",
+      description: "Vérifie la configuration des partenaires roaming et leurs services",
+      status: "non exécuté",
+      results: null,
+      showResults: false
+    },
+    {
+      id: 2,
+      name: "Inbound Roaming",
+      description: "Analyse le provisioning et la configuration pour les visiteurs étrangers",
+      status: "non exécuté",
+      results: null,
+      showResults: false
+    },
+    {
+      id: 3,
+      name: "Outbound Roaming",
+      description: "Teste la connectivité pour les abonnés voyageant à l'étranger",
+      status: "non exécuté",
+      results: null,
+      showResults: false
+    },
+    {
+      id: 4,
+      name: "Test de Performance",
+      description: "Évalue les performances du réseau en situation de roaming",
+      status: "non exécuté",
+      results: null,
+      showResults: false
+    },
+    {
+      id: 5,
+      name: "Test de Sécurité",
+      description: "Vérifie les mesures de sécurité pour le roaming",
+      status: "non exécuté",
+      results: null,
+      showResults: false
+    },
+    {
+      id: 6,
+      name: "Test de Compatibilité",
+      description: "Vérifie la compatibilité avec différents réseaux et technologies",
+      status: "non exécuté",
+      results: null,
+      showResults: false
+    }
   ]);
   const [viewMode, setViewMode] = useState('table');
   const [selectedTest, setSelectedTest] = useState(null);
   const [showResults, setShowResults] = useState(false);
   const [showAuditTable, setShowAuditTable] = useState(false);
   const [auditData, setAuditData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [user, setUser] = useState(null);
 
   const countries = Object.keys(operatorData);
   const operators = operatorData[selectedCountry] || [];
@@ -614,6 +629,75 @@ Solutions :
       </div>
     </>
   );
+
+  useEffect(() => {
+    checkUserAccess();
+  }, []);
+
+  const checkUserAccess = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData || !userData.id) {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('http://localhost:5178/current-user', {
+        headers: {
+          'user-id': userData.id
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur de réponse du serveur');
+      }
+
+      const data = await response.json();
+      console.log('Données utilisateur reçues:', data);
+      
+      // Vérifie si l'utilisateur est admin
+      if (data.role !== 'admin') {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+      
+      setUser(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur lors de la vérification des droits:', error);
+      setAccessDenied(true);
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
+          <div className="text-red-600 text-6xl mb-4">
+            <FaTimesCircle />
+          </div>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Accès Refusé</h2>
+          <p className="text-gray-600 mb-4">
+            Vous n'avez pas les droits nécessaires pour accéder à cette page.
+          </p>
+          <p className="text-gray-600">
+            Cette page est réservée aux administrateurs.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (showAuditTable) {
     return renderAuditTable();

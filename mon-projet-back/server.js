@@ -1403,20 +1403,28 @@ app.get('/current-user', async (req, res) => {
     }
 
     // Récupérer l'utilisateur depuis la base de données
-    const user = await User.findByPk(userId);
-    
-    if (!user) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' });
-    }
+    const query = 'SELECT id, name, role FROM users WHERE id = ?';
+    connection.query(query, [userId], (error, results) => {
+      if (error) {
+        console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+        return res.status(500).json({ error: 'Erreur serveur' });
+      }
 
-    // Renvoyer les données de l'utilisateur
-    res.json({
-      user_id: user.id,
-      name: user.name,
-      role: user.role,
-      permissions: user.role === 'admin' ? [
-      { resource_type: 'Report', access_level: 'Admin' }
-      ] : []
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé' });
+      }
+
+      const user = results[0];
+
+      // Renvoyer les données de l'utilisateur
+      res.json({
+        user_id: user.id,
+        name: user.name,
+        role: user.role,
+        permissions: user.role === 'admin' ? [
+          { resource_type: 'Report', access_level: 'Admin' }
+        ] : []
+      });
     });
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur:', error);

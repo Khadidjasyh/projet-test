@@ -78,6 +78,11 @@ const AuditReport = sequelize.define('AuditReport', {
   implemented_changes: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  assigned_users: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: []
   }
 }, {
   tableName: 'audit_reports',
