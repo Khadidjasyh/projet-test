@@ -760,8 +760,8 @@ app.get('/api/huawei-networks', async (req, res) => {
 
       // Si la table existe, exécuter la requête
       const query = 'SELECT * FROM huawei_mobile_networks ORDER BY id DESC';
-      connection.query(query, (error, results) => {
-        if (error) {
+  connection.query(query, (error, results) => {
+    if (error) {
           console.error('Erreur lors de la récupération des données:', error);
           return res.status(500).json({ 
             error: 'Erreur lors de la récupération des données',
@@ -770,12 +770,12 @@ app.get('/api/huawei-networks', async (req, res) => {
         }
         
         console.log(`Nombre de réseaux trouvés : ${results.length}`);
-        if (results.length > 0) {
+    if (results.length > 0) {
           console.log('Premier réseau :', JSON.stringify(results[0], null, 2));
-        }
+    }
         
-        res.json(results);
-      });
+    res.json(results);
+  });
     });
   } catch (err) {
     console.error('Erreur serveur:', err);
@@ -2062,7 +2062,7 @@ app.post('/api/upload-huawei-networks', upload.single('file'), async (req, res) 
     }
 
     console.log(`Nombre d'entrées à importer: ${huaweiData.length}`);
-
+    
     // Insérer les données dans la base
     let successCount = 0;
     for (const data of huaweiData) {
@@ -2098,4 +2098,203 @@ app.post('/api/upload-huawei-networks', upload.single('file'), async (req, res) 
       error: 'Erreur lors de l\'import du fichier: ' + error.message
     });
   }
+});
+
+app.get('/camel-inbound-test', (req, res) => {
+  const sql = `
+    SELECT DISTINCT
+      COALESCE(sg.pays, 'N/A') AS pays,
+      COALESCE(sg.operateur, rp.operateur, 'Inconnu') AS operateur,
+      src.tadig,
+      src.camel_inbound AS Valeur_CAMEL_IR,
+      mi.anres_value AS ValeurObservee,
+      CASE
+        WHEN (
+          (src.camel_inbound LIKE '%CAPv1%' AND mi.anres_value LIKE '%CAMEL-1%')
+          OR (src.camel_inbound LIKE '%CAPv2%' AND mi.anres_value LIKE '%CAMEL-2%')
+          OR (src.camel_inbound LIKE '%CAPv3%' AND mi.anres_value LIKE '%CAMEL-3%')
+        )
+        THEN 'Réussi'
+        ELSE 'Échoué'
+      END AS Resultat,
+      CASE
+        WHEN sg.pays IS NULL OR sg.pays = '' OR sg.pays = 'N/A' THEN 'Pays manquant ou inconnu'
+        WHEN (sg.operateur IS NULL OR sg.operateur = '') AND (rp.operateur IS NULL OR rp.operateur = '') THEN 'Opérateur manquant ou inconnu'
+        WHEN src.camel_inbound IS NULL OR src.camel_inbound = '' THEN 'Valeur CAMEL Inbound manquante'
+        WHEN mi.anres_value IS NULL OR mi.anres_value = '' THEN 'Valeur observée (anres_value) manquante'
+        WHEN (
+          NOT (
+            (src.camel_inbound LIKE '%CAPv1%' AND mi.anres_value LIKE '%CAMEL-1%')
+            OR (src.camel_inbound LIKE '%CAPv2%' AND mi.anres_value LIKE '%CAMEL-2%')
+            OR (src.camel_inbound LIKE '%CAPv3%' AND mi.anres_value LIKE '%CAMEL-3%')
+          )
+        ) THEN 'Version CAMEL non conforme'
+        ELSE 'Validé'
+      END AS Commentaire
+    FROM (
+      SELECT 'IR21' AS source, tadig, e212, camel_inbound FROM ir21_data
+      UNION ALL
+      SELECT 'IR85' AS source, tadig, e212, camel_inbound FROM ir85_data
+    ) AS src
+    LEFT JOIN situation_globales sg
+      ON sg.plmn = src.tadig OR sg.imsi = src.e212
+    LEFT JOIN roaming_partners rp
+      ON rp.imsi_prefix = src.e212
+    LEFT JOIN mss_imsi_analysis mi
+      ON src.e212 = mi.imsi_series
+    WHERE src.camel_inbound IS NOT NULL
+    ORDER BY pays, operateur;
+  `;
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Erreur API camel-inbound-test:', err);
+      return res.status(500).json({ message: 'Erreur serveur' });
+    }
+    res.json(results);
+  });
+});
+
+app.get('/camel-outbound-analyse', (req, res) => {
+  const query = `
+    SELECT 
+      sg.pays,
+      sg.operateur,
+      COALESCE(ir21.camel_outbound, ir85.camel_outbound) AS 'Valeur IR (IR.21/IR.85)',
+      mi.anres_value AS 'Valeur observée (anres_value)',
+
+      CASE
+        WHEN (
+          (ir21.camel_outbound LIKE '%CAPv1%' OR ir85.camel_outbound LIKE '%CAPv1%') AND mi.anres_value LIKE '%CAMEL-1%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv2%' OR ir85.camel_outbound LIKE '%CAPv2%') AND mi.anres_value LIKE '%CAMEL-2%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv3%' OR ir85.camel_outbound LIKE '%CAPv3%') AND mi.anres_value LIKE '%CAMEL-3%'
+        )
+        THEN 'Réussi'
+        ELSE 'Échoué'
+      END AS 'Résultat du test CAMEL Outbound',
+
+      CASE
+        WHEN (
+          (ir21.camel_outbound LIKE '%CAPv1%' OR ir85.camel_outbound LIKE '%CAPv1%') AND mi.anres_value NOT LIKE '%CAMEL-1%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv2%' OR ir85.camel_outbound LIKE '%CAPv2%') AND mi.anres_value NOT LIKE '%CAMEL-2%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv3%' OR ir85.camel_outbound LIKE '%CAPv3%') AND mi.anres_value NOT LIKE '%CAMEL-3%'
+        )
+        THEN CONCAT('Mismatch : IR = ', COALESCE(ir21.camel_outbound, ir85.camel_outbound), ', Observé = ', mi.anres_value)
+        ELSE 'Conforme - Les valeurs CAMEL Outbound sont cohérentes'
+      END AS Commentaire
+
+    FROM
+      situation_globales sg
+    LEFT JOIN
+      roaming_partners rp ON sg.operateur = rp.operateur
+    LEFT JOIN
+      ir21_data ir21 ON sg.plmn = ir21.tadig
+    LEFT JOIN
+      ir85_data ir85 ON sg.plmn = ir85.tadig
+    LEFT JOIN
+      mss_imsi_analysis mi ON COALESCE(ir21.e212, ir85.e212) = mi.imsi_series
+    WHERE
+      ir21.camel_outbound IS NOT NULL OR ir85.camel_outbound IS NOT NULL
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('❌ Erreur MySQL :', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+    }
+
+    console.log(`✅ ${results.length} résultats retournés.`);
+    res.json(results);
+  });
+});
+
+app.get('/inbound-roaming-test', (req, res) => {
+  const query = `
+    SELECT 
+      sg.operateur, 
+      sg.pays, 
+      GROUP_CONCAT(DISTINCT fw.cidr_complet SEPARATOR ', ') AS adresses_ip_firewall,
+      GROUP_CONCAT(DISTINCT ir21.ipaddress SEPARATOR ', ') AS adresses_ip_ir21,
+      GROUP_CONCAT(DISTINCT ir85.ipaddress SEPARATOR ', ') AS adresses_ip_ir85,
+      GROUP_CONCAT(DISTINCT mme.imsi SEPARATOR ', ') AS liste_imsis,
+      GROUP_CONCAT(DISTINCT ir21.e212 SEPARATOR ', ') AS liste_e212
+    FROM situation_globales sg
+    LEFT JOIN FireWall_ips fw ON fw.nom LIKE CONCAT(sg.operateur, '%')
+    LEFT JOIN ir21_data ir21 ON sg.plmn = ir21.tadig
+    LEFT JOIN ir85_data ir85 ON sg.plmn = ir85.tadig
+    LEFT JOIN mme_imsi_analysis mme ON mme.digits_to_add = ir21.e214
+    WHERE fw.cidr_complet IS NOT NULL
+    GROUP BY sg.operateur, sg.pays
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('Erreur lors de la récupération des données :', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+    }
+
+    const processedResults = results.map(row => {
+      // IP addresses arrays
+      const firewall_ips = row.adresses_ip_firewall ? row.adresses_ip_firewall.split(', ') : [];
+      const ir21_ips = row.adresses_ip_ir21 ? row.adresses_ip_ir21.split(', ') : [];
+      const ir85_ips = row.adresses_ip_ir85 ? row.adresses_ip_ir85.split(', ') : [];
+
+      // Test conformité IP
+      const ir21_conform = firewall_ips.filter(ip => ir21_ips.some(ir21_ip => ir21_ip.includes(ip)));
+      const ir85_conform = firewall_ips.filter(ip => ir85_ips.some(ir85_ip => ir85_ip.includes(ip)));
+
+      const ir21_pct = firewall_ips.length ? Math.round((ir21_conform.length / firewall_ips.length) * 100) : 0;
+      const ir85_pct = firewall_ips.length ? Math.round((ir85_conform.length / firewall_ips.length) * 100) : 0;
+
+      // IMSI et E212 arrays
+      const imsis = row.liste_imsis ? row.liste_imsis.split(', ') : [];
+      const e212s = row.liste_e212 ? row.liste_e212.split(', ') : [];
+
+      // Test conformité IMSI <-> E212 (par exemple : IMSI commence par E212)
+      const imsi_conformes = imsis.filter(imsi => e212s.some(e212 => imsi.startsWith(e212)));
+
+      const imsi_pct = imsis.length ? Math.round((imsi_conformes.length / imsis.length) * 100) : 0;
+
+      // Commentaires
+      let commentaire_ip = '';
+      if ((ir21_pct + ir85_pct)/2 === 100) commentaire_ip = 'Toutes les IPs sont conformes';
+      else if ((ir21_pct + ir85_pct)/2 > 0) commentaire_ip = 'Partiellement conformes';
+      else commentaire_ip = 'Aucune IP conforme';
+
+      let commentaire_imsi = '';
+      if (imsi_pct === 100) commentaire_imsi = 'Toutes les IMSIs sont conformes';
+      else if (imsi_pct > 0) commentaire_imsi = 'IMSI partiellement conformes';
+      else commentaire_imsi = 'Aucune IMSI conforme';
+
+      return {
+        operateur: row.operateur,
+        pays: row.pays,
+        adresses_ip_firewall: firewall_ips,
+        pourcentage_conformite_ir21: ir21_pct,
+        pourcentage_conformite_ir85: ir85_pct,
+        commentaire_ip: commentaire_ip,
+        imsis_mme: imsis,
+        e212_ir21: e212s,
+        pourcentage_conformite_imsi: imsi_pct,
+        commentaire_imsi: commentaire_imsi
+      };
+    });
+
+    // Trie par conformité IP (peut être adapté pour IMSI aussi)
+    processedResults.sort((a, b) => {
+      const getScore = c => {
+        if (c === 'Toutes les IPs sont conformes') return 3;
+        if (c === 'Partiellement conformes') return 2;
+        return 1;
+      };
+      return getScore(b.commentaire_ip) - getScore(a.commentaire_ip);
+    });
+
+    console.log(`✅ Résultat inbound roaming test avec IP + IMSI + e212 généré`);
+    res.json(processedResults);
+  });
 });

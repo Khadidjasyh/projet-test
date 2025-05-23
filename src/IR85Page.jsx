@@ -56,52 +56,41 @@ const IR85Page = () => {
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
+    if (!file.name.toLowerCase().endsWith('.xml')) {
+      setUploadStatus({ message: 'Veuillez sélectionner un fichier XML', type: 'error' });
+      return;
+    }
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      setUploadStatus({ message: 'Uploading file...', type: 'info' });
-      const response = await axios.post('http://localhost:5178/api/upload-ir85', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      setUploadStatus({ message: 'Import en cours...', type: 'info' });
+      const response = await axios.post('http://localhost:5178/api/import-ir85', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-
       if (response.data.success) {
         setUploadStatus({ message: response.data.message, type: 'success' });
-        // Rafraîchir les données après l'upload
-        fetchData();
+        setTimeout(fetchData, 2000);
       } else {
-        setUploadStatus({ message: response.data.message || 'Upload failed', type: 'error' });
+        throw new Error(response.data.error || 'Erreur lors de l\'import');
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
-      setUploadStatus({ 
-        message: error.response?.data?.message || 'Error uploading file', 
-        type: 'error' 
-      });
+      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de l\'import du fichier', type: 'error' });
     }
   };
 
   // Suppression IR85
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this IR85 operator?')) return;
+    if (!window.confirm('Confirmer la suppression de cet opérateur IR85 ?')) return;
     try {
-      const response = await axios.delete(`http://localhost:5178/api/ir85/node/${id}`);
-      
+      const response = await axios.delete(`http://localhost:5178/api/ir85/${id}`);
       if (response.data.success) {
         setIr85Data(prev => prev.filter(row => row.id !== id));
-        setUploadStatus({ message: response.data.message, type: 'success' });
+        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
       } else {
-        setUploadStatus({ message: response.data.message || 'Delete failed', type: 'error' });
+        setUploadStatus({ message: response.data.error || 'Erreur lors de la suppression', type: 'error' });
       }
     } catch (error) {
-      console.error('Error deleting node:', error);
-      setUploadStatus({ 
-        message: error.response?.data?.message || 'Error deleting node', 
-        type: 'error' 
-      });
+      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de la suppression', type: 'error' });
     }
   };
 
@@ -163,48 +152,55 @@ const IR85Page = () => {
       ) : currentData.length === 0 ? (
         <p className="text-gray-500 text-center p-4">Aucune donnée trouvée</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 border-b">N°</th>
-                <th className="px-6 py-3 border-b">TADIG</th>
-                <th className="px-6 py-3 border-b">Pays</th>
-                <th className="px-6 py-3 border-b">E212</th>
-                <th className="px-6 py-3 border-b">E214</th>
-                <th className="px-6 py-3 border-b">APN</th>
-                <th className="px-6 py-3 border-b">IP Address</th>
-                <th className="px-6 py-3 border-b">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {currentData.map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 border-b">{idx + 1}</td>
-                  <td className="px-6 py-4 border-b">{row.tadig}</td>
-                  <td className="px-6 py-4 border-b">{row.pays}</td>
-                  <td className="px-6 py-4 border-b">{row.e212 || '-'}</td>
-                  <td className="px-6 py-4 border-b">{row.e214 || '-'}</td>
-                  <td className="px-6 py-4 border-b">{row.apn || '-'}</td>
-                  <td className="px-6 py-4 border-b">
-                    <div className="max-w-xs overflow-auto whitespace-normal">
-                      {row.ipaddress}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 border-b text-center">
-                    <button
-                      className="text-red-600 hover:text-red-800"
-                      title="Supprimer"
-                      onClick={() => handleDelete(row.id)}
-                    >
-                      <BsTrash />
-                    </button>
-                  </td>
+        <>
+          <div className="flex flex-wrap items-center justify-between mb-2">
+            <span className="text-gray-600 text-sm">
+              {currentData.length} entr{currentData.length > 1 ? 'ées' : 'ée'} affich{currentData.length > 1 ? 'ées' : 'ée'}
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
+                <tr>
+                  <th className="px-3 py-2 border-b text-center font-semibold text-gray-700">N°</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">TADIG</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">Pays</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">E212</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">E214</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">APN</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">IP Address</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">CAMEL Inbound</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">CAMEL Outbound</th>
+                  <th className="px-3 py-2 border-b text-center font-semibold text-gray-700">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {currentData.map((row, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    <td className="px-3 py-2 border-b text-center">{idx + 1}</td>
+                    <td className="px-3 py-2 border-b font-mono text-blue-800 truncate max-w-[90px]" title={row.tadig}>{row.tadig}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[100px]" title={row.pays}>{row.pays}</td>
+                    <td className="px-3 py-2 border-b text-center font-mono text-gray-700 truncate max-w-[70px]" title={row.e212}>{row.e212 || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center font-mono text-gray-700 truncate max-w-[70px]" title={row.e214}>{row.e214 || '-'}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[150px]" title={row.apn}>{row.apn || '-'}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[170px]" title={row.ipaddress}>{row.ipaddress}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[120px]" title={row.camel_inbound || '-'}>{row.camel_inbound || '-'}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[120px]" title={row.camel_outbound || '-'}>{row.camel_outbound || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center">
+                      <button
+                        className="text-red-600 hover:text-red-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-400"
+                        title="Supprimer"
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        <BsTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

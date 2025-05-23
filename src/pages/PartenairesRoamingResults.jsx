@@ -198,11 +198,11 @@ Solutions :
                   commentaire = commentaire ? `${commentaire}, ${commentaireAuto}` : commentaireAuto;
                 } else if (commentaireAuto === 'Tous les services sont disponibles' && (!commentaire || commentaire === '' || commentaire === undefined || commentaire === null)) {
                   commentaire = 'Tous les services sont disponibles';
-                }
-                return (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.pays}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.operateur}</td>
+    }
+  return (
+                <tr key={idx} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.pays}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.operateur}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.plmn}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.gsm !== undefined && row.gsm !== null && row.gsm !== '' ? row.gsm : 'Aucun'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.camel !== undefined && row.camel !== null && row.camel !== '' ? row.camel : 'Aucun'}</td>
@@ -210,7 +210,7 @@ Solutions :
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.troisg !== undefined && row.troisg !== null && row.troisg !== '' ? row.troisg : 'Aucun'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.lte !== undefined && row.lte !== null && row.lte !== '' ? row.lte : 'Aucun'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{commentaire !== undefined && commentaire !== null && commentaire !== '' ? commentaire : 'Aucun'}</td>
-                  </tr>
+                </tr>
                 );
               })}
             </tbody>

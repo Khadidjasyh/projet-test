@@ -241,24 +241,24 @@ const RoamingTests = () => {
     },
     {
       id: 4,
-      name: "Test de Performance",
-      description: "Évalue les performances du réseau en situation de roaming",
+      name: "Tests CAMEL Phase Service Inbound Roaming",
+      description: "Vérification des services CAMEL pour les visiteurs étrangers (USSD, VPN, etc.).",
       status: "non exécuté",
       results: null,
       showResults: false
     },
     {
       id: 5,
-      name: "Test de Sécurité",
-      description: "Vérifie les mesures de sécurité pour le roaming",
+      name: "Tests CAMEL Phase Service Outbound Roaming",
+      description: "Vérification des services CAMEL pour les abonnés à l'étranger (USSD, VPN, etc.).",
       status: "non exécuté",
       results: null,
       showResults: false
     },
     {
       id: 6,
-      name: "Test de Compatibilité",
-      description: "Vérifie la compatibilité avec différents réseaux et technologies",
+      name: "Tests Data Inbound Roaming",
+      description: "Vérification de la connectivité data (3G/4G) pour les visiteurs étrangers.",
       status: "non exécuté",
       results: null,
       showResults: false
