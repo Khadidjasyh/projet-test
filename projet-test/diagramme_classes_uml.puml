@@ -1,0 +1,116 @@
+@startuml
+' === Composants principaux ===
+class App {
+  +Router
+  +AppLayout
+}
+class AppLayout {
+  -adminExists: bool
+  -currentUser: object
+  +handleSignOut()
+  +handleLoginSuccess(userData)
+  +useNavigate()
+  +useLocation()
+}
+class Dashboard {
+  -tests: array
+  -fetchPartners()
+  -getStatusColor()
+  -getRoamingStatusColor()
+  +Sidebar
+  +Navbar
+  +RoamingPartners
+  +RoamingServicesTable
+}
+class RapportAudit {
+  -reports: array
+  -loading: bool
+  -error: string
+  -searchTerm: string
+  -selectedStatus: string
+  -sortConfig: object
+  -showFilters: bool
+  -expandedReportId: string
+  -showNewReportModal: bool
+  -isAdmin: bool
+  -userLoading: bool
+  -newReport: object
+  +fetchAuditReports()
+  +fetchTestResults()
+  +getCurrentUser()
+  +updateReport(updatedReport)
+  +handleDownload(reportId)
+  +handleDelete(reportId)
+  +handleValidate(reportId)
+  +handleFileUpload(event)
+  +handleCreateReport()
+  +generateReportFromTest(testResults)
+}
+class RoamingTests {
+  -operatorData: object
+  -initialTests: array
+  -selectedCountry: string
+  -selectedOperator: string
+  -viewMode: string
+  -showResults: bool
+  -showAuditTable: bool
+  +handleRunTest(testId)
+  +handleShowResults(test)
+  +handleCloseResults()
+}
+
+' === Pages de résultats ===
+class DataInboundResults
+class InboundRoamingResults
+class OutboundRoamingResults
+class CamelInboundResults
+class CamelOutboundResults
+class PartenairesRoamingResults
+
+' === Sous-composants et utilitaires ===
+class Sidebar
+class Navbar
+class RoamingPartners
+class RoamingServicesTable
+
+' === Relations de composition ===
+App --> AppLayout
+AppLayout --> Dashboard
+AppLayout --> RapportAudit
+AppLayout --> RoamingTests
+AppLayout --> DataInboundResults
+AppLayout --> InboundRoamingResults
+AppLayout --> OutboundRoamingResults
+AppLayout --> CamelInboundResults
+AppLayout --> CamelOutboundResults
+AppLayout --> PartenairesRoamingResults
+AppLayout --> Sidebar
+AppLayout --> Profile
+AppLayout --> AdminPanel
+AppLayout --> (autres pages...)
+
+Dashboard --> Sidebar
+Dashboard --> Navbar
+Dashboard --> RoamingPartners
+Dashboard --> RoamingServicesTable
+
+RapportAudit --> generateReportFromTest
+RapportAudit --> fetchAuditReports
+RapportAudit --> fetchTestResults
+RapportAudit --> getCurrentUser
+RapportAudit --> updateReport
+
+RoamingTests --> DataInboundResults
+RoamingTests --> InboundRoamingResults
+RoamingTests --> OutboundRoamingResults
+RoamingTests --> CamelInboundResults
+RoamingTests --> CamelOutboundResults
+RoamingTests --> PartenairesRoamingResults
+
+' === Relations fonctionnelles ===
+RapportAudit ..> RoamingTests : utilise résultats tests
+AppLayout ..> AdminCreation : si admin non existant
+AppLayout ..> SignIn : transmet onLoginSuccess(userData)
+AppLayout ..> Profile : transmet currentUser
+
+@enduml

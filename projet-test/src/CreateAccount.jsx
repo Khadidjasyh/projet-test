@@ -14,13 +14,13 @@ function CreateAccount() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    const response = await fetch('/auth/create-user', {
+    const response = await fetch("http://localhost:5178/api/auth/create-user", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, prenom, username, email, telephone, role })
     });
     if (response.ok) {
-      setSuccess('User created, activation link sent!');
+      setSuccess("Utilisateur créé, lien d'activation envoyé !");
       setName('');
       setPrenom('');
       setUsername('');
@@ -29,19 +29,19 @@ function CreateAccount() {
       setRole('user');
     } else {
       const data = await response.json();
-      setError(data.error || 'Failed to create account');
+      setError(data.error || "Échec de la création du compte");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4 text-center">Create User Account</h2>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-blue-100 to-blue-200">
+      <div className="p-10 bg-white rounded-xl shadow-2xl w-full max-w-lg border border-blue-100">
+        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">Créer un compte utilisateur</h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {success && <p className="text-green-600 text-center mb-4">{success}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
+            <label className="block text-gray-700">Nom</label>
             <input
               type="text"
               value={name}
@@ -61,7 +61,7 @@ function CreateAccount() {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Username</label>
+            <label className="block text-gray-700">Nom d'utilisateur</label>
             <input
               type="text"
               value={username}
@@ -91,19 +91,19 @@ function CreateAccount() {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Role</label>
+            <label className="block text-gray-700">Rôle</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
               className="w-full p-2 border rounded bg-white"
               required
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="user">Utilisateur</option>
+              <option value="admin">Administrateur</option>
             </select>
           </div>
-          <button type="submit" className="w-full p-2 bg-green-500 text-white rounded hover:bg-green-600">
-            Create User
+          <button type="submit" className="w-full p-3 mt-2 bg-gradient-to-r from-blue-500 to-green-400 text-white font-semibold rounded-lg shadow hover:from-green-400 hover:to-blue-500 transition">
+            Créer l'utilisateur
           </button>
         </form>
       </div>

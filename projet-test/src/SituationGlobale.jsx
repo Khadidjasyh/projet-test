@@ -394,112 +394,41 @@ const SituationGlobale = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto rounded-lg">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opérateur</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PLMN</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GSM</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAMEL</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GPRS</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">3G</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">4G/LTE</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MCC</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MNC</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMSI</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EPC Realm</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">ID</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Pays</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Opérateur</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">PLMN</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">GSM</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">CAMEL</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">GPRS</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">3G</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">4G/LTE</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sortedData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.pays || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.operateur || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.plmn || "-"}</td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.gsm)}`}>
-                      {item.gsm || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.camel)}`}>
-                      {item.camel || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.gprs)}`}>
-                      {item.gprs || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.troisg)}`}>
-                      {item.troisg || "-"}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getStatusColor(item.lte)}`}>
-                      {item.lte || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.mcc || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.mnc || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.imsi || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.epcrealm || "-"}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex space-x-2">
-                        {editingId === item.id ? (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleSaveAll();
-                              }}
-                              className="bg-green-500 hover:bg-green-600 text-white p-1 rounded"
-                              title="Enregistrer"
-                            >
-                              <FaSave />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleCancel();
-                              }}
-                              className="bg-red-500 hover:bg-red-600 text-white p-1 rounded"
-                              title="Annuler"
-                            >
-                              <FaTimes />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleEdit(item);
-                              }}
-                              className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded"
-                              title="Modifier"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleImportClick(item.id);
-                              }}
-                              className="bg-purple-500 hover:bg-purple-600 text-white p-1 rounded"
-                              title="Importer IR21"
-                            >
-                              <FaFileImport />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+              <tbody>
+                {sortedData.map((item, idx) => (
+                  <tr key={item.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.id}>{item.id}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.pays || ''}>{item.pays || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.operateur || ''}>{item.operateur || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.plmn || ''}>{item.plmn || '-'}</td>
+                    <td className={`px-3 py-2 border-b text-center font-medium truncate max-w-[120px] ${getStatusColor(item.gsm)}`}>{item.gsm || '-'}</td>
+                    <td className={`px-3 py-2 border-b text-center font-medium truncate max-w-[120px] ${getStatusColor(item.camel)}`}>{item.camel || '-'}</td>
+                    <td className={`px-3 py-2 border-b text-center font-medium truncate max-w-[120px] ${getStatusColor(item.gprs)}`}>{item.gprs || '-'}</td>
+                    <td className={`px-3 py-2 border-b text-center font-medium truncate max-w-[120px] ${getStatusColor(item.troisg)}`}>{item.troisg || '-'}</td>
+                    <td className={`px-3 py-2 border-b text-center font-medium truncate max-w-[120px] ${getStatusColor(item.lte)}`}>{item.lte || '-'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="flex justify-between items-center mt-4 px-4">
+              <span className="text-sm text-gray-700">Total: {sortedData.length} entrée(s)</span>
+            </div>
           </div>
         </div>
       </div>

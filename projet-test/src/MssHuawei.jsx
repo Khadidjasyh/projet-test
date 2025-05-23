@@ -1,218 +1,245 @@
-import React, { useState, useEffect } from 'react';
-import { BsTable, BsSearch, BsFilter } from 'react-icons/bs';
+import React, { useState, useEffect, useRef } from 'react';
+import { BsSearch, BsUpload, BsTrash } from 'react-icons/bs';
+import axios from 'axios';
 
 const MssHuawei = () => {
-  const [networkData, setNetworkData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(50);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [uniqueGroups, setUniqueGroups] = useState([]);
+  const [uploadStatus, setUploadStatus] = useState({ message: '', type: '' });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // Fetch all mobile networks data
+  // Récupération des données MSS Huawei
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:5178/api/huawei-networks');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      setData(Array.isArray(result) ? result : []);
+    } catch (err) {
+      setError(`Erreur lors du chargement des données : ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial data fetching on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch('http://localhost:5178/mobile-networks');
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || `HTTP error! status: ${response.status}`
-          );
-        }
-        
-        const result = await response.json();
-        
-        // Vérifier que la réponse est un tableau
-        if (!Array.isArray(result)) {
-          throw new Error('La réponse du serveur n\'est pas un tableau valide');
-        }
-        
-        console.log('Données reçues du serveur:', result);
-        
-        // S'assurer que chaque élément a les propriétés nécessaires
-        const validatedData = result.map(item => ({
-          id: item.id || '',
-          imsi_prefix: item.imsi_prefix || '',
-          msisdn_prefix: item.msisdn_prefix || '',
-          network_name: item.network_name || 'Nom inconnu',
-          managed_object_group: item.managed_object_group || 'Groupe inconnu',
-          // Ajouter d'autres champs nécessaires avec des valeurs par défaut
-          ...item
-        }));
-        
-        setNetworkData(validatedData);
-        setFilteredData(validatedData);
-        
-        // Extraire les groupes uniques pour le filtre déroulant
-        const groups = [...new Set(validatedData.map(item => item.managed_object_group).filter(Boolean))];
-        setUniqueGroups(groups);
-        
-      } catch (err) {
-        console.error('Erreur lors de la récupération des données réseau:', err);
-        setError(`Erreur: ${err.message || 'Impossible de charger les données'}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
 
-  // Apply filters whenever search term or selected group changes
-  useEffect(() => {
-    if (!networkData.length) return;
-    
-    let filtered = [...networkData];
-    
-    // Filter by managed object group if selected
-    if (selectedGroup) {
-      filtered = filtered.filter(item => item.managed_object_group === selectedGroup);
+  // Import MSS Huawei
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.txt')) {
+      setUploadStatus({ message: 'Veuillez sélectionner un fichier .txt', type: 'error' });
+      fileInputRef.current.value = '';
+      return;
     }
-    
-    // Filter by search term
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(item => 
-        (item.imsi_prefix && item.imsi_prefix.toLowerCase().includes(search)) ||
-        (item.msisdn_prefix && item.msisdn_prefix.toLowerCase().includes(search)) ||
-        (item.network_name && item.network_name.toLowerCase().includes(search))
-      );
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      setUploadStatus({ message: 'Envoi en cours...', type: 'info' });
+      const response = await axios.post('http://localhost:5178/api/upload-huawei-networks', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.success) {
+        setUploadStatus({ message: 'Fichier traité avec succès', type: 'success' });
+        await fetchData();
+      } else {
+        throw new Error(response.data.error || 'Échec de l\'envoi');
+      }
+    } catch (error) {
+      setUploadStatus({
+        message: error.response?.data?.error || error.message || 'Erreur lors de l\'envoi',
+        type: 'error'
+      });
+    } finally {
+      fileInputRef.current.value = '';
     }
-    
-    setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, selectedGroup, networkData]);
-
-  const getPaginatedData = () => {
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return filteredData.slice(indexOfFirstItem, indexOfLastItem);
   };
 
-  const renderTable = () => {
-    if (loading) return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-    
-    if (error) return (
-      <div className="text-red-500 text-center p-4">
-        <p>Error: {error}</p>
-        <p className="text-sm mt-2">Check backend server on port 5177</p>
-      </div>
-    );
-    
-    if (!networkData || networkData.length === 0) return (
-      <p className="text-gray-500 text-center p-4">No data available</p>
-    );
-
-    const paginatedData = getPaginatedData();
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
+  // Filtrage simple sur tous les champs principaux
+  const filteredData = data.filter(row => {
+    const search = searchTerm.toLowerCase();
     return (
-      <div>
-        <div className="mb-4 flex items-center space-x-4">
-          <div className="flex-1 flex items-center space-x-4">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search by IMSI, MSISDN or Network Name"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              />
-              <BsSearch className="absolute left-3 top-3 text-gray-400" />
-            </div>
-            <div className="relative">
-              <select
-                value={selectedGroup}
-                onChange={(e) => setSelectedGroup(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 appearance-none bg-white min-w-[200px]"
-              >
-                <option value="">All Groups</option>
-                {uniqueGroups.map(group => (
-                  <option key={group} value={group}>{group}</option>
-                ))}
-              </select>
-              <BsFilter className="absolute left-3 top-3 text-gray-400" />
-            </div>
-          </div>
-        </div>
-
-        {filteredData.length === 0 ? (
-          <p className="text-gray-500 text-center p-4">No matching records found</p>
-        ) : (
-          <>
-            <>
-              <div className="flex flex-wrap items-center justify-between mb-2">
-                <span className="text-gray-600 text-sm">
-                  {filteredData.length} entr{filteredData.length > 1 ? 'ées' : 'ée'} affich{filteredData.length > 1 ? 'ées' : 'ée'}
-                </span>
-              </div>
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-                <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 bg-gray-100">
-                    <tr>
-                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI Prefix</th>
-                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">MSISDN Prefix</th>
-                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Network Name</th>
-                      <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Managed Object Group</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedData.map((row, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
-                        <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.imsi_prefix || '-'}>{row.imsi_prefix || '-'}</td>
-                        <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.msisdn_prefix || '-'}>{row.msisdn_prefix || '-'}</td>
-                        <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={row.network_name || '-'}>{row.network_name || '-'}</td>
-                        <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={row.managed_object_group || '-'}>{row.managed_object_group || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-between items-center mt-4 px-4">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-                  disabled={currentPage === 1} 
-                  className={`px-4 py-2 border rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                >
-                  Précédent
-                </button>
-                <span className="text-sm text-gray-700">Page {currentPage} sur {totalPages || 1}</span>
-                <button 
-                  onClick={() => setCurrentPage(prev => prev + 1)} 
-                  disabled={currentPage >= totalPages}
-                  className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                >
-                  Suivant
-                </button>
-              </div>
-            </>
-          </>
-        )}
-      </div>
+      (row.imsi_prefix && row.imsi_prefix.toLowerCase().includes(search)) ||
+      (row.msisdn_prefix && row.msisdn_prefix.toLowerCase().includes(search)) ||
+      (row.network_name && row.network_name.toLowerCase().includes(search)) ||
+      (row.managed_object_group && row.managed_object_group.toLowerCase().includes(search))
     );
+  });
+
+  // Suppression MSS Huawei
+  const handleDelete = async (id) => {
+    let isMounted = true;
+    try {
+      const response = await axios.delete(`http://localhost:5178/api/huawei-networks/${id}`);
+      if (isMounted && response.data.success) {
+        setUploadStatus({ message: 'Entrée supprimée', type: 'success' });
+        await fetchData();
+      }
+    } catch (error) {
+      if (isMounted) {
+        setUploadStatus({
+          message: error.response?.data?.error || 'Erreur lors de la suppression',
+          type: 'error'
+        });
+      }
+    }
+    if (isMounted) {
+      setDeleteModalOpen(false);
+      setEntryToDelete(null);
+    }
+    return () => { isMounted = false; };
+  };
+
+
+  const openDeleteModal = (entry) => {
+    setEntryToDelete(entry);
+    setDeleteModalOpen(true);
   };
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">MSS Huawei Data Analysis</h1>
-        <p className="text-gray-600">View and analyze MSS Huawei information</p>
+        <h1 className="text-2xl font-bold text-gray-800">Analyse des données MSS Huawei</h1>
+        <p className="text-gray-600">Visualisez et analysez les informations MSS Huawei</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        {renderTable()}
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              placeholder="Rechercher par groupe, IMSI, MSISDN, réseau..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <BsSearch />
+            </span>
+          </div>
+          <input
+            type="file"
+            accept=".txt"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
+          >
+            <BsUpload className="mr-2" />
+            <span>Importer MSS Huawei</span>
+          </button>
+        </div>
+        {uploadStatus.message && (
+          <div className={`mt-2 text-sm rounded px-3 py-2 ${uploadStatus.type === 'success' ? 'bg-green-100 text-green-800' : uploadStatus.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
+            {uploadStatus.message}
+          </div>
+        )}
       </div>
+
+      {loading && (
+        <div className="flex justify-center items-center h-32">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 mb-4 rounded">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && data.length === 0 && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded">
+          <p>Aucune entrée MSS Huawei trouvée</p>
+        </div>
+      )}
+
+      {!loading && filteredData.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto rounded-lg">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
+                <tr>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI Prefix</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">MSISDN Prefix</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Network Name</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Managed Object Group</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((row, idx) => (
+                  <tr key={row.id || idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.imsi_prefix || ''}>{row.imsi_prefix || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.msisdn_prefix || ''}>{row.msisdn_prefix || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.network_name || ''}>{row.network_name || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={row.managed_object_group || ''}>{row.managed_object_group || '-'}</td>
+                    <td className="px-3 py-2 border-b text-center">
+                      <button
+                        onClick={() => openDeleteModal(row)}
+                        className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-50"
+                        title="Supprimer"
+                      >
+                        <BsTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between items-center mt-4 px-4">
+              <span className="text-sm text-gray-700">Total: {filteredData.length} entrée(s)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de suppression */}
+      {deleteModalOpen && entryToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Confirmer la suppression</h3>
+            <p className="text-gray-600 mb-4">
+              Êtes-vous sûr de vouloir supprimer cette entrée ?
+              <br />
+              <span className="font-semibold">IMSI Prefix:</span> {entryToDelete.imsi_prefix || '-'}
+              <br />
+              <span className="font-semibold">MSISDN Prefix:</span> {entryToDelete.msisdn_prefix || '-'}
+              <br />
+              <span className="font-semibold">Network Name:</span> {entryToDelete.network_name || '-'}
+              <br />
+              <span className="font-semibold">Managed Object Group:</span> {entryToDelete.managed_object_group || '-'}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDelete(entryToDelete.id)}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

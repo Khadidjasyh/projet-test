@@ -27,7 +27,7 @@ export default function Contact() {
     setStatus("");
 
     try {
-      const response = await fetch("http://localhost:5177/send-email", {
+      const response = await fetch("http://localhost:5178/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

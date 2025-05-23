@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BsTable, BsSearch, BsUpload, BsCalendarDate } from 'react-icons/bs';
+import { BsTable, BsSearch, BsUpload, BsCalendarDate, BsTrash } from 'react-icons/bs';
 
 const HlrPage = () => {
     const [hlrData, setHlrData] = useState([]);
@@ -9,6 +9,26 @@ const HlrPage = () => {
     const [importing, setImporting] = useState(false);
     const [importMessage, setImportMessage] = useState(null);
     const [searchColumn, setSearchColumn] = useState('ns'); // Par défaut on filtre sur NS
+
+    // Suppression d'une ligne HLR
+    const handleDelete = async (id) => {
+        if (!window.confirm('Voulez-vous vraiment supprimer cette ligne ?')) return;
+        try {
+            const response = await fetch(`http://localhost:5178/hlrr/${id}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.error || 'Erreur lors de la suppression');
+            }
+            // Rafraîchir les données après suppression
+            const dataResponse = await fetch('http://localhost:5178/hlrr');
+            const data = await dataResponse.json();
+            setHlrData(data.data || data);
+        } catch (err) {
+            setError(err.message || 'Erreur lors de la suppression');
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -163,6 +183,7 @@ const HlrPage = () => {
                                     <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">NS</th>
                                     <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">GTRC</th>
                                     <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center"><BsCalendarDate className="inline mr-1" />Date</th>
+                                    <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -173,7 +194,16 @@ const HlrPage = () => {
                                         <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={row.na}>{row.na}</td>
                                         <td className="px-3 py-2 border-b text-center font-mono font-semibold truncate max-w-[90px] text-blue-800" title={row.ns}>{row.ns}</td>
                                         <td className="px-3 py-2 border-b text-center truncate max-w-[90px]" title={row.gtrc}>{row.gtrc}</td>
-                                        <td className="px-3 py-2 border-b text-center text-gray-500 truncate max-w-[110px]" title={row.imported_date || row.created_at}>{row.imported_date || row.created_at}</td>
+                                        <td className="px-3 py-2 border-b text-center text-gray-500 truncate max-w-[110px]" title={row.created_at}>{row.created_at}</td>
+                                        <td className="px-3 py-2 border-b text-center">
+                                            <button
+                                                className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
+                                                title="Supprimer"
+                                                onClick={() => handleDelete(row.id)}
+                                            >
+                                                <BsTrash size={18} />
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

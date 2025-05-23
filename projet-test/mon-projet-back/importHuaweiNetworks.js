@@ -1,106 +1,157 @@
-const mysql = require('mysql2');
-require('dotenv').config();
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
+const mysql = require('mysql2/promise');
 
-// Connexion à MySQL
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "1234",
-  database: process.env.DB_NAME || "mon_projet_db"
-});
+// Configuration de la base
+const dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '1234',
+    database: process.env.DB_NAME || 'mon_projet_db'
+};
 
-// Vérification de la connexion
-connection.connect((err) => {
-  if (err) {
-    console.error("❌ Erreur de connexion MySQL :", err);
-    return;
-  }
-  console.log("✅ Connecté à MySQL");
-  
-  // Démarrer l'importation
-  importHuaweiNetworks();
-});
+// Parse le contenu d'un fichier Huawei MSS
+const parseHuaweiMSSData = (text, filePath) => {
+    console.log('Début du parsing du fichier Huawei MSS');
+    const lines = text.split('\n');
+    const data = [];
 
-async function importHuaweiNetworks() {
-  console.log("🔄 Début de l'importation des réseaux Huawei...");
-  
-  // Supprimer toutes les données existantes
-  await clearTable();
-  
-  // Insérer des données de test
-  const networksData = [
-    { imsi_prefix: '60201', msisdn_prefix: '20201', network_name: 'Mobilis Algeria', managed_object_group: 'Africa' },
-    { imsi_prefix: '60202', msisdn_prefix: '20202', network_name: 'Djezzy Algeria', managed_object_group: 'Africa' },
-    { imsi_prefix: '60203', msisdn_prefix: '20203', network_name: 'Ooredoo Algeria', managed_object_group: 'Africa' },
-    { imsi_prefix: '21401', msisdn_prefix: '3401', network_name: 'Vodafone Spain', managed_object_group: 'Europe' },
-    { imsi_prefix: '21402', msisdn_prefix: '3402', network_name: 'Movistar Spain', managed_object_group: 'Europe' },
-    { imsi_prefix: '21403', msisdn_prefix: '3403', network_name: 'Orange Spain', managed_object_group: 'Europe' },
-    { imsi_prefix: '31030', msisdn_prefix: '9030', network_name: 'AT&T USA', managed_object_group: 'Americas' },
-    { imsi_prefix: '31031', msisdn_prefix: '9031', network_name: 'T-Mobile USA', managed_object_group: 'Americas' },
-    { imsi_prefix: '41201', msisdn_prefix: '9201', network_name: 'STC Saudi Arabia', managed_object_group: 'Middle East' },
-    { imsi_prefix: '41202', msisdn_prefix: '9202', network_name: 'Mobily Saudi Arabia', managed_object_group: 'Middle East' }
-  ];
-  
-  await insertNetworksData(networksData);
-  
-  console.log("✅ Importation terminée");
-  connection.end();
-}
+    // Pattern pour les lignes de données Huawei MSS
+    // Format attendu: IMSI_PREFIX MSISDN_PREFIX NETWORK_NAME MANAGED_OBJECT_GROUP
+    const regex = /^\s*(\d+)\s+(\d+)\s+(.+?)\s{2,}(\S+)\s*$/;
 
-function clearTable() {
-  return new Promise((resolve, reject) => {
-    const query = "TRUNCATE TABLE huawei_mobile_networks";
-    connection.query(query, (error) => {
-      if (error) {
-        console.error("❌ Erreur lors de la suppression des données:", error);
-        reject(error);
-        return;
-      }
-      console.log("🗑️ Table nettoyée");
-      resolve();
-    });
-  });
-}
-
-function insertNetworksData(networks) {
-  return new Promise((resolve, reject) => {
-    if (networks.length === 0) {
-      console.log("⚠️ Aucune donnée à insérer");
-      resolve();
-      return;
+    for (const line of lines) {
+        if (!line.trim()) continue; // Ignorer les lignes vides
+        
+        console.log('Analyse de la ligne:', line);
+        const match = line.match(regex);
+        
+        if (match) {
+            const [, imsi_prefix, msisdn_prefix, network_name, managed_object_group] = match;
+            const entry = {
+                imsi_prefix: imsi_prefix.trim(),
+                msisdn_prefix: msisdn_prefix.trim(),
+                network_name: network_name.trim(),
+                managed_object_group: managed_object_group.trim(),
+                node_name: path.basename(filePath, path.extname(filePath)) // Utiliser le nom du fichier comme node_name
+            };
+            console.log('Données extraites:', entry);
+            data.push(entry);
+        } else {
+            console.log('Ligne ignorée - format non correspondant:', line);
+        }
     }
-    
-    const values = networks.map(network => [
-      network.imsi_prefix,
-      network.msisdn_prefix,
-      network.network_name,
-      network.managed_object_group
-    ]);
-    
-    const query = `
-      INSERT INTO huawei_mobile_networks 
-      (imsi_prefix, msisdn_prefix, network_name, managed_object_group) 
-      VALUES ?
-    `;
-    
-    connection.query(query, [values], (error, results) => {
-      if (error) {
-        console.error("❌ Erreur lors de l'insertion des données:", error);
-        reject(error);
-        return;
-      }
-      
-      console.log(`✅ ${results.affectedRows} réseaux Huawei insérés avec succès`);
-      resolve(results);
-    });
-  });
-}
 
-// Exécuter le script si appelé directement
+    console.log(`Nombre total d'entrées parsées: ${data.length}`);
+    return data;
+};
+
+// Fonction principale d'import
+const importHuaweiMSSData = async (file) => {
+    console.log('Début de l\'importation du fichier:', file.originalname);
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        console.log('Connexion à la base de données établie');
+
+        const content = await fs.readFile(file.path, 'utf-8');
+        console.log('Fichier lu avec succès, taille:', content.length);
+
+        const entries = parseHuaweiMSSData(content, file.path);
+        console.log(`Nombre d'entrées à importer: ${entries.length}`);
+
+        if (entries.length === 0) {
+            throw new Error('Aucune donnée valide trouvée dans le fichier');
+        }
+
+        const insertQuery = `
+      INSERT INTO mobile_networks 
+            (imsi_prefix, msisdn_prefix, network_name, managed_object_group, node_name)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        let successCount = 0;
+        for (const entry of entries) {
+            try {
+                await connection.execute(insertQuery, [
+                    entry.imsi_prefix,
+                    entry.msisdn_prefix,
+                    entry.network_name,
+                    entry.managed_object_group,
+                    entry.node_name
+                ]);
+                successCount++;
+                console.log(`✔️  Importé : ${entry.imsi_prefix} - ${entry.network_name}`);
+            } catch (err) {
+                console.error(`❌ Erreur d'import [${entry.imsi_prefix}] :`, err.message);
+            }
+            await new Promise(resolve => setTimeout(resolve, 10)); // Ajout d'un délai pour éviter la surcharge MySQL
+        }
+
+        await connection.end();
+        console.log(`Importation terminée : ${successCount} entrées importées avec succès`);
+        
+        return {
+            success: true,
+            message: `Importation terminée : ${successCount} entrées importées avec succès`
+        };
+    } catch (err) {
+        console.error('❌ Erreur globale :', err.message);
+        return {
+            success: false,
+            error: err.message
+        };
+    }
+};
+
+module.exports = {
+    importHuaweiMSSData
+};
+
+// --- Exécution directe en CLI ---
 if (require.main === module) {
-  importHuaweiNetworks();
-}
+    const MSS_HUAWEI_DIR = path.join(__dirname, 'MSS_Huawei');
+    const argFile = process.argv[2];
 
-module.exports = importHuaweiNetworks;
+    (async () => {
+        if (argFile) {
+            // Mode fichier unique (argument fourni)
+            const filePath = path.isAbsolute(argFile) ? argFile : path.join(MSS_HUAWEI_DIR, argFile);
+            const fileName = path.basename(filePath);
+            try {
+                await fs.access(filePath);
+                const file = { path: filePath, originalname: fileName };
+                const result = await importHuaweiMSSData(file);
+                if (result.success) {
+                    console.log('✅ Importation réussie:', result.message);
+                } else {
+                    console.error('❌ Importation échouée:', result.error);
+                }
+            } catch (err) {
+                console.error('❌ Erreur lors de la lecture du fichier:', err.message);
+            }
+        } else {
+            // Mode bulk : tous les fichiers du dossier MSS_Huawei
+            try {
+                const files = await require('fs').promises.readdir(MSS_HUAWEI_DIR);
+                const txtFiles = files.filter(f => f.endsWith('.txt') || f.endsWith('.log'));
+                if (txtFiles.length === 0) {
+                    console.log('Aucun fichier .txt ou .log trouvé dans MSS_Huawei');
+                    return;
+                }
+                for (const fname of txtFiles) {
+                    const filePath = path.join(MSS_HUAWEI_DIR, fname);
+                    const file = { path: filePath, originalname: fname };
+                    console.log(`\n--- Import du fichier: ${fname} ---`);
+                    const result = await importHuaweiMSSData(file);
+                    if (result.success) {
+                        console.log('✅ Importation réussie:', result.message);
+                    } else {
+                        console.error('❌ Importation échouée:', result.error);
+                    }
+                }
+            } catch (err) {
+                console.error('❌ Erreur lors de la lecture du dossier MSS_Huawei:', err.message);
+            }
+        }
+    })();
+}

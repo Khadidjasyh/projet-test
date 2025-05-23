@@ -288,7 +288,6 @@ const RoamingTests = () => {
             ? { ...test, status: "success" }
             : test
         ));
-        setShowAuditTable(true);
       } catch (error) {
         setTests(tests.map(test =>
           test.id === testId
@@ -342,66 +341,73 @@ const RoamingTests = () => {
     setSelectedTest(null);
   };
 
-  // Génération du rapport (TXT)
-  const handleGenerateReport = () => {
-    const nomTest = 'Partenaires Roaming & Services'; // adapter si besoin
-    const now = new Date();
-    const dateStr = now.toLocaleDateString();
-    const heureStr = now.toLocaleTimeString();
-    let report = `Rapport du test : ${nomTest}\nDate : ${dateStr}\nHeure : ${heureStr}\n\n`;
-    report += 'Tableau des résultats :\n';
-    report += 'Pays           | Opérateur                        | Commentaire\n';
-    report += '--------------------------------------------------------------\n';
-    auditData.forEach(row => {
-      // Même logique que dans le rendu du tableau pour le commentaire enrichi
-      const services = ['gsm','camel','gprs','troisg','lte'];
-      const missing = [];
-      for (let s of services) {
-        if (row[s] === undefined || row[s] === null || row[s] === '') missing.push(`${s.toUpperCase()} non disponible`);
-      }
-      let commentaireAuto = '';
-      if (missing.length === 0) {
-        commentaireAuto = 'Tous les services sont disponibles';
-      } else {
-        commentaireAuto = missing.join(', ');
-      }
-      let commentaire = row.commentaire;
-      if (commentaireAuto && commentaireAuto !== 'Tous les services sont disponibles') {
-        commentaire = commentaire ? `${commentaire}, ${commentaireAuto}` : commentaireAuto;
-      } else if (commentaireAuto === 'Tous les services sont disponibles' && (!commentaire || commentaire === '' || commentaire === undefined || commentaire === null)) {
-        commentaire = 'Tous les services sont disponibles';
-      }
-      // On n'affiche que si commentaire != 'Tous les services sont disponibles'
-      if (commentaire !== 'Tous les services sont disponibles') {
-        const pad = (v, n) => (v !== undefined && v !== null && v !== '' ? v : 'Aucun').toString().padEnd(n, ' ');
-        report += `${pad(row.pays,14)}| ${pad(row.operateur,30)}| ${commentaire}\n`;
-      }
-    });
-    report += '\nSolutions :\n'
-      + '- Activer CAMEL chez les partenaires prioritaires\n'
-      + '- Pour permettre le roaming des clients prépayés.\n'
-      + '- Lancer des tests de validation avec ces opérateurs.\n'
-      + '- Étendre la couverture Data (GPRS/3G/4G/LTE)\n'
-      + '- Prioriser les pays à fort trafic ou à potentiel élevé.\n'
-      + '- Activer le roaming data via hubs (BICS, Syniverse…).\n'
-      + '- Optimiser les accords de roaming\n'
-      + '- Mettre à jour les accords avec des opérateurs plus compatibles (CAMEL + LTE).\n'
-      + '- Résilier les accords obsolètes ou inactifs.\n'
-      + '- eci';
-    // Téléchargement
-    const blob = new Blob([report], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `rapport_${nomTest.replace(/\s+/g, '_').toLowerCase()}_${dateStr.replace(/\//g,'-')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
-  };
+  const handleGenerateReport = async () => {
+    try {
+      // Calcul des statistiques
+      const totalOperators = auditData.length;
+      const totalIssues = auditData.filter(row => 
+        !row.gsm || !row.camel || !row.gprs || !row.troisg || !row.lte
+      ).length;
+      const camelIssues = auditData.filter(row => !row.camel).length;
+      const gprsIssues = auditData.filter(row => !row.gprs).length;
+      const threegIssues = auditData.filter(row => !row.troisg).length;
+      const lteIssues = auditData.filter(row => !row.lte).length;
 
+      // Préparation des données du rapport
+      const reportData = {
+        id: `AUD-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+        test_id: selectedTest ? selectedTest.id : 1,
+        title: selectedTest ? `${selectedTest.name} - Rapport d'audit` : 'Rapport d\'audit Roaming',
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().split(' ')[0],
+        status: 'En cours',
+        created_by: 'Admin', // À remplacer par l'utilisateur connecté
+        validated_by: null,
+        total_operators: totalOperators,
+        total_issues: totalIssues,
+        camel_issues: camelIssues,
+        gprs_issues: gprsIssues,
+        threeg_issues: threegIssues,
+        lte_issues: lteIssues,
+        results_data: JSON.stringify(auditData),
+        solutions: JSON.stringify({
+          recommendations: [
+            "Vérifier les configurations CAMEL pour les opérateurs en erreur",
+            "Mettre à jour les accords GPRS manquants",
+            "Configurer les services 3G/4G pour les opérateurs concernés"
+          ]
+        }),
+        attachments: JSON.stringify([]),
+        validation_notes: null,
+        implemented_changes: null
+      };
+
+      console.log('Envoi des données du rapport:', reportData);
+
+      // Envoi des données au backend pour sauvegarde
+      const response = await fetch('http://localhost:5178/save-audit-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de la sauvegarde du rapport');
+      }
+
+      // Afficher un message de succès
+      alert('Rapport généré avec succès !');
+
+      // Redirection vers la page RapportAudit
+      navigate('/rapport-audit');
+    } catch (error) {
+      console.error('Erreur lors de la génération du rapport:', error);
+      alert('Une erreur est survenue lors de la génération du rapport: ' + error.message);
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -668,9 +674,12 @@ const RoamingTests = () => {
                       <FaChartBar />
                       <span>Résultats</span>
                     </button>
-                    {test.name === "Partenaires Roaming & Services" && (
+                    {test.name === "Outbound Roaming" && (
                       <button
-                        onClick={handleGenerateReport}
+                        onClick={() => {
+                          setSelectedTest(test);
+                          handleGenerateReport();
+                        }}
                         className="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
                       >
                         <FaChartBar />
@@ -740,7 +749,7 @@ const RoamingTests = () => {
               </button>
               <button
                 onClick={() => handleShowResults(test)}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center space-x-2"
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2"
               >
                 <FaChartBar />
                 <span>Résultats</span>
@@ -758,7 +767,10 @@ const RoamingTests = () => {
         {/* Bouton Générer un rapport en haut du tableau d'audit */}
         <div className="flex justify-end mb-4">
           <button
-            onClick={handleGenerateReport}
+            onClick={() => {
+              setSelectedTest(tests.find(t => t.name === "Partenaires Roaming & Services"));
+              handleGenerateReport();
+            }}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <FaChartBar />

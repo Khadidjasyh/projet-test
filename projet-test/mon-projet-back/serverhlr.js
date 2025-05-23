@@ -38,6 +38,46 @@ const parseHlrData = (text) => {
     }).filter(item => item !== null);
 };
 
+// Route pour l'importation du fichier HLR
+router.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Aucun fichier n\'a été uploadé' });
+    }
+  
+
+try {
+    // Parser le fichier
+    const hlrData = await parseHLRFile(req.file.path);
+
+    // Connexion à la base de données
+    const connection = await mysql.createConnection(dbConfig);
+
+    // Insérer les données dans la base
+    for (const data of hlrData) {
+      await connection.execute(
+        'INSERT INTO hlr (tt, np, na, ns, gtrc) VALUES (?, ?, ?, ?, ?)',
+        [data.tt, data.np, data.na, data.ns, data.gtrc]
+      );
+    }
+
+    await connection.end();
+
+    // Supprimer le fichier après import
+    await fs.promises.unlink(req.file.path);
+
+    res.json({
+      success: true,
+      message: `${hlrData.length} enregistrements HLR ont été importés avec succès`
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'import:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur lors de l\'import du fichier HLR: ' + error.message
+    });
+  }
+});
+
 const importHlrData = async (filePaths) => {
     const connection = await mysql.createConnection(dbConfig);
     const currentDate = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD

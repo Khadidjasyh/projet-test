@@ -93,7 +93,9 @@ async function extractDataFromXML(filePath) {
       e212: '',
       e214: '',
       apn: '',
-      ips: ''
+      ips: '',
+      camelInbound: '',
+      camelOutbound: ''
     };
 
     for (const network of networkArray) {
@@ -146,11 +148,33 @@ async function extractDataFromXML(filePath) {
         const val = typeof ip === 'string' ? ip : ip.IPAddressRange || ip.IPAddress || '';
         if (val) extractedData.ips += val + ', ';
       }
+
+      // CAMEL Information
+      const camelInfo = network.NetworkData?.CAMELInfoSection?.CAMELInfo;
+      if (camelInfo) {
+        // Inbound
+        const inboundVersions = camelInfo.GSM_SSF_MSC?.CAP_Version_Supported_MSC?.CAP_Ver_Supp_MSC_Inbound?.CAP_MSCVersion;
+        if (inboundVersions) {
+          extractedData.camelInbound = Array.isArray(inboundVersions) 
+            ? inboundVersions.join(', ') 
+            : inboundVersions;
+        }
+
+        // Outbound
+        const outboundVersions = camelInfo.GSM_SSF_MSC?.CAP_Version_Supported_MSC?.CAP_Ver_Supp_MSC_Outbound?.CAP_MSCVersion;
+        if (outboundVersions) {
+          extractedData.camelOutbound = Array.isArray(outboundVersions)
+            ? outboundVersions.join(', ')
+            : outboundVersions;
+        }
+      }
     }
 
     // Nettoyage des virgules
-    for (let key of ['e212', 'e214', 'apn', 'ips']) {
-      extractedData[key] = extractedData[key].replace(/, $/, '');
+    for (let key of ['e212', 'e214', 'apn', 'ips', 'camelInbound', 'camelOutbound']) {
+      if (extractedData[key]) {
+        extractedData[key] = extractedData[key].replace(/, $/, '');
+      }
     }
 
     if (!extractedData.tadig) {
@@ -176,7 +200,9 @@ async function createTableIfNotExists(db) {
       e212 TEXT,
       e214 TEXT,
       apn TEXT,
-      ipaddress TEXT
+      ipaddress TEXT,
+      camel_inbound TEXT,
+      camel_outbound TEXT
     )
   `);
 }
@@ -202,7 +228,8 @@ async function processFiles() {
         if (existing.length > 0) {
           await db.execute(
             `UPDATE ir85_data 
-             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ? 
+             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?,
+                 camel_inbound = ?, camel_outbound = ?
              WHERE tadig = ?`,
             [
               fileData.pays,
@@ -210,21 +237,26 @@ async function processFiles() {
               fileData.e214,
               fileData.apn,
               fileData.ips,
+              fileData.camelInbound,
+              fileData.camelOutbound,
               fileData.tadig
             ]
           );
           log(`Mise à jour : ${fileData.tadig}`);
         } else {
           await db.execute(
-            `INSERT INTO ir85_data (tadig, pays, e212, e214, apn, ipaddress) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO ir85_data 
+             (tadig, pays, e212, e214, apn, ipaddress, camel_inbound, camel_outbound) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               fileData.tadig,
               fileData.pays,
               fileData.e212,
               fileData.e214,
               fileData.apn,
-              fileData.ips
+              fileData.ips,
+              fileData.camelInbound,
+              fileData.camelOutbound
             ]
           );
           log(`Insertion : ${fileData.tadig}`);
@@ -261,3 +293,4 @@ function init() {
 }
 
 init();
+module.exports = { extractDataFromXML };

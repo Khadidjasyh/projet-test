@@ -1,34 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const UserReport = require('../models/UserReport');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// Check if admin exists
+// Vérification de l'existence d'un admin
 router.get('/check-admin', async (req, res) => {
   try {
     const admin = await User.findOne({ where: { role: 'admin' } });
     res.json({ exists: !!admin });
   } catch (error) {
-    console.error('Erreur lors du check-admin:', error);
+    console.error('Erreur check-admin:', error);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });
 
-// Create first admin account
+// Création du premier admin
 router.post('/create-admin', async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Missing required fields: name, email, and password' });
+      return res.status(400).json({ error: 'Champs manquants' });
     }
-    // Vérifie si un admin existe déjà avec ce mail
-    const existingAdmin = await User.findOne({ where: { email, role: 'admin' } });
+
+    const existingAdmin = await User.findOne({ where: { email } });
     if (existingAdmin) {
-      return res.status(400).json({ error: 'Admin already exists with this email' });
+      return res.status(400).json({ error: 'Admin existe déjà' });
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
@@ -37,38 +38,32 @@ router.post('/create-admin', async (req, res) => {
       status: 'active',
       password: hashedPassword
     });
+    
     res.status(201).json(user);
   } catch (error) {
-    console.error('Erreur lors de la création de l\'admin:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    console.error('Erreur création admin:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// Admin creates user account
+// Création d'utilisateur (version unifiée)
 router.post('/create-user', async (req, res) => {
   try {
-    console.log('Received request body:', req.body);
     const { name, prenom, username, email, telephone, role } = req.body;
     
     if (!name || !email || !role) {
-      console.error('Missing required fields:', { name, email, role });
-      return res.status(400).json({ error: 'Missing required fields: name, email, and role' });
+      return res.status(400).json({ error: 'Champs obligatoires manquants' });
     }
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      console.log('User already exists:', email);
-      return res.status(400).json({ error: 'Email already in use' });
+      return res.status(400).json({ error: 'Email déjà utilisé' });
     }
 
-    console.log('Generating activation token...');
-    const activationToken = crypto.randomBytes(32).toString('hex');
-    console.log('Generating temporary password...');
+    const activationToken = encodeURIComponent(crypto.randomBytes(32).toString('hex'));
     const temporaryPassword = crypto.randomBytes(16).toString('hex');
-    console.log('Hashing password...');
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 1);
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-    console.log('Creating user...');
     const user = await User.create({
       name,
       prenom,
@@ -80,9 +75,8 @@ router.post('/create-user', async (req, res) => {
       activationToken,
       password: hashedPassword
     });
-    console.log('User created successfully:', user);
-    
-    console.log('Setting up email transport...');
+
+    // Configuration de l'email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -90,135 +84,175 @@ router.post('/create-user', async (req, res) => {
         pass: process.env.GMAIL_PASSWORD
       }
     });
-    
-    console.log('Creating email options...');
+
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: email,
-      subject: 'Activate Your Account',
-      text: `Click here to activate your account: http://localhost:5177/api/auth/activate/${activationToken}`
+      subject: 'Activation de compte',
+      html: `
+        <h1>Activation de compte</h1>
+        <p>Cliquez sur ce lien pour activer votre compte :</p>
+        <a href="http://localhost:5177/api/auth/activate/${activationToken}">
+          Activer mon compte
+        </a>
+      `
     };
-    
-    console.log('Sending email...');
+
     await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
-    
     res.status(201).json(user);
   } catch (error) {
-    console.error('Error details:', {
-      error: error.message,
-      stack: error.stack,
-      env: process.env.NODE_ENV,
-      db: process.env.DB_NAME
-    });
-    res.status(500).json({ error: 'Failed to create user account. Please try again.' });
+    console.error('Erreur création utilisateur:', error);
+    res.status(500).json({ error: 'Échec de la création' });
   }
 });
 
-// Duplicate route for frontend compatibility
-router.post('/auth/create-user', async (req, res) => {
+
+// Activation de compte (GET - Affiche le formulaire)
+router.get('/activate/:token', async (req, res) => {
   try {
-    console.log('Received request body:', req.body);
-    const { name, prenom, username, email, telephone, role } = req.body;
-    
-    if (!name || !email || !role) {
-      console.error('Missing required fields:', { name, email, role });
-      return res.status(400).json({ error: 'Missing required fields: name, email, and role' });
-    }
-
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      console.log('User already exists:', email);
-      return res.status(400).json({ error: 'Email already in use' });
-    }
-
-    console.log('Generating activation token...');
-    const activationToken = crypto.randomBytes(32).toString('hex');
-    console.log('Generating temporary password...');
-    const temporaryPassword = crypto.randomBytes(16).toString('hex');
-    console.log('Hashing password...');
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 1);
-
-    console.log('Creating user...');
-    const user = await User.create({
-      name,
-      prenom,
-      username,
-      email,
-      telephone,
-      role,
-      status: 'pending',
-      activationToken,
-      password: hashedPassword
-    });
-    console.log('User created successfully:', user);
-    
-    console.log('Setting up email transport...');
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
+    const decodedToken = decodeURIComponent(req.params.token);
+    const user = await User.findOne({ 
+      where: { 
+        activationToken: decodedToken,
+        status: 'pending'
       }
     });
-    
-    console.log('Creating email options...');
-    const mailOptions = {
-      from: process.env.GMAIL_USER,
-      to: email,
-      subject: 'Activate Your Account',
-      text: `Click here to activate your account: http://localhost:5177/api/auth/activate/${activationToken}`
-    };
-    
-    console.log('Sending email...');
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
-    
-    res.status(201).json(user);
+
+    if (!user) {
+      return res.status(400).send(`
+        <h1>Erreur d'activation</h1>
+        <p>Lien invalide ou expiré</p>
+      `);
+    }
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Activation de compte</title>
+      </head>
+      <body>
+        <h1>Définir votre mot de passe</h1>
+        <form method="POST" action="/api/auth/activate/${encodeURIComponent(decodedToken)}">
+          <input type="password" name="password" placeholder="Nouveau mot de passe (8 caractères min)" required>
+          <button type="submit">Activer le compte</button>
+        </form>
+      </body>
+      </html>
+    `);
   } catch (error) {
-    console.error('Error details:', {
-      error: error.message,
-      stack: error.stack,
-      env: process.env.NODE_ENV,
-      db: process.env.DB_NAME
-    });
-    res.status(500).json({ error: 'Failed to create user account. Please try again.' });
+    console.error('Erreur activation:', error);
+    res.status(500).send('Erreur serveur');
   }
 });
 
-// Activate user account
+// Activation de compte (POST - Traitement du mot de passe)
 router.post('/activate/:token', async (req, res) => {
-  const { token } = req.params;
-  const { password } = req.body;
+  try {
+    const decodedToken = decodeURIComponent(req.params.token);
+    const { password } = req.body;
 
-  if (!password || password.length < 8) { // Basic complexity check
-    return res.status(400).json({ error: 'Password must be at least 8 characters long' });
-  }
+    // Validation du mot de passe
+    if (!password || password.length < 8) {
+      return res.status(400).json({ 
+        error: 'Le mot de passe doit contenir au moins 8 caractères' 
+      });
+    }
 
-  const user = await User.findOne({ where: { activationToken: token } });
-  if (!user) {
-    return res.status(400).json({ error: 'Invalid or expired activation link' });
+    // Recherche de l'utilisateur
+    const user = await User.findOne({ 
+      where: { 
+        activationToken: decodedToken,
+        status: 'pending' 
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        error: 'Lien d\'activation invalide ou expiré' 
+      });
+    }
+
+    // Mise à jour du compte
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.status = 'active';
+    user.activationToken = null;
+    await user.save();
+
+    // Réponse adaptée (HTML ou JSON)
+    if (req.accepts('html')) {
+      return res.send(`
+        <h1>Compte activé !</h1>
+        <p>Vous pouvez maintenant vous connecter.</p>
+      `);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Compte activé avec succès' 
+    });
+
+  } catch (error) {
+    console.error('Erreur activation:', error);
+    res.status(500).json({
+      error: 'Échec de l\'activation',
+      details: error.message
+    });
   }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  user.password = hashedPassword;
-  user.status = 'active';
-  user.activationToken = null;
-  await user.save();
-  res.json({ message: 'Account activated successfully' });
 });
 
-// Login
+// Connexion utilisateur
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ where: { email } });
-  if (!user) {
-    return res.status(400).json({ error: 'User not found' });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(400).json({ error: 'Utilisateur non trouvé' });
+    }
+    
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ error: 'Mot de passe incorrect' });
+    }
+    
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+  } catch (error) {
+    console.error('Erreur login:', error);
+    res.status(500).json({ error: 'Erreur de connexion' });
   }
-  const validPassword = await bcrypt.compare(password, user.password);
-  if (!validPassword) {
-    return res.status(400).json({ error: 'Invalid password' });
+});
+
+// Récupérer l'utilisateur courant par ID (pour contrôle d'accès frontend)
+router.get('/current-user', async (req, res) => {
+  try {
+    // Prendre l'ID utilisateur depuis le header
+    const userId = req.header('user-id');
+    if (!userId) {
+      return res.status(400).json({ error: 'ID utilisateur manquant' });
+    }
+    // Chercher l'utilisateur en base
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    // Retourner les infos nécessaires (rôle, etc.)
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
-  res.json(user);
 });
 
 module.exports = router;

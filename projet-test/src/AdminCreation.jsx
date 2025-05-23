@@ -29,17 +29,17 @@ function AdminCreation() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded shadow-md">
-        <h2 className="text-2xl font-bold mb-4">Create Admin Account</h2>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-lg">
+        <h2 className="text-4xl font-bold mb-8 text-center text-gray-900">Création du compte administrateur</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
+            <label className="block text-gray-700">Nom</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               required
             />
           </div>
@@ -49,17 +49,17 @@ function AdminCreation() {
               type="text"
               value={prenom}
               onChange={(e) => setPrenom(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Username</label>
+            <label className="block text-gray-700">Nom d'utilisateur</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               required
             />
           </div>
@@ -69,7 +69,7 @@ function AdminCreation() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               required
             />
           </div>
@@ -79,22 +79,22 @@ function AdminCreation() {
               type="text"
               value={telephone}
               onChange={(e) => setTelephone(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               required
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Password</label>
+            <label className="block text-gray-700">Mot de passe</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               required
             />
           </div>
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">
-            Create Admin
+          <button type="submit" className="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-colors duration-200 font-semibold mt-4">
+            Créer l'administrateur
           </button>
         </form>
       </div>

@@ -1,75 +1,81 @@
-import React, { useState, useEffect } from "react";
-import { FaServer, FaFilter, FaSearch, FaNetworkWired, FaSort, FaSortUp, FaSortDown, FaFileExport, FaChartPie, FaTrash, FaPrint, FaFileDownload, FaFileImport } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { BsSearch, BsUpload, BsTrash } from "react-icons/bs";
+import axios from "axios";
 
 const NetworkNodes = () => {
   const [nodes, setNodes] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({
-    node_type: "",
-    vendor: ""
-  });
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [showStats, setShowStats] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [nodeToDelete, setNodeToDelete] = useState(null);
 
-  useEffect(() => {
-    const fetchNodes = async () => {
-      try {
-        const response = await fetch('http://localhost:5178/network-nodes');
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des données');
-        }
-        const data = await response.json();
-        setNodes(data);
-        setError(null);
-      } catch (err) {
-        console.error("Erreur:", err);
-        setError("Erreur lors du chargement des nœuds réseau");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNodes();
-  }, []);
-
-  const handleFileImport = (type) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".log"; // Accepter uniquement les fichiers .log
-
-    input.onchange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target.result;
-          // Traitez le contenu du fichier ici
-          console.log(`Contenu du fichier importé (${type}) : ${content}`);
-          alert(`Fichier ${type} importé avec succès : ${file.name}`);
-        };
-        reader.onerror = (err) => {
-          alert(`Erreur lors de la lecture du fichier : ${err.message}`);
-        };
-        reader.readAsText(file); // Lire le fichier en tant que texte
-      }
-    };
-
-    input.click();
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5178/network-nodes');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const result = await response.json();
+      setNodes(result);
+      setError(null);
+    } catch (err) {
+      setError(`Erreur lors du chargement des nœuds: ${err.message}`);
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredNodes = nodes.filter(node => {
-    const matchesSearch = 
-      node.node_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      node.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilters = 
-      (!filters.node_type || node.node_type === filters.node_type) &&
-      (!filters.vendor || node.vendor === filters.vendor);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    return matchesSearch && matchesFilters;
-  });
+  
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.delete(`http://localhost:5178/api/network-nodes/${id}`);
+      if (response.data.success) {
+        setUploadStatus({ message: 'Nœud supprimé', type: 'success' });
+        await fetchData();
+      }
+    } catch (error) {
+      setUploadStatus({
+        message: error.response?.data?.error || 'Erreur lors de la suppression',
+        type: 'error'
+      });
+    }
+    setDeleteModalOpen(false);
+    setNodeToDelete(null);
+  };
+// SUPPRIMÉ la version doublon plus bas dans le fichier
+
+  const openDeleteModal = (node) => {
+    setNodeToDelete(node);
+    setDeleteModalOpen(true);
+  };
+
+  const filteredNodes = nodes.filter(node =>
+    (node.node_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+    (node.node_type?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+    (node.vendor?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
+  );
+
+  // SUPPRIMÉ car doublon et non utilisé dans la nouvelle version
+// const filteredNodes = nodes.filter(node => {
+//   const matchesSearch = 
+//     node.node_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     node.location?.toLowerCase().includes(searchTerm.toLowerCase());
+//   
+//   const matchesFilters = 
+//     (!filters.node_type || node.node_type === filters.node_type) &&
+//     (!filters.vendor || node.vendor === filters.vendor);
+//
+//   return matchesSearch && matchesFilters;
+// });
+
+// La version simplifiée de filteredNodes est déjà définie plus haut
 
   const sortedNodes = React.useMemo(() => {
     let sortableNodes = [...filteredNodes];
@@ -191,13 +197,7 @@ const NetworkNodes = () => {
     link.click();
   };
 
-  const handleDelete = (node) => {
-    // Logique pour supprimer le nœud
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${node.node_name} ?`)) {
-      console.log('Suppression du nœud:', node.node_name);
-      alert(`Nœud ${node.node_name} supprimé`);
-    }
-  };
+  // SUPPRIMÉ : doublon inutile. La version asynchrone correcte est déjà utilisée plus haut.
 
   const handlePrint = (node) => {
     // Logique pour imprimer les informations du nœud
@@ -247,148 +247,87 @@ const NetworkNodes = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center">
-          <div className="flex items-center space-x-4">
-            <FaNetworkWired className="text-3xl text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Nœuds Réseau</h1>
-          </div>
-        </div>
+    return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Gestion des Nœuds Réseau</h1>
+        <p className="text-gray-600">Visualisation et gestion des équipements réseau</p>
+      </div>
 
-        {/* Statistiques */}
-        <div className="mb-6 bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Statistiques des Nœuds</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-blue-800">Total Nœuds</h3>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalNodes}</p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-green-800">Nœuds Actifs</h3>
-              <p className="text-3xl font-bold text-green-600">{stats.activeNodes}</p>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-purple-800">Types de Nœuds</h3>
-              <div className="mt-2">
-                {Object.entries(stats.nodeTypes).map(([type, count]) => (
-                  <div key={type} className="flex justify-between">
-                    <span className="text-purple-600">{type}:</span>
-                    <span className="font-bold">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-yellow-800">Constructeurs</h3>
-              <div className="mt-2">
-                {Object.entries(stats.vendors).map(([vendor, count]) => (
-                  <div key={vendor} className="flex justify-between">
-                    <span className="text-yellow-600">{vendor}:</span>
-                    <span className="font-bold">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Barre de recherche et filtres */}
-        <div className="mb-6 bg-white p-4 rounded-lg shadow">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Rechercher par nom ou localisation..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <FaSearch className="absolute left-3 top-3 text-gray-400" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <select
-                className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={filters.node_type}
-                onChange={(e) => setFilters({ ...filters, node_type: e.target.value })}
-              >
-                <option value="">Type de nœud</option>
-                <option value="MSC">MSC</option>
-                <option value="MSS">MSS</option>
-                <option value="HLR">HLR</option>
-                <option value="SGSN">SGSN</option>
-                <option value="MME">MME</option>
-                <option value="Firewall">Firewall</option>
-                <option value="GGSN">GGSN</option>
-                <option value="STP">STP</option>
-                <option value="DRA">DRA</option>
-              </select>
-              <select
-                className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={filters.vendor}
-                onChange={(e) => setFilters({ ...filters, vendor: e.target.value })}
-              >
-                <option value="">Constructeur</option>
-                <option value="Ericsson">Ericsson</option>
-                <option value="Huawei">Huawei</option>
-                <option value="Cisco">Cisco</option>
-                <option value="Nokia">Nokia</option>
-                <option value="Other">Autre</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Tableau des nœuds */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between mb-2">
-            <span className="text-gray-600 text-sm">
-              {sortedNodes.length} entr{sortedNodes.length > 1 ? 'ées' : 'ée'} affich{sortedNodes.length > 1 ? 'ées' : 'ée'}
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              placeholder="Rechercher par nom, type ou constructeur"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 pr-10 text-gray-700 bg-white"
+            />
+            <span className="absolute right-3 top-2.5 text-gray-400">
+              <BsSearch />
             </span>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+          
+        </div>
+        
+      </div>
+
+      {loading && (
+        <div className="flex justify-center items-center h-32">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 mb-4 rounded">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && nodes.length === 0 && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded">
+          <p>Aucun nœud réseau trouvé</p>
+        </div>
+      )}
+
+      {!loading && filteredNodes.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto rounded-lg">
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10 bg-gray-100">
                 <tr>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('node_name')}>Nom {getSortIcon('node_name')}</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('node_type')}>Type {getSortIcon('node_type')}</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('vendor')}>Constructeur {getSortIcon('vendor')}</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('imsi')}>IMSI {getSortIcon('imsi')}</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('mcc')}>MCC {getSortIcon('mcc')}</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center cursor-pointer" onClick={() => requestSort('mnc')}>MNC {getSortIcon('mnc')}</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Statut</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Nom</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Type</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Constructeur</th>
+                  
                 </tr>
               </thead>
               <tbody>
-                {sortedNodes.map((node) => (
-                  <tr key={node.id} className={node.id % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
-                    <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={node.node_name}>{node.node_name}</td>
-                    <td className="px-3 py-2 border-b text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${getNodeTypeColor(node.node_type)}`}>{node.node_type}</span></td>
-                    <td className="px-3 py-2 border-b text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${getVendorColor(node.vendor)}`}>{node.vendor}</span></td>
-                    <td className="px-3 py-2 border-b text-center truncate max-w-[100px]" title={node.imsi || '-'}>{node.imsi || '-'}</td>
-                    <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={node.mcc || '-'}>{node.mcc || '-'}</td>
-                    <td className="px-3 py-2 border-b text-center truncate max-w-[60px]" title={node.mnc || '-'}>{node.mnc || '-'}</td>
-                    <td className="px-3 py-2 border-b text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium ${node.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{node.active ? 'Actif' : 'Inactif'}</span></td>
-                    <td className="px-3 py-2 border-b text-center">
-                      <div className="flex space-x-2 justify-center">
-                        <button onClick={() => handleImport(node)} className="text-indigo-600 hover:text-indigo-900" title="Importer"><FaFileImport /></button>
-                        <button onClick={() => handleDownload(node)} className="text-blue-600 hover:text-blue-900" title="Télécharger"><FaFileExport /></button>
-                        <button onClick={() => handleExport(node)} className="text-yellow-600 hover:text-yellow-900" title="Exporter"><FaFileDownload /></button>
-                        <button onClick={() => handleDelete(node)} className="text-red-600 hover:text-red-900" title="Supprimer"><FaTrash /></button>
-                        <button onClick={() => handlePrint(node)} className="text-green-600 hover:text-green-900" title="Imprimer"><FaPrint /></button>
-                      </div>
+                {filteredNodes.map((item, idx) => (
+                  <tr key={item.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.node_name || ''}>
+                      {item.node_name || 'N/A'}
                     </td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.node_type || ''}>
+                      {item.node_type || 'N/A'}
+                    </td>
+                    <td className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={item.vendor || ''}>
+                      {item.vendor || 'N/A'}
+                    </td>
+                    
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="flex justify-between items-center mt-4 px-4">
+              <span className="text-sm text-gray-700">Total: {filteredNodes.length} nœud(s)</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      
     </div>
   );
 };

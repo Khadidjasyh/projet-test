@@ -183,8 +183,7 @@ const RoamingPartners = () => {
               <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">IMSI Complet</th>
               <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">GT</th>
               <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Pays</th>
-              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Bilatéral</th>
-              <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+
             </tr>
           </thead>
           <tbody>
@@ -198,18 +197,7 @@ const RoamingPartners = () => {
                 <td className="px-3 py-2 border-b text-center truncate max-w-[80px]" title={buildIMSI(partner.mcc, partner.mnc)}>{buildIMSI(partner.mcc, partner.mnc)}</td>
                 <td className="px-3 py-2 border-b text-center truncate max-w-[100px]" title={partner.gt}>{partner.gt}</td>
                 <td className="px-3 py-2 border-b text-center truncate max-w-[120px]" title={partner.country || '-'}>{partner.country || '-'}</td>
-                <td className="px-3 py-2 border-b text-center">
-                  <span className={`px-2 py-1 rounded-full text-sm ${partner.bilateral ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{partner.bilateral ? 'Oui' : 'Non'}</span>
-                </td>
-                <td className="px-3 py-2 border-b text-center">
-                  <button
-                    onClick={() => handleImportIR21(partner.id, partner.operateur)}
-                    disabled={importing[partner.id]}
-                    className={`px-4 py-2 rounded ${importing[partner.id] ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700 text-white'}`}
-                  >
-                    {importing[partner.id] ? 'Import...' : 'IR21'}
-                  </button>
-                </td>
+
               </tr>
             ))}
           </tbody>

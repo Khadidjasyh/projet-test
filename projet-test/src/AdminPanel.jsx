@@ -73,7 +73,7 @@ const AdminPanel = () => {
           <tr>
             <th className="px-2 py-2 border">Nom</th>
             <th className="px-2 py-2 border">Prénom</th>
-            <th className="px-2 py-2 border">Username</th>
+            <th className="px-2 py-2 border">Nom d'utilisateur</th>
             <th className="px-2 py-2 border">Email</th>
             <th className="px-2 py-2 border">Téléphone</th>
             <th className="px-2 py-2 border">Rôle</th>

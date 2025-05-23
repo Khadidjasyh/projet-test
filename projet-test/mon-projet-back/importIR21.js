@@ -64,7 +64,9 @@ async function extractDataFromXML(filePath) {
       e214: '',
       apn: '',
       ips: '',
-      date: null
+      date: null,
+      camelInbound: '',
+      camelOutbound: ''
     };
 
     const dateMatch = fileName.match(/_(\d{8})/);
@@ -81,6 +83,7 @@ async function extractDataFromXML(filePath) {
     for (const network of networkArray) {
       const routingInfo = network.NetworkData?.RoutingInfoSection?.RoutingInfo || {};
 
+      // Extraction E212
       const e212Series = routingInfo.CCITT_E212_NumberSeries;
       if (e212Series) {
         const mcc = e212Series.MCC || '';
@@ -88,6 +91,7 @@ async function extractDataFromXML(filePath) {
         if (mcc && mnc) extractedData.e212 += `${mcc}${mnc}`;
       }
 
+      // Extraction E214
       const e214Series = routingInfo.CCITT_E214_MGT;
       if (e214Series) {
         const mgtCC = e214Series.MGT_CC || '';
@@ -95,8 +99,8 @@ async function extractDataFromXML(filePath) {
         if (mgtCC && mgtNC) extractedData.e214 += `${mgtCC}${mgtNC}`;
       }
 
+      // Extraction APN
       let apnSet = new Set();
-
       function extractAPNs(obj) {
         if (!obj) return;
         if (Array.isArray(obj)) {
@@ -116,10 +120,10 @@ async function extractDataFromXML(filePath) {
           }
         }
       }
-
       extractAPNs(network);
       extractedData.apn = Array.from(apnSet).join(', ');
 
+      // Extraction IP
       function extractAllIPs(obj) {
         let ips = [];
         if (typeof obj === 'object' && obj !== null) {
@@ -140,8 +144,26 @@ async function extractDataFromXML(filePath) {
         }
         return ips;
       }
-
       extractedData.ips = extractAllIPs(network).filter(Boolean).join(', ');
+
+      // Extraction CAMEL
+      const camelInfo = network.NetworkData?.CAMELInfoSection?.CAMELInfo;
+      if (camelInfo) {
+        const capVersions = camelInfo.GSM_SSF_MSC?.CAP_Version_Supported_MSC;
+        if (capVersions) {
+          // Gestion Inbound
+          const inbound = capVersions.CAP_Ver_Supp_MSC_Inbound?.CAP_MSCVersion;
+          extractedData.camelInbound = Array.isArray(inbound) 
+            ? inbound.join(', ') 
+            : inbound || '';
+
+          // Gestion Outbound
+          const outbound = capVersions.CAP_Ver_Supp_MSC_Outbound?.CAP_MSCVersion;
+          extractedData.camelOutbound = Array.isArray(outbound)
+            ? outbound.join(', ')
+            : outbound || '';
+        }
+      }
     }
 
     if (!extractedData.e212 && !extractedData.e214 && !extractedData.apn && !extractedData.ips) {
@@ -157,7 +179,7 @@ async function extractDataFromXML(filePath) {
   }
 }
 
-// Création de la table si absente
+// Création de la table
 async function createTableIfNotExists(db) {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS ir21_data (
@@ -168,7 +190,9 @@ async function createTableIfNotExists(db) {
       e214 TEXT,
       apn TEXT,
       ipaddress TEXT,
-      date DATE
+      date DATE,
+      camel_inbound TEXT,
+      camel_outbound TEXT
     )
   `);
 }
@@ -201,7 +225,8 @@ async function processFiles() {
         if (existing.length > 0) {
           await db.execute(
             `UPDATE ir21_data 
-             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?, date = ?
+             SET pays = ?, e212 = ?, e214 = ?, apn = ?, ipaddress = ?, date = ?,
+                 camel_inbound = ?, camel_outbound = ?
              WHERE tadig = ?`,
             [
               fileData.pays,
@@ -210,6 +235,8 @@ async function processFiles() {
               fileData.apn,
               fileData.ips,
               fileData.date,
+              fileData.camelInbound,
+              fileData.camelOutbound,
               fileData.tadig
             ]
           );
@@ -217,8 +244,8 @@ async function processFiles() {
         } else {
           await db.execute(
             `INSERT INTO ir21_data 
-             (tadig, pays, e212, e214, apn, ipaddress, date) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+             (tadig, pays, e212, e214, apn, ipaddress, date, camel_inbound, camel_outbound) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               fileData.tadig,
               fileData.pays,
@@ -226,7 +253,9 @@ async function processFiles() {
               fileData.e214,
               fileData.apn,
               fileData.ips,
-              fileData.date
+              fileData.date,
+              fileData.camelInbound,
+              fileData.camelOutbound
             ]
           );
           log(`Insertion réussie pour ${fileData.tadig}`, 'INFO');
@@ -236,7 +265,6 @@ async function processFiles() {
       }
     }
 
-    // Nettoyage des APN
     await db.execute(
       "UPDATE ir21_data SET apn = SUBSTRING_INDEX(apn, ',', 1) WHERE apn LIKE '%,%'"
     );
@@ -262,3 +290,5 @@ function init() {
 }
 
 init();
+
+module.exports = { extractDataFromXML };

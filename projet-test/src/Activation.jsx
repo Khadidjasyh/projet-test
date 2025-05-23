@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function Activation() {
   const { token } = useParams();
+  const navigate = useNavigate();
+
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -11,39 +13,79 @@ function Activation() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    const response = await fetch(`/api/auth/activate/${token}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
-    if (response.ok) {
-      setSuccess('Password set');
-      setPassword('');
-    } else {
-      const data = await response.json();
-      setError(data.error || 'Failed to activate account');
+
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/auth/activate/${token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(data.message || 'Compte activé avec succès');
+        setPassword('');
+
+        // Redirection vers la page de connexion après 3 secondes
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Échec de l’activation du compte');
+      }
+    } catch (err) {
+      setError('Erreur réseau ou serveur. Veuillez réessayer.');
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded shadow-md w-full max-w-sm">
-        <h2 className="text-2xl font-bold mb-4 text-center">Activate Your Account</h2>
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        {success && <p className="text-green-600 text-center mb-4">{success}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700">Password</label>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">
+          Activation de compte
+        </h2>
+
+        {error && (
+          <div className="mb-4 text-red-600 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 text-green-600 text-sm text-center">
+            {success} <br />
+            Redirection vers la connexion...
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-gray-700 mb-2">
+              Nouveau mot de passe
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none"
+              placeholder="8 caractères minimum"
               required
             />
           </div>
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Activate Account
+
+          <button
+            type="submit"
+            className="w-full p-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition duration-200"
+          >
+            Activer le compte
           </button>
         </form>
       </div>
@@ -51,4 +93,4 @@ function Activation() {
   );
 }
 
-export default Activation; 
+export default Activation;

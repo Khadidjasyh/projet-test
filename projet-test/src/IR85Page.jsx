@@ -64,7 +64,7 @@ const IR85Page = () => {
     formData.append('file', file);
     try {
       setUploadStatus({ message: 'Import en cours...', type: 'info' });
-      const response = await axios.post('http://localhost:5178/api/upload-ir85', formData, {
+      const response = await axios.post('http://localhost:5178/api/import-ir85', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (response.data.success) {
@@ -169,6 +169,8 @@ const IR85Page = () => {
                   <th className="px-3 py-2 border-b font-semibold text-gray-700">E214</th>
                   <th className="px-3 py-2 border-b font-semibold text-gray-700">APN</th>
                   <th className="px-3 py-2 border-b font-semibold text-gray-700">IP Address</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">CAMEL Inbound</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700">CAMEL Outbound</th>
                   <th className="px-3 py-2 border-b text-center font-semibold text-gray-700">Action</th>
                 </tr>
               </thead>
@@ -182,6 +184,8 @@ const IR85Page = () => {
                     <td className="px-3 py-2 border-b text-center font-mono text-gray-700 truncate max-w-[70px]" title={row.e214}>{row.e214 || '-'}</td>
                     <td className="px-3 py-2 border-b truncate max-w-[150px]" title={row.apn}>{row.apn || '-'}</td>
                     <td className="px-3 py-2 border-b truncate max-w-[170px]" title={row.ipaddress}>{row.ipaddress}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[120px]" title={row.camel_inbound || '-'}>{row.camel_inbound || '-'}</td>
+                    <td className="px-3 py-2 border-b truncate max-w-[120px]" title={row.camel_outbound || '-'}>{row.camel_outbound || '-'}</td>
                     <td className="px-3 py-2 border-b text-center">
                       <button
                         className="text-red-600 hover:text-red-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-400"

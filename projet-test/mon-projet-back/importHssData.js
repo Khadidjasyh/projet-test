@@ -108,8 +108,14 @@ const importHSSData = async () => {
   }
 };
 
-// Exécution du script principal
-(async () => {
-  await createTable();
-  await importHSSData();
-})();
+// Exporte les fonctions pour usage dans server.js
+module.exports = {
+  parseHSSData,
+  cleanIMSIprefix,
+};
+
+// Exécution du script principal (à commenter si utilisé comme module)
+// (async () => {
+//   await createTable();
+//   await importHSSData();
+// })();
