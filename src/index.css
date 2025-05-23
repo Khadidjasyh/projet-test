@@ -33,9 +33,6 @@ a:hover {
 /* Styles globaux pour le body */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  justify-content: center;
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--background-color, #242424);

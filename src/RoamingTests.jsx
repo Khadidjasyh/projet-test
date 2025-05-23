@@ -13,7 +13,9 @@ import {
   FaFilter,
   FaSort,
   FaSortUp,
-  FaSortDown
+  FaSortDown,
+  FaTimes,
+  FaDownload
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +29,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { generateReportFromTest } from './RapportAudit';
+import { toast } from 'react-hot-toast';
 // Données extraites du fichier Excel
 const operatorData = {
   "Afghanistan": ["Telecom Development Company Afghanistan Ltd.", "Etisalat Afghanistan", "MTN", "Afghan Wireless Communication Company"],
@@ -208,6 +211,7 @@ const operatorData = {
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const RoamingTests = () => {
+  const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState("Afghanistan");
   const [selectedOperator, setSelectedOperator] = useState("Telecom Development Company Afghanistan Ltd.");
   const [tests, setTests] = useState([
@@ -291,35 +295,23 @@ const RoamingTests = () => {
     }, 2000);
   };
 
-  const handleShowResults = async (test) => {
-    // Vérifier si le test a été lancé et réussi
-    if (test.status !== 'success') {
-      alert('Veuillez d\'abord lancer le test avant de consulter les résultats.');
-      return;
-    }
-
-    // Navigation vers la page de résultats appropriée
-    switch (test.id) {
-      case 1:
-        try {
-          const response = await fetch("http://localhost:5178/situation-globale");
-          if (!response.ok) throw new Error("Erreur lors de la récupération des données");
-          const data = await response.json();
-          setAuditData(data);
-          setShowAuditTable(true);
-        } catch (error) {
-          console.error("Erreur lors de la récupération des données:", error);
-          alert("Erreur lors de la récupération des données de la situation globale.");
-        }
-        break;
-      case 2:
-        navigate('/inbound-roaming-results');
-        break;
-      case 3:
+  const handleShowResults = (test) => {
+    if (test.name === "Partenaires Roaming & Services") {
+      navigate('/partenaires-roaming-results');
+    } else if (test.name === "Inbound Roaming") {
+      navigate('/inbound-roaming-results');
+    } else if (test.name === "Outbound Roaming") {
       navigate('/outbound-roaming-results');
-        break;
-      default:
-        console.error('Test non reconnu:', test.id);
+    } else if (test.name === "Tests CAMEL Phase Service Inbound Roaming") {
+      navigate('/camel-inbound-results');
+    } else if (test.name === "Tests CAMEL Phase Service Outbound Roaming") {
+      navigate('/camel-outbound-results');
+    } else if (test.name === "Tests Data Inbound Roaming") {
+      navigate('/data-inbound-results');
+    } else {
+      setSelectedTest(test);
+      setShowResults(true);
+      setShowAuditTable(false);
     }
   };
 
@@ -630,10 +622,6 @@ Solutions :
     </>
   );
 
-  useEffect(() => {
-    checkUserAccess();
-  }, []);
-
   const checkUserAccess = async () => {
     try {
       const userData = JSON.parse(localStorage.getItem('user'));
@@ -671,6 +659,90 @@ Solutions :
       setLoading(false);
     }
   };
+
+  const renderTestResults = () => {
+    if (!selectedTest) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Résultats du test: {selectedTest.name}
+            </h2>
+            <button
+              onClick={handleCloseResults}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FaTimes size={24} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-700 mb-2">Description</h3>
+              <p className="text-gray-600">{selectedTest.description}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-700 mb-2">Statut</h3>
+              <div className="flex items-center">
+                {getStatusIcon(selectedTest.status)}
+                <span className={`ml-2 ${
+                  selectedTest.status === "running" ? "text-blue-500" : 
+                  selectedTest.status === "success" ? "text-green-500" : 
+                  selectedTest.status === "failed" ? "text-red-500" : 
+                  "text-gray-500"
+                }`}>
+                  {selectedTest.status === "running" ? "En cours..." : 
+                   selectedTest.status === "success" ? "Succès" : 
+                   selectedTest.status === "failed" ? "Échoué" : 
+                   selectedTest.status}
+                </span>
+              </div>
+            </div>
+
+            {selectedTest.results && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-700 mb-2">Résultats détaillés</h3>
+                <pre className="bg-white p-4 rounded-lg overflow-x-auto">
+                  {JSON.stringify(selectedTest.results, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={handleBackToTests}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Retour aux tests
+              </button>
+              <button
+                onClick={() => handleGenerateReport(selectedTest)}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 flex items-center space-x-2"
+              >
+                <FaDownload />
+                <span>Générer rapport</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
+  useEffect(() => {
+    checkUserAccess();
+  }, []);
 
   if (loading) {
     return (

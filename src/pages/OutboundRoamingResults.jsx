@@ -96,7 +96,7 @@ const OutboundRoamingResults = () => {
     navigate('/roaming-tests');
   };
 
-  const handleGenerateReport = async () => {
+  const handleDownload = () => {
     try {
       const now = new Date();
       const dateStr = now.toLocaleString();
@@ -105,7 +105,7 @@ const OutboundRoamingResults = () => {
       const erreurs = data.filter(row => row.commentaires && row.commentaires.toLowerCase().includes("erreur"));
       const erreurGlobale = erreurs.length > 0 ? erreurs[0].commentaires : "Aucune erreur majeure détectée.";
 
-      // Construction du tableau pour le fichier texte
+      // Construction du tableau
       const col1 = 'Pays';
       const col2 = 'Opérateur';
       const col3 = 'Commentaire';
@@ -154,7 +154,108 @@ Solutions :
 - Mets en place une table de correspondance APN IR21 <-> APN HSS.
 `;
 
-      const txt = `Nom du test : Outbound Roaming\n` +
+      const txt = `Nom du test : Test Outbound Roaming\n` +
+                  `Date : ${dateStr}\n` +
+                  `Erreur globale : ${erreurGlobale}\n\n` +
+                  table + aide;
+
+      // Création et téléchargement du fichier
+      const blob = new Blob([txt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport_outbound_roaming_${now.toISOString().slice(0,19).replace(/[:T]/g, "-")}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Erreur lors de la génération du rapport:", error);
+      alert("Une erreur est survenue lors de la génération du rapport.");
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleGenerateReport = async () => {
+    try {
+      const now = new Date();
+      const dateStr = now.toLocaleString();
+      // Préparation des données pour le rapport
+      const erreurs = data.filter(row => row.commentaires && row.commentaires.toLowerCase().includes("erreur"));
+      const erreurGlobale = erreurs.length > 0 ? erreurs[0].commentaires : "Aucune erreur majeure détectée.";
+
+      // Construction du tableau pour le fichier texte
+      const col1 = 'Pays';
+      const col2 = 'Opérateur';
+      const col3 = 'Commentaire';
+      const width1 = Math.max(col1.length, ...data.map(r => (r.pays || '').length));
+      const width2 = Math.max(col2.length, ...data.map(r => (r.operateur || '').length));
+      const width3 = Math.max(col3.length, ...data.map(r => (r.commentaires || '').length));
+
+      const pad = (txt, len) => (txt || '').padEnd(len, ' ');
+      const sep = `| ${pad(col1, width1)} | ${pad(col2, width2)} | ${pad(col3, width3)} |\n`;
+      const sepLine = `|-${'-'.repeat(width1)}-|-${'-'.repeat(width2)}-|-${'-'.repeat(width3)}-|\n`;
+      let table = sep + sepLine;
+      data.forEach(row => {
+        table += `| ${pad(row.pays, width1)} | ${pad(row.operateur, width2)} | ${pad(row.commentaires, width3)} |\n`;
+      });
+
+      const aide = `\n\n\n🔴 Commentaire : "Vérifie l'importation de l'IR21 ou l'IR85"
+Cause probable :
+L'extraction de l'IR21 a échoué (fichier manquant, mal structuré, ou mauvaise URL).
+
+Solutions :
+- Vérifie si le fichier IR.21 est bien importé et lisible dans ton application.
+- Assure-toi que le format XML du fichier respecte bien la norme IR.21.
+- Si tu utilises une API ou un système d'import, vérifie que le fichier IR.85 est également à jour.
+- Vérifie le nom du fichier et sa localisation.
+- S'assurer que les balises nécessaires sont bien présentes.
+
+🔴 Commentaire : "Impossible de faire l'extraction MCC/MNC"
+Cause probable :
+Les champs MCC ou MNC sont manquants ou mal formatés.
+
+Solutions :
+- Vérifie que la PLMN est bien renseignée sous la forme MCC+MNC.
+- Si la base de données contient une valeur comme mnc001, mcc208, extrais correctement les chiffres.
+- Si l'information n'est pas présente dans l'IR21, cherche-la manuellement.
+- Met en place une règle de validation en amont.
+
+🟡 Commentaire : "Extraction IR21 réussie, erreur dans la vérification HSS (APN)"
+Cause probable :
+Les données APN extraites de l'IR21 ne correspondent pas à celles présentes dans le HSS.
+
+Solutions :
+- Vérifie que l'APN déclaré dans l'IR21 correspond bien à celui provisionné.
+- Assure-toi que l'APN est bien activé pour le roaming.
+- Contrôle la casse et les caractères spéciaux.
+- Mets en place une table de correspondance APN IR21 <-> APN HSS.
+
+🔴 Commentaire : "Extraction IR21 et vérifications HSS et GT en erreur."
+Cause probable :
+Aucune des étapes clés n'a pu être validée (IR21 illisible, HSS non provisionné, GT manquant).
+
+Solutions :
+- Vérifie d'abord l'import du fichier IR21.
+- Inspecte les erreurs retournées par le HSS.
+- Contrôle que le GT est bien présent dans l'IR21.
+- Si besoin, relance un import manuel pour cet opérateur.
+
+⚠️ Commentaire : "Situation mixte, vérifier les données."
+Cause probable :
+Des résultats contradictoires ou incomplets (extraction partielle, certains champs OK, d'autres KO).
+
+Solutions :
+- Vérifie les champs un à un (IR21, APN, GT, MCC/MNC).
+- Regarde les logs d'extraction.
+- Ajoute une interface de contrôle manuel pour corriger ces cas.
+`;
+
+      const txt = `Nom du test : Test Outbound Roaming\n` +
                   `Date : ${dateStr}\n` +
                   `Erreur globale : ${erreurGlobale}\n\n` +
                   table + aide;
@@ -171,7 +272,6 @@ Solutions :
       URL.revokeObjectURL(url);
 
       // Préparation des données pour la sauvegarde dans la base de données
-      // Réduire la taille des données en ne gardant que les informations essentielles
       const simplifiedData = data.map(row => ({
         pays: row.pays,
         operateur: row.operateur,
@@ -190,10 +290,11 @@ Solutions :
         total_issues: erreurs.length,
         results_data: JSON.stringify(simplifiedData),
         solutions: JSON.stringify([
-          "Vérifier l'importation des fichiers IR21/IR85",
-          "Valider le format XML des fichiers",
-          "Vérifier l'extraction MCC/MNC",
-          "Contrôler la correspondance des APN entre IR21 et HSS"
+          "Vérifie si le fichier IR.21 est bien importé et lisible dans ton application.",
+          "Assure-toi que le format XML du fichier respecte bien la norme IR.21.",
+          "Vérifie que la PLMN est bien renseignée sous la forme MCC+MNC.",
+          "Vérifie que l'APN déclaré dans l'IR21 correspond bien à celui provisionné.",
+          "Ajoute une interface de contrôle manuel pour corriger les cas complexes."
         ]),
         validation_notes: erreurGlobale
       };
@@ -212,15 +313,10 @@ Solutions :
       }
 
       alert('Rapport généré et sauvegardé avec succès !');
-
     } catch (error) {
       console.error("Erreur lors de la génération du rapport:", error);
       alert("Une erreur est survenue lors de la génération du rapport.");
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   return (

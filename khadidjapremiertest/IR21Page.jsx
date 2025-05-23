@@ -195,37 +195,33 @@ const IR21Page = () => {
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 z-10 bg-gray-100">
                 <tr>
-                  <th className="px-3 py-2 border-b text-center font-semibold text-gray-700">N°</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">TADIG</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">Pays</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">E212</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">E214</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">APN</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">IP Address</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700">Date d'ajout</th>
-                  <th className="px-3 py-2 border-b text-center font-semibold text-gray-700">Action</th>
+                  <th className="px-3 py-2 border-b text-center font-semibold text-gray-700 w-16">N°</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-32">TADIG</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-32">Pays</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-40">Opérateur</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-40">IP Address</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-40">E.212</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-40 max-w-[200px]">E.214</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-40">APN</th>
+                  <th className="px-3 py-2 border-b font-semibold text-gray-700 w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {currentData.map((row, idx) => (
-                  <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
-                    <td className="px-3 py-2 border-b text-center">{idx + 1}</td>
-                    <td className="px-3 py-2 border-b font-mono text-blue-800 truncate max-w-[90px]" title={row.tadig}>{row.tadig}</td>
-                    <td className="px-3 py-2 border-b truncate max-w-[100px]" title={row.pays}>{row.pays}</td>
-                    <td className="px-3 py-2 border-b text-center font-mono text-gray-700 truncate max-w-[70px]" title={row.e212}>{row.e212 || '-'}</td>
-                    <td className="px-3 py-2 border-b text-center font-mono text-gray-700 truncate max-w-[70px]" title={row.e214}>{row.e214 || '-'}</td>
-                    <td className="px-3 py-2 border-b truncate max-w-[150px]" title={row.apn}>{row.apn || '-'}</td>
-                    <td className="px-3 py-2 border-b truncate max-w-[170px]" title={row.ipaddress}>{row.ipaddress}</td>
-                    <td className="px-3 py-2 border-b text-center">
-                      {row.date && !isNaN(new Date(row.date).getTime())
-                        ? new Date(row.date).toLocaleDateString('fr-FR')
-                        : (row.date || '-')}
-                    </td>
+                {currentData.map((row, index) => (
+                  <tr key={row.id || index} className="hover:bg-gray-50">
+                    <td className="px-3 py-2 border-b text-center">{index + 1}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap">{row.tadig}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap">{row.pays}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap">{row.operateur}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap">{row.ipaddress}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap">{row.e212}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap max-w-[200px] truncate" title={row.e214}>{row.e214}</td>
+                    <td className="px-3 py-2 border-b whitespace-nowrap">{row.apn}</td>
                     <td className="px-3 py-2 border-b text-center">
                       <button
-                        className="text-red-600 hover:text-red-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-400"
-                        title="Supprimer"
                         onClick={() => handleDelete(row.id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Supprimer"
                       >
                         <BsTrash />
                       </button>

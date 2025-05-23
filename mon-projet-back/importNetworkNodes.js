@@ -5,7 +5,7 @@ const xlsx = require("xlsx");
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "1234",
+  password: "Aaa!121212",
   database: "mon_projet_db",
 });
 

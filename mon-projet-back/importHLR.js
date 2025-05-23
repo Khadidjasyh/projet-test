@@ -108,7 +108,7 @@ router.post('/api/upload-hlr', upload.single('file'), async (req, res) => {
 });
 
 // Route pour récupérer les données HLR
-router.get('/hlr', async (req, res) => {
+router.get('/hlrr', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
     const [rows] = await connection.execute('SELECT * FROM hlr ORDER BY id DESC');

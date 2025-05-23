@@ -56,41 +56,52 @@ const IR85Page = () => {
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.xml')) {
-      setUploadStatus({ message: 'Veuillez sélectionner un fichier XML', type: 'error' });
-      return;
-    }
+
     const formData = new FormData();
     formData.append('file', file);
+
     try {
-      setUploadStatus({ message: 'Import en cours...', type: 'info' });
+      setUploadStatus({ message: 'Uploading file...', type: 'info' });
       const response = await axios.post('http://localhost:5178/api/upload-ir85', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+
       if (response.data.success) {
         setUploadStatus({ message: response.data.message, type: 'success' });
-        setTimeout(fetchData, 2000);
+        // Rafraîchir les données après l'upload
+        fetchData();
       } else {
-        throw new Error(response.data.error || 'Erreur lors de l\'import');
+        setUploadStatus({ message: response.data.message || 'Upload failed', type: 'error' });
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de l\'import du fichier', type: 'error' });
+      console.error('Error uploading file:', error);
+      setUploadStatus({ 
+        message: error.response?.data?.message || 'Error uploading file', 
+        type: 'error' 
+      });
     }
   };
 
   // Suppression IR85
   const handleDelete = async (id) => {
-    if (!window.confirm('Confirmer la suppression de cet opérateur IR85 ?')) return;
+    if (!window.confirm('Are you sure you want to delete this IR85 operator?')) return;
     try {
-      const response = await axios.delete(`http://localhost:5178/api/ir85/${id}`);
+      const response = await axios.delete(`http://localhost:5178/api/ir85/node/${id}`);
+      
       if (response.data.success) {
         setIr85Data(prev => prev.filter(row => row.id !== id));
-        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
+        setUploadStatus({ message: response.data.message, type: 'success' });
       } else {
-        setUploadStatus({ message: response.data.error || 'Erreur lors de la suppression', type: 'error' });
+        setUploadStatus({ message: response.data.message || 'Delete failed', type: 'error' });
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de la suppression', type: 'error' });
+      console.error('Error deleting node:', error);
+      setUploadStatus({ 
+        message: error.response?.data?.message || 'Error deleting node', 
+        type: 'error' 
+      });
     }
   };
 

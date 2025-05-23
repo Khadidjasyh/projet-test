@@ -170,17 +170,49 @@ Solutions :
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pays</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opérateur</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Services Manquants</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PLMN</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GSM</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAMEL</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GPRS</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">3G</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LTE</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commentaire</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.pays}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.operateur}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{row.services_manquants}</td>
-                </tr>
-              ))}
+              {data.map((row, idx) => {
+                // Génération automatique du commentaire
+                const services = ['gsm','camel','gprs','troisg','lte'];
+                const missing = [];
+                for (let s of services) {
+                  if (row[s] === undefined || row[s] === null || row[s] === '') missing.push(`${s.toUpperCase()} non disponible`);
+                }
+                let commentaireAuto = '';
+                if (missing.length === 0) {
+                  commentaireAuto = 'Tous les services sont disponibles';
+                } else {
+                  commentaireAuto = missing.join(', ');
+                }
+                let commentaire = row.commentaire;
+                if (commentaireAuto && commentaireAuto !== 'Tous les services sont disponibles') {
+                  commentaire = commentaire ? `${commentaire}, ${commentaireAuto}` : commentaireAuto;
+                } else if (commentaireAuto === 'Tous les services sont disponibles' && (!commentaire || commentaire === '' || commentaire === undefined || commentaire === null)) {
+                  commentaire = 'Tous les services sont disponibles';
+                }
+                return (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.pays}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.operateur}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.plmn}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.gsm !== undefined && row.gsm !== null && row.gsm !== '' ? row.gsm : 'Aucun'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.camel !== undefined && row.camel !== null && row.camel !== '' ? row.camel : 'Aucun'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.gprs !== undefined && row.gprs !== null && row.gprs !== '' ? row.gprs : 'Aucun'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.troisg !== undefined && row.troisg !== null && row.troisg !== '' ? row.troisg : 'Aucun'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.lte !== undefined && row.lte !== null && row.lte !== '' ? row.lte : 'Aucun'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{commentaire !== undefined && commentaire !== null && commentaire !== '' ? commentaire : 'Aucun'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

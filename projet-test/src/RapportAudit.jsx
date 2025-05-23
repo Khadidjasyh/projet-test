@@ -100,9 +100,9 @@ export default function RapportAudit() {
     const loadData = async () => {
       try {
         const [reportsData, testsData, userData] = await Promise.all([
-          AuditService.fetchAuditReports(),
-          AuditService.fetchTestResults(),
-          AuditService.getCurrentUser()
+          fetchReports(),
+          fetch('http://localhost:5178/tests').then(res => res.json()),
+          fetch('http://localhost:5178/current-user').then(res => res.json()),
         ]);
         setReports(reportsData);
         setTests(testsData);

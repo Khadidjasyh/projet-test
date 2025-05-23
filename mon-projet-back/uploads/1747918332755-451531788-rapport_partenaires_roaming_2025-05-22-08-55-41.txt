@@ -1,0 +1,503 @@
+Nom du test : Partenaires Roaming & Services
+Date : 5/22/2025, 9:55:41 AM
+Erreur globale : Aucun service manquant détecté.
+
+| Pays                                  | Opérateur                                           | Services Manquants |
+|---------------------------------------|-----------------------------------------------------|--------------------|
+| Afghanistan                           | Telecom Development Company Afghanistan Ltd.        |                    |
+| Afghanistan                           | Etisalat Afghanistan                                |                    |
+| Afghanistan                           | MTN                                                 |                    |
+| Afghanistan                           | Afghan Wireless Communication Company               |                    |
+| Albania                               | Albanian Mobile Communications                      |                    |
+| Albania                               | Vodafone                                            |                    |
+| Angola                                | Unitel S,A                                          |                    |
+| Angola                                | Movicel Angola                                      |                    |
+| Argentina                             | Telefonica                                          |                    |
+| Argentina                             | Claro                                               |                    |
+| Armenia                               | K Telecom CJSC                                      |                    |
+| Armenia                               | Armentel                                            |                    |
+| Aruba                                 | Digicel                                             |                    |
+| Australia                             | Telstra                                             |                    |
+| Australia                             | Vodafone Hutchison                                  |                    |
+| Austria                               | T-Mobile                                            |                    |
+| Austria                               | T-Mobile                                            |                    |
+| Austria                               | T-Mobile                                            |                    |
+| Azerbaijan                            | Azercell Telecom BM                                 |                    |
+| Azerbaijan                            | Backcell                                            |                    |
+| Azerbaijan                            | K Telecom CJSC  / Azerfon LLC                       |                    |
+| Bahamas                               | Be Aliv                                             |                    |
+| Bahrain                               | Bahrain Telecommunications Company                  |                    |
+| Bahrain                               | ZAIN BAHRAIN                                        |                    |
+| Bahrain                               | VIVA BAHRAIN                                        |                    |
+| Bangladesh                            | Robi Axiata                                         |                    |
+| Bangladesh                            | Airtel Bangladesh Ltd                               |                    |
+| Belarus                               | JLLC Mobile TeleSystems                             |                    |
+| Belarus                               | Velcom                                              |                    |
+| Belgium                               | Belgacom Mobile/Proximus                            |                    |
+| Belgium                               | BASE NV/SA                                          |                    |
+| Belgium                               | Mobistar S.A. / Orange                              |                    |
+| Belgium                               | Bics                                                |                    |
+| Belgium                               | Telenet BVBA, Belgium                               |                    |
+| Benin                                 | SPACETEL                                            |                    |
+| Birmanie                              | OOredOO Birmanie                                    |                    |
+| Bosnia and Herzegovina                | HT-ERONET                                           |                    |
+| Bosnia and Herzegovina                | RS Telecommunications JSC Banja Luka m:tel          |                    |
+| Bostwana                              | Mascom Bostwana                                     |                    |
+| Bostwana                              | Orange Bostwana                                     |                    |
+| Burkina Faso                          | telecell                                            |                    |
+| Burkina Faso                          | Orange                                              |                    |
+| Brazil                                | Vivo                                                |                    |
+| Brazil                                | Vivo                                                |                    |
+| Brazil                                | Vivo                                                |                    |
+| Brazil                                | Vivo                                                |                    |
+| Brazil                                | TIM Cellular                                        |                    |
+| Brazil                                | TIM Cellular                                        |                    |
+| Brazil                                | TIM Cellular                                        |                    |
+| Brazil                                | CLARO                                               |                    |
+| British Virgin Island                 | Digicel                                             |                    |
+| Brunei Darussalam                     | Datastream Technology Sdn Bhd                       |                    |
+| Brunei Darussalam                     | Progressif Cellular Sdn Bhd                         |                    |
+| Brunei Darussalam                     | Unified National Networks                           |                    |
+| Brunei Darussalam                     | Unified National Networks                           |                    |
+| Bulgaria                              | Bulgarian Telecommunications Com VIVAcom            |                    |
+| Bulgaria                              | Telenor Bulgaria Mobile EAD /telefonica             |                    |
+| Bulgaria                              | Mobitel BULGARIA                                    |                    |
+| Burundi                               | Smart Burundi                                       |                    |
+| Burundi                               | Lumitel Burundi                                     |                    |
+| Cambodia                              | Metfone                                             |                    |
+| Cambodia                              | Metfone                                             |                    |
+| Cambodia                              | Cambodia Shinawatra Co. Ltd                         |                    |
+| Cameroon                              | MTN                                                 |                    |
+| Cameroon                              | Orange                                              |                    |
+| Canada                                | Microcell Telecommunications Inc (Fido)             |                    |
+| Canada                                | Rogers Wireless Inc                                 |                    |
+| Canada                                | Bell Mobility INC                                   |                    |
+| Canada                                | Bell Mobility INC                                   |                    |
+| Canada                                | Sasktel                                             |                    |
+| Canada                                | videotron                                           |                    |
+| Canada                                | Telus Canada                                        |                    |
+| Canada                                | Telus Canada                                        |                    |
+| Cap Verde                             | Unitel+                                             |                    |
+| Center Africa                         | moov                                                |                    |
+| Center Africa                         | ORANGE                                              |                    |
+| China                                 | China Telecommunications                            |                    |
+| China                                 | China Unicom                                        |                    |
+| China                                 | China Unicom                                        |                    |
+| China                                 | Mobile                                              |                    |
+| China                                 | Mobile                                              |                    |
+| China                                 | Mobile                                              |                    |
+| China                                 | Mobile                                              |                    |
+| Chile                                 | Claro                                               |                    |
+| Chile                                 | Telefonica                                          |                    |
+| Chile                                 | Telefonica                                          |                    |
+| Colombia                              | Telefonika Colombia                                 |                    |
+| Congo                                 | Africell                                            |                    |
+| Congo                                 | Vodacom                                             |                    |
+| Congo                                 | Orange                                              |                    |
+| Congo                                 | Orange                                              |                    |
+| Congo Brazaville                      | Airtel /Warid                                       |                    |
+| Congo Brazaville                      | Airtel /Warid                                       |                    |
+| Comores                               | Telecom Comores                                     |                    |
+| Costa Rica                            | Ice                                                 |                    |
+| Costa Rica                            | Claro                                               |                    |
+| Coast Ivory                           | MTN                                                 |                    |
+| Coast Ivory                           | Orange                                              |                    |
+| Croatia                               | Tele 2 d.o.o                                        |                    |
+| Croatia                               | T-Mobile                                            |                    |
+| Cuba                                  | Cubacel                                             |                    |
+| Curacao Bonaire                       | Digicel                                             |                    |
+| Cyprus                                | MTN Cyprus Limited/ Salt                            |                    |
+| Cyprus                                | Primetel                                            |                    |
+| Cyprus                                | vodafone/Cytamobile                                 |                    |
+| Czech Republic                        | O2/EUROTEL PRAHA/Telefonica                         |                    |
+| Czech Republic                        | Vodafone                                            |                    |
+| Czech Republic                        | T-MOBILE                                            |                    |
+| Denmark                               | Sonofon Denmark  /Telenor A/S                       |                    |
+| Denmark                               | TDC Mobil                                           |                    |
+| Denmark                               | Telia Nattjanster Norden AB                         |                    |
+| Denmark                               | Telia Nattjanster Norden AB                         |                    |
+| Djibouti                              | Djibouti Telecom SA                                 |                    |
+| Dominican Republic                    | ALTICE Dominicana                                   |                    |
+| Ecuador                               | Telefonica                                          |                    |
+| Ecuador                               | Claro Ecuador                                       |                    |
+| Egypt                                 | Etisalat Misr                                       |                    |
+| Egypt                                 | Telecom                                             |                    |
+| Egypt                                 | Mobinil/ Orange                                     |                    |
+| Egypt                                 | Vodafone Egypt Telecommunications S.A.E             |                    |
+| Equatorial Guinea                     | Green Com S,A                                       |                    |
+| Equatorial Guinea                     | Getesa-Orange                                       |                    |
+| Estonia                               | Elisa Eesti AS                                      |                    |
+| Estonia                               | Tele 2 Eesti Aktsiaselts                            |                    |
+| Ethiopia                              | Ethiopian Telecommunications Corporation            |                    |
+| Ethiopia                              | Safaricom Limited Ethiopia                          |                    |
+| Faroe Islands                         | P/F Kall/Vodafone                                   |                    |
+| Finland                               | Ålands Telekommunikation Ab                         |                    |
+| Finland                               | Telenor Finland                                     |                    |
+| Finland                               | Elisa                                               |                    |
+| Finland                               | Elisa                                               |                    |
+| France                                | Orange                                              |                    |
+| France                                | SFR                                                 |                    |
+| France                                | SFR                                                 |                    |
+| France                                | Bouygues Telecom                                    |                    |
+| France                                | Orange M2M                                          |                    |
+| French Guiana                         | FREE CARAIBE                                        |                    |
+| France                                | Free Mobile                                         |                    |
+| Gabon                                 | Airtel Gabon                                        |                    |
+| Gambia                                | Gamcel                                              |                    |
+| Gambia                                | Africell                                            |                    |
+| Germany                               | Vodafone GmbH                                       |                    |
+| Germany                               | TELEKOM/ T-mobile                                   |                    |
+| Germany                               | Telekom M2M                                         |                    |
+| Germany                               | E-Plus Mobilfunk GmbH & Co. KG                      |                    |
+| Germany                               | Emnify                                              |                    |
+| Germany                               | Telefonica                                          |                    |
+| Ghana                                 | Ghana Telecommunications Compan/Vodafone            |                    |
+| Ghana                                 | Millicom Ghana Limited/Celtel Ghana                 |                    |
+| Ghana                                 | MTN Ghana                                           |                    |
+| Greece                                | COSMOTE / Mobile Telecommunications S.A.            |                    |
+| Greece                                | Vodafone                                            |                    |
+| Greece                                | WIND HELLAS                                         |                    |
+| Greece                                | WIND HELLAS                                         |                    |
+| Guadeloupe /Frensh Guiana /Martinique | Digicel                                             |                    |
+| Guatemala                             | Telecomunicaciones de Guatemala                     |                    |
+| Guinea                                | Orange                                              |                    |
+| Guinea                                | MTN                                                 |                    |
+| Guinea                                | intercell                                           |                    |
+| Guinea Bissau                         | Orange                                              |                    |
+| Guinea Bissau                         | MTN GUINEA BISSAU                                   |                    |
+| Guernsey                              | Sure limited Guernsey                               |                    |
+| Guyana                                | Digicel                                             |                    |
+| Haiti                                 | Digicel                                             |                    |
+| Haiti                                 | Natcom Viettel                                      |                    |
+| Honduras                              | claro                                               |                    |
+| Hong Kong                             | PCCW Mobile HK Limited                              |                    |
+| Hong Kong                             | PCCW Mobile HK Limited                              |                    |
+| Hong Kong                             | Hong Kong CSL Limited HKT                           |                    |
+| Hong Kong                             | Hutchison Telecom (HK) Ltd                          |                    |
+| Hong Kong                             | Hutchison Telecom (HK) Ltd 3 g  HKT                 |                    |
+| Hong Kong                             | China Mobile Peoples Telephone Co Ltd               |                    |
+| Hungary                               | T-MOBILE                                            |                    |
+| Hungary                               | Vodafone                                            |                    |
+| Iceland                               | Siminn hf                                           |                    |
+| Iceland                               | IMC Island ehf/ Viking                              |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | Bharti Airtel Limited                               |                    |
+| India                                 | AIRTEL,Bharti Cellular,Ltd,INDIA                    |                    |
+| India                                 | AIRTEL ,Bharti Cellular INDIA                       |                    |
+| India                                 | AIRTEL BhartiRajasthan                              |                    |
+| India                                 | AIRTEL ,Bharti Cellular INDIA                       |                    |
+| India                                 | AIRTEL ,Bharti Cellular INDIA                       |                    |
+| India                                 | AIRTEL Bharti Cellular                              |                    |
+| India                                 | AIRTEL ,Bharti Cellular INDIA                       |                    |
+| India                                 | Vodafone Essar East Limited                         |                    |
+| India                                 | Vodafone Essar Gujarat Limited                      |                    |
+| India                                 | Hutchison Max Telecom                               |                    |
+| India                                 | Vodafone Essar Mobile Services Limited              |                    |
+| India                                 | BPL INDIA                                           |                    |
+| India                                 | Reliance telecom Ltd                                |                    |
+| India                                 | Vodafone India                                      |                    |
+| Indonesia                             | PT Mobile/8 Telekom Tbk                             |                    |
+| Indonesia                             | Indosat                                             |                    |
+| Iran                                  | MCI                                                 |                    |
+| Iran                                  | Rightel                                             |                    |
+| Iran                                  | MTN Irancell                                        |                    |
+| Iraq                                  | Asia Cell Telecommunications Company Ltd            |                    |
+| Iraq                                  | IRAQNA IRAQ /Zain                                   |                    |
+| Iraq                                  | Zain Iraq                                           |                    |
+| Ireland                               | Vodafone                                            |                    |
+| Ireland                               | Meteor                                              |                    |
+| Italy                                 | Vodafone Omnitel N.V.                               |                    |
+| Italy                                 | Free Mobile Iliad                                   |                    |
+| Italy                                 | Telecom Italia SpA                                  |                    |
+| Jamaica                               | Digicel                                             |                    |
+| Japan                                 | NTT Docomo , inc                                    |                    |
+| Japan                                 | KNDDI                                               |                    |
+| Japan                                 | KNDDI                                               |                    |
+| Japan                                 | KNDDI                                               |                    |
+| Jersey                                | Telekom Jersey                                      |                    |
+| Jordan                                | Zain                                                |                    |
+| Jordan                                | Orange Jordan / Petra                               |                    |
+| Jordan                                | Umniah Mobile Company                               |                    |
+| Kazakhstan                            | Tele 2                                              |                    |
+| Kazakhstan                            | Kar / Tel LLP /Beeline                              |                    |
+| Kenya                                 | Safaricom Limited                                   |                    |
+| Kenya                                 | TELEKOM KENYA (orange)                              |                    |
+| Korea Republic of                     | SKT Korea                                           |                    |
+| Korea Republic of                     | KT Corporation                                      |                    |
+| Kuwait                                | Zain (MTC, Vodafone)                                |                    |
+| Kuwait                                | National Mobile Telecommunications Co. (Wataniya)   |                    |
+| Kuwait                                | VIVA ( KTC)                                         |                    |
+| Kyrgyz Republic                       | Bitel Ltd,GSM/900 Kyrgyz Republi                    |                    |
+| Kyrgyz Republic                       | NUR                                                 |                    |
+| Laos                                  | Unitel Laos / Viettel                               |                    |
+| Latvia                                | Latvian Mobile Telephone Co                         |                    |
+| Latvia                                | TELE 2 LATIVIA                                      |                    |
+| Lebanon                               | MIC 1                                               |                    |
+| Lebanon                               | MIC 2                                               |                    |
+| Lesotho                               | Vodacom                                             |                    |
+| Lesotho                               | Econet Telecom                                      |                    |
+| Liberia                               | MTN                                                 |                    |
+| Liberia                               | Comium Services BVI (Liberia)                       |                    |
+| Lithuania                             | Tele 2 Lithunia                                     |                    |
+| Luxembourg                            | P & T Luxembourg                                    |                    |
+| Luxembourg                            | MTX                                                 |                    |
+| Luxembourg                            | MTX                                                 |                    |
+| Luxembourg                            | Tango SA                                            |                    |
+| Luxembourg                            | VOX LUXEMBOURG /Orange                              |                    |
+| Lybia                                 | AL MADAR Telecomm Company                           |                    |
+| Macau                                 | CTM                                                 |                    |
+| Macedonia                             | One VIP                                             |                    |
+| Macedonia                             | COSMOFON AD Skopje/ One VIP                         |                    |
+| Madagascar                            | Orange Madagascar S.A.                              |                    |
+| Madagascar                            | Celtel Madagascar                                   |                    |
+| Malawi                                | Telekom Networks Malawi Ltd                         |                    |
+| Mali                                  | Malitel                                             |                    |
+| Mali                                  | Orange Mali SA                                      |                    |
+| Malta                                 | Vodafone M2M                                        |                    |
+| Malta                                 | Vodafone Maritime                                   |                    |
+| Malta                                 | Vodafone / Salt                                     |                    |
+| Malta                                 | Go Mobile                                           |                    |
+| Malaysia                              | U mobile Sdn Bhd Malaysia                           |                    |
+| Malaysia                              | Maxis Communications Berhad                         |                    |
+| Mauritania                            | MAURITEL MOBILES                                    |                    |
+| Mauritania                            | Chinguitel                                          |                    |
+| Mauritus                              | Orange                                              |                    |
+| Mexico                                | Telcel                                              |                    |
+| Mexico                                | AT&T Mexico                                         |                    |
+| Mexico                                | Telefónica México                                   |                    |
+| Moldova                               | Orange                                              |                    |
+| Moldova                               | Moldtelecom                                         |                    |
+| Monaco                                | Telecom                                             |                    |
+| Mongolia                              | Unitel S,A                                          |                    |
+| Montenegro                            | Telefonica                                          |                    |
+| Montenegro                            | m:tel                                               |                    |
+| Morocco                               | Maroc Telecom                                       |                    |
+| Morocco                               | Orange /meditel                                     |                    |
+| Morocco                               | Wana Morocco                                        |                    |
+| Mozambique                            | Vodacom                                             |                    |
+| Mozambique                            | Movitel Mozambiqe                                   |                    |
+| Mozambique                            | Viettel                                             |                    |
+| Namibia                               | MTC Namibia                                         |                    |
+| Netherlands                           | Orange Nederland N.V.                               |                    |
+| Netherlands                           | T-Mobile Netherlands                                |                    |
+| Netherlands                           | KPN Mobile The Netherlands                          |                    |
+| Netherlands                           | Vodafone Nertherlands                               |                    |
+| Netherlands                           | Telfort                                             |                    |
+| New Caledonia                         | OPT                                                 |                    |
+| New Zealand                           | 2 Degrees Mobile Ltd                                |                    |
+| New Zealand                           | Vodafone                                            |                    |
+| Nicaragua                             | Claro                                               |                    |
+| Nicaragua                             | Claro                                               |                    |
+| Niger                                 | Atlantique (Moov)                                   |                    |
+| Niger                                 | Orange                                              |                    |
+| Niger                                 | Airtel                                              |                    |
+| Nigeria                               | Celtel nigeria                                      |                    |
+| Nigeria                               | MTN Nigeria Communications Limited                  |                    |
+| Nigeria                               | Etisalat Nigeria                                    |                    |
+| Norway                                | Telenor                                             |                    |
+| Norway                                | Tele2 Group / lyse norway                           |                    |
+| Norway                                | Aeromobile                                          |                    |
+| Norway                                | MCP                                                 |                    |
+| Norway                                | TDC Norway                                          |                    |
+| Oman,Sultanateof                      | Omantel                                             |                    |
+| Oman,Sultanateof                      | Vodafone                                            |                    |
+| Oman,Sultanateof                      | Nawres/Ooredoo                                      |                    |
+| Pakistan                              | CMPak Limited /paktel                               |                    |
+| Pakistan                              | Telenor Pakistan (Pvt) Ltd.                         |                    |
+| Pakistan                              | Warid Telecom (PVT) Ltd                             |                    |
+| Palestinian Territory                 | Palestine Telecomm Co Ltd                           |                    |
+| Palestinian Territory                 | Wataniya  mobile                                    |                    |
+| Panama                                | Digicel                                             |                    |
+| Panama                                | Cable & Wireless Panama                             |                    |
+| PARAGUAY                              | AMX Paraguay S.A.                                   |                    |
+| Peru                                  | Viettel                                             |                    |
+| Peru                                  | Bitel Peru / Viettel                                |                    |
+| Peru                                  | Telefonica                                          |                    |
+| Peru                                  | Claro                                               |                    |
+| Philippines                           | Globe Telecom                                       |                    |
+| Philippines                           | SMART Communications, Inc.                          |                    |
+| Poland                                | Orange                                              |                    |
+| Poland                                | P4                                                  |                    |
+| Poland                                | T-Mobile                                            |                    |
+| polynesia                             | vini frensh polynesia                               |                    |
+| Puerto Rico                           | Liberty Mobile                                      |                    |
+| Puerto Rico                           | Claro                                               |                    |
+| Puerto Rico                           | AT & T                                              |                    |
+| Portugal                              | TMN   / MEO - Serviços de Comunicações e…           |                    |
+| Portugal                              | Vodafone                                            |                    |
+| Qatar                                 | ooredoo                                             |                    |
+| Qatar                                 | Vodafone                                            |                    |
+| Republic of Maldives                  | ooredoo Maldives                                    |                    |
+| Romania                               | Cosmote Romanian Mobile Telecommunications S.A.     |                    |
+| Romania                               | Orange                                              |                    |
+| Romania                               | Vodafone Romania S.A.                               |                    |
+| Russia                                | OJSC VimpelCom, KP IMPULS, Beeline                  |                    |
+| Russia                                | MegaFon, Open Joint Stock Company                   |                    |
+| Russia                                | MTS                                                 |                    |
+| Russia                                | tele 2                                              |                    |
+| Rwanda,Republicof                     | MTN RwandaCell                                      |                    |
+| Salvador/el salvador                  | Telemovil                                           |                    |
+| Salvador/el salvador                  | Digicel                                             |                    |
+| Salvador/el salvador                  | Claro                                               |                    |
+| Saudi Arabia                          | Saudi Telecom Company (STC)                         |                    |
+| Saudi Arabia                          | Mobily Lebara                                       |                    |
+| Saudi Arabia                          | STC Virgin MVNO                                     |                    |
+| Saudi Arabia                          | Etihad Etisalat Company                             |                    |
+| Saudi Arabia                          | ZAIN KSA                                            |                    |
+| Saudi Arabia                          | ZAIN KSA                                            |                    |
+| Senegal                               | Sonatel/ orange                                     |                    |
+| Senegal                               | TIGO / Free                                         |                    |
+| Serbia                                | Telefonika                                          |                    |
+| Serbia                                | Telekom Srbija                                      |                    |
+| seychelles                            | Airtel                                              |                    |
+| Sierra Leone                          | Africell                                            |                    |
+| Sierra Leone                          | QCell SL                                            |                    |
+| Singapore                             | MOBILE ONE SANGAPORE                                |                    |
+| Slovak republic                       | Orange Slovensko a.s.                               |                    |
+| Slovak republic                       | Slovak Telekom a.s                                  |                    |
+| Slovenia                              | T2                                                  |                    |
+| Slovenia                              | Telemach Slovenija                                  |                    |
+| Slovenia                              | Mobitel D.D.                                        |                    |
+| South Africa                          | Cell C (Pty) Ltd                                    |                    |
+| South Africa                          | MTN / Mobile Telephone Networks (Pty) Ltd.          |                    |
+| South Africa                          | Vodacom (Pty) Ltd                                   |                    |
+| South Sudan                           | MTN                                                 |                    |
+| Spain                                 | Vodafone Espana S.A.                                |                    |
+| Spain                                 | Vodafone Espana S.A.                                |                    |
+| Spain                                 | Orange Spain                                        |                    |
+| Spain                                 | Telefonica Moviles España S.A.                      |                    |
+| Spain                                 | Telefonica Moviles España S.A.                      |                    |
+| Sri Lanka                             | Mobitel (Pvt) Limited                               |                    |
+| Sri Lanka                             | Dialog Telekom Ltd                                  |                    |
+| Sri Lanka                             | Hutchison                                           |                    |
+| Sudan                                 | Zain , Mobitel                                      |                    |
+| Sudan                                 | MTN Sudan                                           |                    |
+| suriname                              | Digicel                                             |                    |
+| Swaziland                             | Swazi MTN Limited                                   |                    |
+| Sweden                                | Tele 2 AB                                           |                    |
+| Sweden                                | Tele 2 AB                                           |                    |
+| Sweden                                | TeliaSonera Mobile Networks AB Sweden               |                    |
+| Sweden                                | Telenor Nordic                                      |                    |
+| Sweden                                | Telenor Nordic                                      |                    |
+| Sweden                                | TDC Sweden                                          |                    |
+| Switzerland                           | Swisscom (Switzerland) Ltd                          |                    |
+| Switzerland                           | Sunrise Commincation                                |                    |
+| Switzerland                           | Orange Communications SA                            |                    |
+| Switzerland                           | OnAir  Switzerland                                  |                    |
+| Syria                                 | Syriatel Mobile Telecom SA                          |                    |
+| Syria                                 | MTN Syria (JSC)                                     |                    |
+| Taiwan                                | Star Telecom Taiwan (vibo)                          |                    |
+| Tajikistan/North                      | JV Somoncom                                         |                    |
+| Tajikistan/North                      | Indigo Tajikistan                                   |                    |
+| Tanzania                              | Celtel Tanzania Ltd.                                |                    |
+| Tanzania                              | Mic Tanzania                                        |                    |
+| Tanzania                              | Vodafone                                            |                    |
+| Tanzania                              | Halotel Tanzania                                    |                    |
+| Tanzania                              | Smart                                               |                    |
+| Tchad                                 | Airtel Tchad                                        |                    |
+| Tchad                                 | Mic Tchad                                           |                    |
+| Thailand                              | DTAC THAILAND                                       |                    |
+| Thailand                              | DTAC THAILAND                                       |                    |
+| Thailand                              | Advanced Wireless Network                           |                    |
+| Thailand                              | True Move (Real Future Thailand)                    |                    |
+| Thailand                              | True Move Company Ltd                               |                    |
+| Timor Leste                           | Telkomcel                                           |                    |
+| Timor Leste                           | Telemor                                             |                    |
+| Togo                                  | Togo Cellulaire                                     |                    |
+| Tunisia                               | Ooredoo Tunisia                                     |                    |
+| Tunisia                               | Tunisie Telecom                                     |                    |
+| Tunisia                               | Tunisie Telecom                                     |                    |
+| Tunisia                               | Orange Tunisie                                      |                    |
+| Tunisia                               | Lyca Mobile                                         |                    |
+| Turkey                                | TT Mobile ex Avea Iletisim Hizmetleri A.S.          |                    |
+| Turkey                                | TT Mobile ex Avea Iletisim Hizmetleri A.S.          |                    |
+| Turkey                                | Turkcell Iletisim Hizmetleri A.S.                   |                    |
+| Turkey                                | Vodafone Telekomunikasyon A.S                       |                    |
+| Turkmenistan                          | MTS-Turkmenistan                                    |                    |
+|                                       | TMCELL AMD Telecom                                  |                    |
+| Trindad & Tobago                      | Digicel                                             |                    |
+| Uganda                                | Celtel Uganda                                       |                    |
+| Uganda                                | Celtel Uganda                                       |                    |
+| Uganda                                | Smart Uganda                                        |                    |
+| Ukraine                               | Golden Telekom                                      |                    |
+| Ukraine                               | Astelit LLC/lifecell                                |                    |
+| Ukraine                               | Kyivstar GSM JSC                                    |                    |
+| Ukraine                               | Ukrainian Radio Systems                             |                    |
+| Ukraine                               | Ukrainian Mobile Communications                     |                    |
+| United Arab Emirates                  | Emirates Integrated Telecommunications Company PJSC |                    |
+| United Arab Emirates                  | Emirates Telecom Corp/ETISALAT                      |                    |
+| United Arab Emirates                  | THURAYA                                             |                    |
+| UnitedKingdom                         | T-Mobile (EE)                                       |                    |
+| UnitedKingdom                         | Vodafone                                            |                    |
+| UnitedKingdom                         | Truphone                                            |                    |
+| UnitedKingdom                         | Telefonica UK Limited / O2                          |                    |
+| United States of America              | Limitless Mobile                                    |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | T-Mobile  USA                                       |                    |
+| United States of America              | AT & T                                              |                    |
+| United States of America              | AT & T                                              |                    |
+| United States of America              | AT & T                                              |                    |
+| United States of America              | AT & T                                              |                    |
+| United States of America              | AT & T                                              |                    |
+| United States of America              | AT & T                                              |                    |
+| United States of America              | AT & T  Maritime Cruise                             |                    |
+| United States of America              | Cincinnati Bell Wireless LLC                        |                    |
+| United States of America              | Verizon                                             |                    |
+| United States of America              | Verizon                                             |                    |
+| Uruguay                               | AM Wireless Uruguay S.A. claro                      |                    |
+| Uruguay                               | Telefonica                                          |                    |
+| Uruguay                               | Antel Ancel                                         |                    |
+| Uzbekistan                            | COSCOM (TM UCell),                                  |                    |
+| Uzbekistan                            | Uzbektelecom                                        |                    |
+| Uzbekistan                            | UMS LLC                                             |                    |
+| Uzbekistan                            | Unitel                                              |                    |
+| venezuela                             | Digitel GSM                                         |                    |
+| Vietnam                               | Vietnamobile Communications Center                  |                    |
+| Vietnam                               | Mobifone                                            |                    |
+| Vietnam                               | Vinaphone                                           |                    |
+| Vietnam                               | Viettel                                             |                    |
+| Yemen                                 | Yemen Mobile Phone Company / Sabafon                |                    |
+| Yemen                                 | Spacetel                                            |                    |
+| Yemen                                 | Yemen Telecom                                       |                    |
+| Zambia                                | MTN                                                 |                    |
+| Zambia                                | Airtel                                              |                    |
+| Zimbabwe                              | Telcel                                              |                    |
+
+
+
+🔴 Services manquants détectés
+Cause probable :
+- Services non activés dans le système
+- Données manquantes dans la base
+- Configuration incomplète
+
+Solutions :
+- Vérifier l'activation des services dans le système
+- Compléter les données manquantes
+- Mettre à jour la configuration des services
+- Vérifier les accords de roaming avec les opérateurs

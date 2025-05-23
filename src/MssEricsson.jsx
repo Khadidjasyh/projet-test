@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BsTable, BsSearch, BsFilter, BsUpload, BsTrash } from 'react-icons/bs';
-import axios from 'axios';
 
 const MssEricsson = () => {
+  const fileInputRef = useRef(null);
+  const [uploadStatus, setUploadStatus] = useState({ message: '', type: '' });
   const [imsiData, setImsiData] = useState([]);
   const [bnumberData, setBnumberData] = useState([]);
   const [gtData, setGtData] = useState([]);
@@ -14,10 +15,6 @@ const MssEricsson = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNode, setSelectedNode] = useState('');
   const [uniqueNodes, setUniqueNodes] = useState([]);
-  const [uploadStatus, setUploadStatus] = useState({ message: '', type: '' });
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [nodeToDelete, setNodeToDelete] = useState('');
-  const fileInputRef = useRef(null);
 
   // Fetch all unique nodes once when component mounts
   useEffect(() => {
@@ -122,7 +119,11 @@ const MssEricsson = () => {
           case 'bnumber':
             return item.b_number?.toLowerCase().includes(searchLower);
           case 'gt':
-            return item.tt?.toLowerCase().includes(searchLower);
+            // Recherche sur GTRC, insensible à la casse et aux espaces
+            return (
+              item.gtrc &&
+              item.gtrc.toString().replace(/\s+/g, '').toLowerCase().includes(searchLower.replace(/\s+/g, ''))
+            );
           default:
             return true;
         }
@@ -154,85 +155,137 @@ const MssEricsson = () => {
 
     return (
       <div>
-        <div className="mb-4 flex items-center space-x-4">
-          <div className="flex-1 flex items-center space-x-4">
+
+
+        <>
+          <div className="mb-4 flex items-center space-x-4">
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder={`Search ${activeTab === 'imsi' ? 'IMSI Series' : activeTab === 'bnumber' ? 'B Number' : 'TT'}`}
+                placeholder={
+                  activeTab === 'gt'
+                    ? 'Rechercher GTRC'
+                    : activeTab === 'imsi'
+                    ? 'Rechercher IMSI Series'
+                    : activeTab === 'bnumber'
+                    ? 'Rechercher B Number'
+                    : ''
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
               />
               <BsSearch className="absolute left-3 top-3 text-gray-400" />
             </div>
-            <div className="relative">
-              <select
-                value={selectedNode}
-                onChange={(e) => setSelectedNode(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 appearance-none bg-white min-w-[200px]"
-              >
-                <option value="">All Nodes</option>
-                {uniqueNodes.map(node => (
-                  <option key={node} value={node}>{node}</option>
-                ))}
-              </select>
-              <BsFilter className="absolute left-3 top-3 text-gray-400" />
-            </div>
           </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-50">
-              <tr>
-                {columns.map((col, index) => (
-                  <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.map((row, rowIndex) => (
-                <tr key={rowIndex} className="hover:bg-gray-50">
-                  {columns.map((col, colIndex) => (
-                    <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {row[col.toLowerCase().replace(/ /g, '_')]}
-                    </td>
+          <div className="flex flex-wrap items-center justify-between mb-2">
+            <span className="text-gray-600 text-sm">
+              {filteredData.length} entr{filteredData.length > 1 ? 'ées' : 'ée'} affich{filteredData.length > 1 ? 'ées' : 'ée'}
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-100">
+                <tr>
+                  {columns.map((col, index) => (
+                    <th key={index} className="px-3 py-2 border-b font-semibold text-gray-700 text-center">{col}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="flex justify-between items-center mt-4 px-4">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-gray-600">Page {currentPage}</span>
-            <button
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              className="px-4 py-2 bg-gray-200 rounded"
-            >
-              Next
-            </button>
+              </thead>
+              <tbody>
+                {filteredData.map((row, rowIndex) => (
+                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-blue-50'}>
+                    {columns.map((col, colIndex) => (
+                      col === 'Actions' ? (
+                        <td key={colIndex} className="px-3 py-2 border-b text-center">
+                          <button
+                            className="text-red-600 hover:text-red-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-400"
+                            title="Supprimer"
+                            onClick={() => handleDelete(row, activeTab)}
+                          >
+                            <BsTrash />
+                          </button>
+                        </td>
+                      ) : (
+                        <td key={colIndex} className="px-3 py-2 border-b text-center truncate max-w-[160px]" title={row[col.toLowerCase().replace(/ /g, '_')] || ''}>
+                          {row[col.toLowerCase().replace(/ /g, '_')]}
+                        </td>
+                      )
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-between items-center mt-4 px-4">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 border rounded-md ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              >
+                Précédent
+              </button>
+              <span className="text-sm text-gray-700">Page {currentPage}</span>
+              <button
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50"
+              >
+                Suivant
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       </div>
     );
   };
 
   const columns = {
-    imsi: ['Node Name', 'IMSI Series', 'M Value', 'NA Value', 'ANRES Value', 'Created At'],
-    bnumber: ['Node Name', 'B Number', 'MISCELL', 'F/N', 'ROUTE', 'CHARGE', 'L', 'A Value', 'Created At'],
-    gt: ['Node Name', 'TT', 'NP', 'NA', 'NS', 'GTRC', 'Created At']
+    imsi: ['Node Name', 'IMSI Series', 'M Value', 'NA Value', 'ANRES Value', 'Created At', 'Actions'],
+    bnumber: ['Node Name', 'B Number', 'MISCELL', 'F/N', 'ROUTE', 'CHARGE', 'L', 'A Value', 'Created At', 'Actions'],
+    gt: ['Node Name', 'TT', 'NP', 'NA', 'NS', 'GTRC', 'Created At', 'Actions']
   };
 
-  // Import MSS Ericsson
+  // Suppression MSS Ericsson
+  const handleDelete = async (row, tab) => {
+    if (!window.confirm('Confirmer la suppression de cette ligne ?')) return;
+    let endpoint = '';
+    let key = '';
+    switch (tab) {
+      case 'imsi':
+        endpoint = 'mss/imsi-analysis';
+        key = 'imsi_series';
+        break;
+      case 'bnumber':
+        endpoint = 'mss/bnumber-analysis';
+        key = 'b_number';
+        break;
+      case 'gt':
+        endpoint = 'mss/gt-series';
+        key = 'tt';
+        break;
+      default:
+        return;
+    }
+    try {
+      const url = `http://localhost:5178/${endpoint}`;
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node_name: row.node_name, [key]: row[key] })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        setUploadStatus({ message: data.error || 'Erreur lors de la suppression', type: 'error' });
+      }
+    } catch (err) {
+      setUploadStatus({ message: err.message || 'Erreur lors de la suppression', type: 'error' });
+    }
+  };
+
+
+  // Upload MSS Ericsson
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -240,41 +293,28 @@ const MssEricsson = () => {
     const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
     if (!allowedExtensions.includes(ext)) {
       setUploadStatus({ message: 'Veuillez sélectionner un fichier XML, LOG ou TXT', type: 'error' });
+      fileInputRef.current.value = '';
       return;
     }
     const formData = new FormData();
     formData.append('file', file);
     try {
       setUploadStatus({ message: 'Import en cours...', type: 'info' });
-      const response = await axios.post('http://localhost:5178/api/upload-mss-ericsson', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const response = await fetch('http://localhost:5178/api/upload-mss-ericsson', {
+        method: 'POST',
+        body: formData
       });
-      if (response.data.success) {
-        setUploadStatus({ message: response.data.message, type: 'success' });
+      const data = await response.json();
+      if (data.success) {
+        setUploadStatus({ message: data.message || 'Fichier importé avec succès', type: 'success' });
         setTimeout(() => window.location.reload(), 2000);
       } else {
-        throw new Error(response.data.error || 'Erreur lors de l\'import');
+        throw new Error(data.error || 'Erreur lors de l\'import');
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de l\'import du fichier', type: 'error' });
-    }
-  };
-
-  // Suppression d'un node MSS
-  const handleDeleteNode = async () => {
-    if (!nodeToDelete) return;
-    try {
-      setUploadStatus({ message: 'Suppression en cours...', type: 'info' });
-      const response = await axios.delete(`http://localhost:5178/api/mss/node/${encodeURIComponent(nodeToDelete)}`);
-      if (response.data.success) {
-        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
-        setDeleteModalOpen(false);
-        setTimeout(() => window.location.reload(), 2000);
-      } else {
-        setUploadStatus({ message: response.data.error || 'Erreur lors de la suppression', type: 'error' });
-      }
-    } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de la suppression', type: 'error' });
+      setUploadStatus({ message: error.message || 'Erreur lors de l\'import du fichier', type: 'error' });
+    } finally {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -285,71 +325,65 @@ const MssEricsson = () => {
         <p className="text-gray-600">View and analyze MSS Ericsson log data</p>
       </div>
 
-      {/* Boutons Importer & Supprimer un nœud */}
-      <div className="mb-6 flex items-center space-x-4">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          accept=".xml,.log,.txt"
-          className="hidden"
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center"
-        >
-          <BsUpload className="mr-2" />
-          <span>Importer MSS Ericsson</span>
-        </button>
-        <button
-          onClick={() => setDeleteModalOpen(true)}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center"
-        >
-          <BsTrash className="mr-2" />
-          <span>Supprimer un nœud</span>
-        </button>
-      </div>
-
-      {/* Feedback utilisateur */}
-      {uploadStatus.message && (
-        <div className={`mb-4 p-3 rounded ${
-          uploadStatus.type === 'error' ? 'bg-red-100 text-red-700' :
-          uploadStatus.type === 'success' ? 'bg-green-100 text-green-700' :
-          'bg-blue-100 text-blue-700'
-        }`}>
-          {uploadStatus.message}
-        </div>
-      )}
-
-      {/* Modale de suppression de nœud */}
-      {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Supprimer un nœud MSS</h2>
+      {/* BARRE DE RECHERCHE, FILTRE NODE ET BOUTON IMPORT */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex-1 flex items-center gap-4">
+          <div className="relative w-full max-w-xs">
+            <input
+              type="text"
+              placeholder={
+                activeTab === 'gt'
+                  ? 'Rechercher GTRC'
+                  : activeTab === 'imsi'
+                  ? 'Rechercher IMSI Series'
+                  : activeTab === 'bnumber'
+                  ? 'Rechercher B Number'
+                  : ''
+              }
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+            />
+            <BsSearch className="absolute left-3 top-3 text-gray-400" />
+          </div>
+          <div className="relative w-full max-w-xs">
             <select
-              value={nodeToDelete}
-              onChange={e => setNodeToDelete(e.target.value)}
-              className="w-full mb-4 p-2 border rounded"
+              value={selectedNode}
+              onChange={e => setSelectedNode(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 appearance-none bg-white"
             >
-              <option value="">Sélectionner un nœud...</option>
+              <option value="">Tous les nodes</option>
               {uniqueNodes.map(node => (
                 <option key={node} value={node}>{node}</option>
               ))}
             </select>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 bg-gray-200 rounded"
-              >Annuler</button>
-              <button
-                onClick={handleDeleteNode}
-                disabled={!nodeToDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
-              >Supprimer</button>
-            </div>
+            <BsFilter className="absolute left-3 top-3 text-gray-400" />
           </div>
+          <label className="flex items-center space-x-2 cursor-pointer">
+            <input
+              type="file"
+              accept=".xml,.log,.txt"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <span className="px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 flex items-center space-x-2">
+              <BsUpload />
+              <span>Importer</span>
+            </span>
+          </label>
         </div>
-      )}
+        {uploadStatus.message && (
+          <div className={`text-sm rounded px-3 py-2 ${
+            uploadStatus.type === 'success' ? 'bg-green-100 text-green-800' :
+            uploadStatus.type === 'error' ? 'bg-red-100 text-red-800' :
+            'bg-blue-100 text-blue-800'
+          }`}>
+            {uploadStatus.message}
+          </div>
+        )}
+      </div>
+
 
       <div className="mb-6">
         <div className="flex space-x-4">

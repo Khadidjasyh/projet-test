@@ -32,6 +32,7 @@ import HlrPage from "./HlrPage";
 import IR85Page from './IR85Page';
 import Profile from './Profile';
 import AdminPanel from './AdminPanel';
+import PartenairesRoamingResults from './pages/PartenairesRoamingResults';
 
 // This component will contain the main layout and logic that needs access to useNavigate
 function AppLayout() {
@@ -205,6 +206,7 @@ function AppLayout() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin-panel" element={<AdminPanel />} />
               <Route path="/mme-imsi" element={<MmeImsi />} />
+              <Route path="/partenaires-roaming-results" element={<PartenairesRoamingResults />} />
               <Route path="*" element={<Navigate to="/" />} />
             </>
           )}

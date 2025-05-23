@@ -24,7 +24,8 @@ const HlrPage = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setHlrData(data);
+      setHlrData(Array.isArray(data) ? data : []);
+    
     } catch (err) {
       setError(err.message || 'Failed to fetch HLR data');
     } finally {

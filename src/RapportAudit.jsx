@@ -33,6 +33,7 @@ import {
   TrashIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 // Service simulé pour les données d'audit
 const AuditService = {
@@ -159,6 +160,14 @@ const RapportAudit = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [tests, setTests] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedReportForAssign, setSelectedReportForAssign] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [assignForm, setAssignForm] = useState({
+    userIds: [],
+    severite: 'normal',
+    date_limite: ''
+  });
 
   useEffect(() => {
     const checkUserAccess = async () => {
@@ -206,16 +215,19 @@ const RapportAudit = () => {
     if (isAdmin) {
     const loadData = async () => {
       try {
-          const [reportsData, testsData] = await Promise.all([
-          fetchReports(),
-          fetch('http://localhost:5178/tests').then(res => res.json()),
+        const [reportsData, testsData, userData, usersData] = await Promise.all([
+          fetchReports(), 
+          AuditService.fetchTestResults(),
+          AuditService.getCurrentUser(),
+          fetch('http://localhost:5178/users').then(res => res.json())
         ]);
         setReports(reportsData);
         setTests(testsData);
-        setLoading(false);
+        setCurrentUser(userData);
+        setUsers(usersData);
       } catch (error) {
-        console.error("Erreur de chargement des données initiales:", error);
-        setError("Erreur lors du chargement des données.");
+        console.error("Erreur de chargement des données:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -587,6 +599,48 @@ ${solutions.map(s => `- ${s}`).join('\n')}
     }
   };
 
+  const handleAssignUser = (report) => {
+    setSelectedReportForAssign(report);
+    setShowAssignModal(true);
+  };
+
+  const handleSubmitAssign = async () => {
+    try {
+      if (!assignForm.userIds.length) {
+        toast.error('Veuillez sélectionner au moins un utilisateur');
+        return;
+      }
+      if (!assignForm.date_limite) {
+        toast.error('Veuillez sélectionner une date limite');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5178/audit-reports/${selectedReportForAssign.id}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(assignForm),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'assignation');
+      }
+
+      toast.success('Utilisateurs assignés avec succès');
+      setShowAssignModal(false);
+      setSelectedReportForAssign(null);
+      setAssignForm({
+        userIds: [],
+        severite: 'normal',
+        date_limite: ''
+      });
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de l\'assignation des utilisateurs');
+    }
+  };
+
   if (userLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -803,21 +857,27 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                      <button
+                        <button
                           onClick={(e) => { e.stopPropagation(); handleDownload(report.id); }}
                           className="text-blue-600 hover:text-blue-900"
                           title="Télécharger"
-                      >
+                        >
                           <FaDownload />
-                      </button>
-                      <button
+                        </button>
+                        <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(report.id); }}
                           className="text-red-600 hover:text-red-900"
                           title="Supprimer"
-                      >
+                        >
                           <FaTrash />
-                      </button>
-                    </div>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleAssignUser(report); }}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          Assigner utilisateur
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {expandedReportId === report.id && (
@@ -1083,6 +1143,88 @@ ${solutions.map(s => `- ${s}`).join('\n')}
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
                   Créer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal d'assignation */}
+        {showAssignModal && selectedReportForAssign && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Assigner des utilisateurs</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Utilisateurs
+                  </label>
+                  <select
+                    multiple
+                    className="w-full border rounded-md p-2"
+                    value={assignForm.userIds}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                      setAssignForm(prev => ({ ...prev, userIds: selectedOptions }));
+                    }}
+                  >
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} ({user.role})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs utilisateurs
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sévérité
+                  </label>
+                  <select
+                    className="w-full border rounded-md p-2"
+                    value={assignForm.severite}
+                    onChange={(e) => setAssignForm(prev => ({ ...prev, severite: e.target.value }))}
+                  >
+                    <option value="critique">Critique</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="normal">Normal</option>
+                    <option value="info">Info</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date limite
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full border rounded-md p-2"
+                    value={assignForm.date_limite}
+                    onChange={(e) => setAssignForm(prev => ({ ...prev, date_limite: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setSelectedReportForAssign(null);
+                    setAssignForm({
+                      userIds: [],
+                      severite: 'normal',
+                      date_limite: ''
+                    });
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSubmitAssign}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Assigner
                 </button>
               </div>
             </div>

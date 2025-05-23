@@ -57,73 +57,55 @@ const IR21Page = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith('.xml')) {
-      setUploadStatus({
-        message: 'Veuillez sélectionner un fichier XML',
-        type: 'error'
-      });
-      return;
-    }
-
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      setUploadStatus({
-        message: 'Import en cours...',
-        type: 'info'
-      });
-
+      setUploadStatus({ message: 'Uploading file...', type: 'info' });
       const response = await axios.post('http://localhost:5178/api/upload-ir21', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (response.data.success) {
-        setUploadStatus({
-          message: response.data.message,
-          type: 'success'
-        });
-
-        // Attendre un peu pour laisser le temps au script d'import de finir
-        setTimeout(async () => {
-          try {
-            const dataResponse = await fetch('http://localhost:5178/ir21');
-            if (!dataResponse.ok) {
-              throw new Error('Erreur lors du rafraîchissement des données');
-            }
-            const result = await dataResponse.json();
-            setIr21Data(result.data || result);
-          } catch (err) {
-            console.error('Erreur lors du rafraîchissement:', err);
-          }
-        }, 2000); // Attendre 2 secondes
+        setUploadStatus({ message: response.data.message, type: 'success' });
+        // Rafraîchir les données après l'upload
+        const dataResponse = await fetch('http://localhost:5178/ir21');
+        if (!dataResponse.ok) {
+          throw new Error('Error refreshing data');
+        }
+        const result = await dataResponse.json();
+        setIr21Data(result.data || result);
       } else {
-        throw new Error(response.data.error || 'Erreur lors de l\'import');
+        setUploadStatus({ message: response.data.message || 'Upload failed', type: 'error' });
       }
     } catch (error) {
-      console.error('Erreur upload:', error);
-      setUploadStatus({
-        message: error.response?.data?.error || error.message || 'Erreur lors de l\'import du fichier',
-        type: 'error'
+      console.error('Error uploading file:', error);
+      setUploadStatus({ 
+        message: error.response?.data?.message || 'Error uploading file', 
+        type: 'error' 
       });
     }
   };
 
-  // Fonction de suppression
   const handleDelete = async (id) => {
-    if (!window.confirm('Confirmer la suppression de cet opérateur IR21 ?')) return;
+    if (!window.confirm('Are you sure you want to delete this IR21 operator?')) return;
     try {
-      const response = await axios.delete(`http://localhost:5178/api/ir21/${id}`);
+      const response = await axios.delete(`http://localhost:5178/api/ir21/node/${id}`);
+      
       if (response.data.success) {
         setIr21Data(prev => prev.filter(row => row.id !== id));
-        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
+        setUploadStatus({ message: response.data.message, type: 'success' });
       } else {
-        setUploadStatus({ message: response.data.error || 'Erreur lors de la suppression', type: 'error' });
+        setUploadStatus({ message: response.data.message || 'Delete failed', type: 'error' });
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de la suppression', type: 'error' });
+      console.error('Error deleting node:', error);
+      setUploadStatus({ 
+        message: error.response?.data?.message || 'Error deleting node', 
+        type: 'error' 
+      });
     }
   };
 
@@ -193,10 +175,9 @@ const IR21Page = () => {
                 <th className="px-6 py-3 border-b">TADIG</th>
                 <th className="px-6 py-3 border-b">Pays</th>
                 <th className="px-6 py-3 border-b">E212</th>
-                <th className="px-6 py-3 border-b">E214</th>
+                <th className="px-6 py-3 border-b">E.214</th>
                 <th className="px-6 py-3 border-b">APN</th>
                 <th className="px-6 py-3 border-b">IP Address</th>
-                <th className="px-6 py-3 border-b">Date d'ajout</th>
                 <th className="px-6 py-3 border-b text-center">Action</th>
               </tr>
             </thead>
@@ -213,11 +194,6 @@ const IR21Page = () => {
                     <div className="max-w-xs overflow-auto whitespace-normal">
                       {row.ipaddress}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 border-b">
-                    {row.date && !isNaN(new Date(row.date).getTime())
-                      ? new Date(row.date).toLocaleDateString('fr-FR')
-                      : (row.date || '-')}
                   </td>
                   <td className="px-6 py-4 border-b text-center">
                     <button

@@ -47,6 +47,7 @@ async function createTable() {
       imsi_prefix VARCHAR(10),
       \`3g\` VARCHAR(255) NOT NULL,
       hss_esm VARCHAR(255) NOT NULL,
+      node_name VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -84,13 +85,15 @@ const importHSSData = async () => {
         const filePath = path.join(hssFolder, file);
         const content = await fs.readFile(filePath, 'utf-8');
         const entries = parseHSSData(content);
+        // Extraire le node_name depuis le nom du fichier (sans extension)
+        const node_name = path.basename(file, path.extname(file));
 
         for (const { epc, imsi_prefix, '3g': g3, hss_esm } of entries) {
           await connection.execute(
             `INSERT INTO hss_data 
-             (epc, imsi_prefix, \`3g\`, hss_esm) 
-             VALUES (?, ?, ?, ?)`,
-            [epc, imsi_prefix, g3, hss_esm]
+             (epc, imsi_prefix, \`3g\`, hss_esm, node_name) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [epc, imsi_prefix, g3, hss_esm, node_name]
           );
         }
         console.log(`✅ ${entries.length} entrées importées depuis ${file}`);

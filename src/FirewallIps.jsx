@@ -37,32 +37,27 @@ const FirewallIPs = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith('.txt')) {
-      setUploadStatus({ message: 'Please select a .txt file', type: 'error' });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      return;
-    }
-
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      setUploadStatus({ message: 'Uploading...', type: 'info' });
+      setUploadStatus({ message: 'Uploading file...', type: 'info' });
       const response = await axios.post('http://localhost:5178/api/upload-firewall', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (response.data.success) {
         setUploadStatus({ message: response.data.message, type: 'success' });
-        fetchData(); // Refresh the data after successful upload
+        fetchData();
       } else {
-        throw new Error(response.data.error || 'Upload failed');
+        setUploadStatus({ message: response.data.message || 'Upload failed', type: 'error' });
       }
     } catch (error) {
+      console.error('Error uploading file:', error);
       setUploadStatus({ 
-        message: error.response?.data?.error || error.message || 'Error uploading file', 
+        message: error.response?.data?.message || 'Error uploading file', 
         type: 'error' 
       });
     } finally {
@@ -74,14 +69,18 @@ const FirewallIPs = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(`http://localhost:5178/api/firewall-ips/${id}`);
+      const response = await axios.delete(`http://localhost:5178/api/firewall/entry/${id}`);
+      
       if (response.data.success) {
-        setUploadStatus({ message: 'Entry deleted successfully', type: 'success' });
-        fetchData(); // Refresh the data
+        setUploadStatus({ message: response.data.message, type: 'success' });
+        fetchData();
+      } else {
+        setUploadStatus({ message: response.data.message || 'Delete failed', type: 'error' });
       }
     } catch (error) {
+      console.error('Error deleting entry:', error);
       setUploadStatus({ 
-        message: error.response?.data?.error || 'Error deleting entry', 
+        message: error.response?.data?.message || 'Error deleting entry', 
         type: 'error' 
       });
     }

@@ -59,28 +59,31 @@ const HssPage = () => {
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    const allowedExtensions = ['.log', '.txt'];
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
-    if (!allowedExtensions.includes(ext)) {
-      setUploadStatus({ message: 'Veuillez sélectionner un fichier LOG ou TXT', type: 'error' });
-      return;
-    }
+
     const formData = new FormData();
     formData.append('file', file);
+
     try {
-      setUploadStatus({ message: 'Import en cours...', type: 'info' });
+      setUploadStatus({ message: 'Uploading file...', type: 'info' });
       const response = await axios.post('http://localhost:5178/api/upload-hss', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+
       if (response.data.success) {
         setUploadStatus({ message: response.data.message, type: 'success' });
-        // Rafraîchir les données après un délai
-        setTimeout(fetchData, 2000);
+        // Rafraîchir les données après l'upload
+        fetchData();
       } else {
-        throw new Error(response.data.error || 'Erreur lors de l\'import');
+        setUploadStatus({ message: response.data.message || 'Upload failed', type: 'error' });
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de l\'import du fichier', type: 'error' });
+      console.error('Error uploading file:', error);
+      setUploadStatus({ 
+        message: error.response?.data?.message || 'Error uploading file', 
+        type: 'error' 
+      });
     }
   };
 
@@ -95,18 +98,24 @@ const HssPage = () => {
 
   const handleDeleteNode = async () => {
     if (!nodeToDelete) return;
+
     try {
-      setUploadStatus({ message: 'Suppression en cours...', type: 'info' });
-      const response = await axios.delete(`http://localhost:5178/api/hss/node/${encodeURIComponent(nodeToDelete)}`);
+      const response = await axios.delete(`http://localhost:5178/api/hss/node/${nodeToDelete}`);
+      
       if (response.data.success) {
-        setUploadStatus({ message: 'Suppression réussie', type: 'success' });
+        setUploadStatus({ message: response.data.message, type: 'success' });
+        // Rafraîchir les données après la suppression
+        fetchData();
         setDeleteModalOpen(false);
-        setTimeout(() => window.location.reload(), 2000);
       } else {
-        setUploadStatus({ message: response.data.error || 'Erreur lors de la suppression', type: 'error' });
+        setUploadStatus({ message: response.data.message || 'Delete failed', type: 'error' });
       }
     } catch (error) {
-      setUploadStatus({ message: error.response?.data?.error || error.message || 'Erreur lors de la suppression', type: 'error' });
+      console.error('Error deleting node:', error);
+      setUploadStatus({ 
+        message: error.response?.data?.message || 'Error deleting node', 
+        type: 'error' 
+      });
     }
   };
 

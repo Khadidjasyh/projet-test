@@ -42,35 +42,28 @@ const MmeImsi = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (!file.name.toLowerCase().endsWith('.txt')) {
-      setUploadStatus({ message: 'Veuillez sélectionner un fichier .txt', type: 'error' });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      return;
-    }
-
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      setUploadStatus({ message: 'Importation en cours...', type: 'info' });
+      setUploadStatus({ message: 'Uploading file...', type: 'info' });
       const response = await axios.post('http://localhost:5178/api/upload-mme', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (response.data.success) {
-        setUploadStatus({ 
-          message: `Importation réussie : ${response.data.details.successCount} entrées traitées`, 
-          type: 'success' 
-        });
-        fetchData(); // Rafraîchir les données après l'import
+        setUploadStatus({ message: response.data.message, type: 'success' });
+        // Rafraîchir les données après l'upload
+        fetchData();
       } else {
-        throw new Error(response.data.error || 'Échec de l\'importation');
+        setUploadStatus({ message: response.data.message || 'Upload failed', type: 'error' });
       }
     } catch (error) {
+      console.error('Error uploading file:', error);
       setUploadStatus({ 
-        message: error.response?.data?.error || error.message || 'Erreur lors de l\'importation', 
+        message: error.response?.data?.message || 'Error uploading file', 
         type: 'error' 
       });
     } finally {
@@ -83,13 +76,18 @@ const MmeImsi = () => {
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`http://localhost:5178/api/mme-imsi/${id}`);
+      
       if (response.data.success) {
-        setUploadStatus({ message: 'Entrée supprimée avec succès', type: 'success' });
-        fetchData(); // Rafraîchir les données
+        setUploadStatus({ message: response.data.message, type: 'success' });
+        // Rafraîchir les données après la suppression
+        fetchData();
+      } else {
+        setUploadStatus({ message: response.data.message || 'Delete failed', type: 'error' });
       }
     } catch (error) {
+      console.error('Error deleting node:', error);
       setUploadStatus({ 
-        message: error.response?.data?.error || 'Erreur lors de la suppression', 
+        message: error.response?.data?.message || 'Error deleting node', 
         type: 'error' 
       });
     }
