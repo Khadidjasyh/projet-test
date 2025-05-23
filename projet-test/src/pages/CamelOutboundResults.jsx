@@ -1,156 +1,145 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FaArrowLeft, FaCheckCircle, FaDownload, FaPrint } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 
 const CamelOutboundResults = () => {
-  const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const results = {
-    headers: [
-      "Opérateur",
-      "Comparaison des données (np, tt, na) avec IR.21 et E.214",
-      "Vérification des listes VPLMN GT sur HPLMN HLR/HSS",
-      "Commentaires"
-    ],
-    data: [
-      {
-        operateur: "Mobilis",
-        comparaisonDonnees: "✅ Réussi",
-        verificationListes: "✅ Réussi",
-        commentaires: "Les données np, tt, na du fichier audit CS.rar sont conformes aux informations dans IR.21 et E.214. Les listes VPLMN GT sont bien configurées dans HLR/HSS."
-      },
-      {
-        operateur: "Orange",
-        comparaisonDonnees: "✅ Réussi",
-        verificationListes: "✅ Réussi",
-        commentaires: "Aucune différence observée entre les données dans le fichier d'audit et celles dans IR.21 et E.214. Configuration VPLMN GT correcte dans HLR/HSS."
-      },
-      {
-        operateur: "Djezzy",
-        comparaisonDonnees: "✅ Réussi",
-        verificationListes: "✅ Réussi",
-        commentaires: "Les données sont validées, et aucune anomalie n'a été détectée lors de la comparaison avec IR.21 et E.214. Les listes VPLMN GT sont présentes et bien configurées."
-      },
-      {
-        operateur: "Ooredoo",
-        comparaisonDonnees: "✅ Réussi",
-        verificationListes: "✅ Réussi",
-        commentaires: "Les comparaisons avec le fichier audit CS.rar, IR.21, et E.214 ont été validées. Listes VPLMN GT bien intégrées dans HLR/HSS pour un routage fiable."
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5178/camel-outbound-analyse');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        setData(result);
+        setError(null);
+      } catch (err) {
+        setError(`Erreur lors du chargement des résultats: ${err.message}`);
+        setData([]);
+      } finally {
+        setLoading(false);
       }
-    ]
-  };
+    };
+    fetchData();
+  }, []);
 
-  const handleBack = () => {
-    navigate('/roaming-tests');
-  };
+  const filteredData = data.filter(
+    row =>
+      (row.operateur && row.operateur.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (row.pays && row.pays.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (row["Valeur IR (IR.21/IR.85)"] && row["Valeur IR (IR.21/IR.85)"].toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (row["Valeur observée (anres_value)"] && row["Valeur observée (anres_value)"].toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (row["Résultat du test CAMEL Outbound"] && row["Résultat du test CAMEL Outbound"].toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (row.Commentaire && row.Commentaire.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const handleDownload = () => {
-    // Logique pour télécharger le rapport
-    console.log('Téléchargement du rapport...');
-  };
+  // Génération du rapport TXT
+  const handleExportTXT = () => {
+    if (filteredData.length === 0) return;
 
-  const handlePrint = () => {
-    window.print();
+    let txtContent = 'Rapport Analyse CAMEL Outbound\n\n';
+
+    filteredData.forEach(row => {
+      txtContent += `Opérateur : ${row.operateur}\n`;
+      txtContent += `Pays      : ${row.pays}\n`;
+      txtContent += `Valeur CAMEL Outbound (IR.21/IR.85) : ${row["Valeur IR (IR.21/IR.85)"]}\n`;
+      txtContent += `Valeur observée ANRES : ${row["Valeur observée (anres_value)"]}\n`;
+      txtContent += `Résultat du test CAMEL Outbound : ${row["Résultat du test CAMEL Outbound"] === "Réussi" ? "✅" : "❌"}\n`;
+      txtContent += `Commentaire : ${row.Commentaire}\n`;
+      txtContent += '\n----------------------------------------\n\n';
+    });
+
+    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'rapport_camel_outbound_analyse.txt');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="p-6 max-w-7xl mx-auto"
-    >
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={handleBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <FaArrowLeft />
-            <span>Retour aux tests</span>
-          </button>
-          <div className="flex space-x-4">
-            <button
-              onClick={handleDownload}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200"
-            >
-              <FaDownload />
-              <span>Télécharger</span>
-            </button>
-            <button
-              onClick={handlePrint}
-              className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-all duration-200"
-            >
-              <FaPrint />
-              <span>Imprimer</span>
-            </button>
-          </div>
+    <div className="p-8 max-w-6xl mx-auto">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Analyse CAMEL Outbound</h1>
+          <p className="text-gray-600">Comparaison des valeurs IR.21/IR.85 et observées (anres_value)</p>
         </div>
-
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Résultats des Tests CAMEL Phase Service Outbound Roaming</h1>
-        <p className="text-gray-600">Analyse de la comparaison des données avec IR.21, E.214 et vérification des listes VPLMN GT</p>
+        <button
+          onClick={handleExportTXT}
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow transition"
+        >
+          Générer rapport
+        </button>
       </div>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Total des opérateurs</div>
-          <div className="text-2xl font-bold text-gray-800">{results.data.length}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Tests réussis</div>
-          <div className="text-2xl font-bold text-green-600">
-            {results.data.filter(op => 
-              op.comparaisonDonnees.includes("Réussi") &&
-              op.verificationListes.includes("Réussi")
-            ).length}
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Taux de réussite</div>
-          <div className="text-2xl font-bold text-blue-600">100%</div>
-        </div>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center gap-4">
+        <input
+          type="text"
+          placeholder="Rechercher par opérateur, pays, valeur IR, observée ou commentaire"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-700 bg-white"
+        />
       </div>
 
-      {/* Tableau de résultats */}
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {results.headers.map((header, idx) => (
-                <th 
-                  key={idx} 
-                  scope="col" 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {results.data.map((row, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.operateur}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.comparaisonDonnees}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.verificationListes}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{row.commentaires}</td>
+      {loading && (
+        <div className="flex justify-center items-center h-32">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 mb-4 rounded">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && filteredData.length === 0 && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded">
+          <p>Aucun résultat trouvé</p>
+        </div>
+      )}
+
+      {!loading && filteredData.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-gray-100">
+              <tr>
+                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Opérateur</th>
+                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Pays</th>
+                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Valeur CAMEL Outbound (IR.21/IR.85)</th>
+                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Valeur observée ANRES</th>
+                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Résultat du test</th>
+                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Commentaire</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Conclusion */}
-      <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 mb-8">
-        <h2 className="text-xl font-bold text-blue-800 mb-2">Conclusion</h2>
-        <p className="text-blue-700">
-          Les tests CAMEL Phase Service pour l'Outbound Roaming ont été réalisés avec succès pour tous les opérateurs testés.
-          Toutes les données sont conformes aux standards IR.21 et E.214, et les listes VPLMN GT sont correctement configurées dans HLR/HSS.
-          Aucune anomalie n'a été détectée, permettant un service roaming fiable pour les utilisateurs voyageant à l'étranger.
-        </p>
-      </div>
-    </motion.div>
+            </thead>
+            <tbody>
+              {filteredData.map((row, idx) => (
+                <tr key={row.operateur + row.pays + idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-3 py-2 border-b font-medium">{row.operateur}</td>
+                  <td className="px-3 py-2 border-b">{row.pays}</td>
+                  <td className="px-3 py-2 border-b text-center">{row["Valeur IR (IR.21/IR.85)"]}</td>
+                  <td className="px-3 py-2 border-b text-center">{row["Valeur observée (anres_value)"]}</td>
+                  <td className="px-3 py-2 border-b text-center">
+                    {row["Résultat du test CAMEL Outbound"] === "Réussi" ? "✅" : "❌"}
+                  </td>
+                  <td className="px-3 py-2 border-b">{row.Commentaire}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex justify-between items-center mt-4 px-4">
+            <span className="text-sm text-gray-700">Total: {filteredData.length} résultat(s)</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

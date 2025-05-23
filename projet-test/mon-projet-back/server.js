@@ -487,6 +487,62 @@ app.get('/inbound-roaming-test', (req, res) => {
 });
 
 
+app.get('/camel-outbound-analyse', (req, res) => {
+  const query = `
+    SELECT 
+      sg.pays,
+      sg.operateur,
+      COALESCE(ir21.camel_outbound, ir85.camel_outbound) AS 'Valeur IR (IR.21/IR.85)',
+      mi.anres_value AS 'Valeur observée (anres_value)',
+
+      CASE
+        WHEN (
+          (ir21.camel_outbound LIKE '%CAPv1%' OR ir85.camel_outbound LIKE '%CAPv1%') AND mi.anres_value LIKE '%CAMEL-1%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv2%' OR ir85.camel_outbound LIKE '%CAPv2%') AND mi.anres_value LIKE '%CAMEL-2%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv3%' OR ir85.camel_outbound LIKE '%CAPv3%') AND mi.anres_value LIKE '%CAMEL-3%'
+        )
+        THEN 'Réussi'
+        ELSE 'Échoué'
+      END AS 'Résultat du test CAMEL Outbound',
+
+      CASE
+        WHEN (
+          (ir21.camel_outbound LIKE '%CAPv1%' OR ir85.camel_outbound LIKE '%CAPv1%') AND mi.anres_value NOT LIKE '%CAMEL-1%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv2%' OR ir85.camel_outbound LIKE '%CAPv2%') AND mi.anres_value NOT LIKE '%CAMEL-2%'
+        ) OR (
+          (ir21.camel_outbound LIKE '%CAPv3%' OR ir85.camel_outbound LIKE '%CAPv3%') AND mi.anres_value NOT LIKE '%CAMEL-3%'
+        )
+        THEN CONCAT('Mismatch : IR = ', COALESCE(ir21.camel_outbound, ir85.camel_outbound), ', Observé = ', mi.anres_value)
+        ELSE 'Conforme - Les valeurs CAMEL Outbound sont cohérentes'
+      END AS Commentaire
+
+    FROM
+      situation_globales sg
+    LEFT JOIN
+      roaming_partners rp ON sg.operateur = rp.operateur
+    LEFT JOIN
+      ir21_data ir21 ON sg.plmn = ir21.tadig
+    LEFT JOIN
+      ir85_data ir85 ON sg.plmn = ir85.tadig
+    LEFT JOIN
+      mss_imsi_analysis mi ON COALESCE(ir21.e212, ir85.e212) = mi.imsi_series
+    WHERE
+      ir21.camel_outbound IS NOT NULL OR ir85.camel_outbound IS NOT NULL
+  `;
+
+  connection.query(query, (error, results) => {
+    if (error) {
+      console.error('❌ Erreur MySQL :', error);
+      return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+    }
+
+    console.log(`✅ ${results.length} résultats retournés.`);
+    res.json(results);
+  });
+});
 
 
 // Route pour récupérer les nœuds réseau
