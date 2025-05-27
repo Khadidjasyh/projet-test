@@ -54,19 +54,78 @@ const CamelInboundResults = () => {
     return "aucun";
   }
 
+  // Badge coloré et compact
+  function getResultBadge(result) {
+    const val = (result || "").toLowerCase();
+    if (val.includes("réussit")) {
+      return (
+        <span className="inline-block px-2 py-0.5 rounded-full text-[12px] md:text-[14px] font-semibold bg-green-100 text-green-700 whitespace-nowrap">
+          Réussit
+        </span>
+      );
+    }
+    if (val.includes("erreur")) {
+      return (
+        <span className="inline-block px-2 py-0.5 rounded-full text-[12px] md:text-[14px] font-semibold bg-red-100 text-red-700 whitespace-nowrap">
+          Erreur
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-2 py-0.5 rounded-full text-[12px] md:text-[14px] font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">
+        Aucun
+      </span>
+    );
+  }
+
+  // Génération du rapport détaillé
   const handleExportTXT = () => {
     if (filteredData.length === 0) return;
 
     let txtContent = 'Rapport Analyse CAMEL Inbound – Tests Inbound Roaming ATM Mobilis\n\n';
 
     filteredData.forEach(row => {
-      txtContent += `Opérateur : ${row.operateur}\n`;
-      txtContent += `Pays      : ${row.pays}\n`;
-      txtContent += `TADIG     : ${row.tadig}\n`;
-      txtContent += `Valeur CAMEL Inbound (IR.21/IR.85) : ${row.Valeur_CAMEL_IR}\n`;
-      txtContent += `Valeur observée ANRES : ${row.ValeurObservee}\n`;
+      txtContent += `Opérateur : ${row.operateur || "N/A"}\n`;
+      txtContent += `Pays      : ${row.pays || "N/A"}\n`;
+      txtContent += `TADIG     : ${row.tadig || "N/A"}\n`;
+      txtContent += `Valeur CAMEL Inbound (IR.21/IR.85) : ${row.Valeur_CAMEL_IR || "N/A"}\n`;
+      txtContent += `Valeur observée ANRES : ${row.ValeurObservee || "null"}\n`;
       txtContent += `Résultat du test CAMEL Inbound : ${getResultText(row.Resultat)}\n`;
-      txtContent += `Commentaire : ${row.Commentaire}\n`;
+      txtContent += `Commentaire : ${row.Commentaire || "Aucun"}\n`;
+
+      // Bloc recommandations selon les cas
+      txtContent += `Solution / Recommandation :\n`;
+
+      // Cas valeur observée manquante
+      if (!row.ValeurObservee || row.ValeurObservee === "null" || row.ValeurObservee === "") {
+        txtContent += `Valeur observée ANRES manquante :\n`;
+        txtContent += `- Les logs MSS ne montrent pas de trafic CAMEL pour ce partenaire.\n`;
+        txtContent += `Actions recommandées :\n`;
+        txtContent += `• Vérifier que des abonnés ATM Mobilis ont bien tenté d’utiliser des services à valeur ajoutée sur ce réseau.\n`;
+        txtContent += `• S’assurer que les IMSI Mobilis sont bien provisionnés côté partenaire.\n`;
+        txtContent += `• Contrôler la collecte des logs MSS et la correspondance des IMSI dans la base Mobilis.\n`;
+      }
+      // Cas pays inconnu ou manquant
+      else if (!row.pays || row.pays.toLowerCase() === "n/a" || row.pays.toLowerCase().includes("inconnu")) {
+        txtContent += `Pays manquant ou inconnu :\n`;
+        txtContent += `- Le pays n'est pas renseigné ou reconnu pour cet opérateur.\n`;
+        txtContent += `Actions recommandées :\n`;
+        txtContent += `• Compléter la donnée pays dans la base ou le fichier IR.21/IR.85.\n`;
+        txtContent += `• Vérifier la cohérence des données partenaires.\n`;
+      }
+      // Cas valeur CAMEL manquante
+      else if (!row.Valeur_CAMEL_IR || row.Valeur_CAMEL_IR === "" || row.Valeur_CAMEL_IR === "null") {
+        txtContent += `Valeur CAMEL Inbound manquante :\n`;
+        txtContent += `- Impossible de valider la compatibilité CAMEL pour ce partenaire.\n`;
+        txtContent += `Actions recommandées :\n`;
+        txtContent += `• Demander à l’opérateur partenaire de fournir un IR.21/IR.85 à jour avec la section CAMEL renseignée.\n`;
+        txtContent += `• Vérifier l’importation IR.21/IR.85 dans l’outil (format XML, balises présentes).\n`;
+      }
+      // Sinon, pas de recommandation spécifique
+      else {
+        txtContent += `- RAS ou voir commentaire ci-dessus.\n`;
+      }
+
       txtContent += '\n----------------------------------------\n\n';
     });
 
@@ -91,29 +150,29 @@ const CamelInboundResults = () => {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       {/* Buttons row */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => window.history.back()}
-          className="flex items-center bg-gray-900 hover:bg-gray-800 text-white font-medium px-4 py-2 rounded shadow transition text-sm"
+          className="flex items-center bg-gray-900 hover:bg-gray-800 text-white font-medium px-4 py-2 rounded shadow transition text-base"
         >
-          <FaArrowLeft className="mr-2" size={16} />
+          <FaArrowLeft className="mr-2" size={18} />
           <span>Retour aux tests</span>
         </button>
         <button
           onClick={handleExportTXT}
-          className="flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow transition text-sm"
+          className="flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow transition text-base"
         >
-          <FaChartBar className="mr-2" size={16} />
+          <FaChartBar className="mr-2" size={18} />
           <span>Générer un rapport</span>
         </button>
       </div>
 
       {/* Title and description */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Analyse CAMEL Inbound</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Analyse CAMEL Inbound</h1>
+        <p className="text-lg text-gray-600">
           Comparaison des valeurs IR.21/IR.85 et observées (anres_value) pour le roaming entrant
         </p>
       </div>
@@ -121,20 +180,20 @@ const CamelInboundResults = () => {
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Total des opérateurs</div>
-          <div className="text-3xl font-bold text-gray-800">{total}</div>
+          <div className="text-base text-gray-500">Total des opérateurs</div>
+          <div className="text-4xl font-bold text-gray-800">{total}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Tests réussis</div>
-          <div className="text-3xl font-bold text-green-600">{totalReussi}</div>
+          <div className="text-base text-gray-500">Tests réussis</div>
+          <div className="text-4xl font-bold text-green-600">{totalReussi}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Tests échoués</div>
-          <div className="text-3xl font-bold text-gray-800">{totalEchoue}</div>
+          <div className="text-base text-gray-500">Tests échoués</div>
+          <div className="text-4xl font-bold text-gray-800">{totalEchoue}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Taux de réussite</div>
-          <div className="text-3xl font-bold text-green-600">{tauxReussite}%</div>
+          <div className="text-base text-gray-500">Taux de réussite</div>
+          <div className="text-4xl font-bold text-green-600">{tauxReussite}%</div>
         </div>
       </div>
 
@@ -145,7 +204,7 @@ const CamelInboundResults = () => {
           placeholder="Rechercher par opérateur, pays, TADIG "
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-700 bg-white"
+          className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-base text-gray-700 bg-white"
         />
       </div>
 
@@ -170,36 +229,36 @@ const CamelInboundResults = () => {
 
       {!loading && filteredData.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-[12px] md:text-[14px]">
             <thead className="sticky top-0 z-10 bg-gray-100">
               <tr>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Opérateur</th>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Pays</th>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">TADIG</th>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Valeur CAMEL Inbound (IR.21/IR.85)</th>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Valeur observée ANRES</th>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Résultat du test</th>
-                <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Commentaire</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Opérateur</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Pays</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">TADIG</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Valeur CAMEL Inbound (IR.21/IR.85)</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Valeur observée ANRES</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Résultat du test</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Commentaire</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.map((row, idx) => (
-                <tr key={row.operateur + row.pays + row.tadig + idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-3 py-2 border-b font-medium">{row.operateur}</td>
-                  <td className="px-3 py-2 border-b">{row.pays}</td>
-                  <td className="px-3 py-2 border-b text-center">{row.tadig}</td>
-                  <td className="px-3 py-2 border-b text-center">{row.Valeur_CAMEL_IR}</td>
-                  <td className="px-3 py-2 border-b text-center">{row.ValeurObservee}</td>
-                  <td className="px-3 py-2 border-b text-center">
-                    {getResultText(row.Resultat)}
+                <tr key={row.operateur + row.pays + row.tadig + idx} className={idx === 0 ? '' : 'bg-gray-50'}>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-medium">{row.operateur}</td>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b">{row.pays}</td>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">{row.tadig}</td>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">{row.Valeur_CAMEL_IR}</td>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">{row.ValeurObservee}</td>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">
+                    {getResultBadge(getResultText(row.Resultat))}
                   </td>
-                  <td className="px-3 py-2 border-b">{row.Commentaire}</td>
+                  <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b">{row.Commentaire}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <div className="flex justify-between items-center mt-4 px-4">
-            <span className="text-sm text-gray-700">Total: {filteredData.length} résultat(s)</span>
+            <span className="text-base text-gray-700">Total: {filteredData.length} résultat(s)</span>
           </div>
         </div>
       )}

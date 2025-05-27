@@ -29,14 +29,35 @@ const DataInboundResults = () => {
     fetchData();
   }, []);
 
-  // Helper pour afficher "réussit", "erreur", "aucun"
   function getConformiteText(val) {
     if (val === 100) return "réussit";
     if (val > 0 && val < 100) return "erreur";
     return "aucun";
   }
 
-  // Génère une explication détaillée et une solution selon la conformité
+  function getConformiteBadge(val) {
+    const txt = getConformiteText(val);
+    if (txt === "réussit") {
+      return (
+        <span className="inline-block px-2 py-0.5 rounded-full text-[12px] md:text-[14px] font-semibold bg-green-100 text-green-700 whitespace-nowrap">
+          Réussit
+        </span>
+      );
+    }
+    if (txt === "erreur") {
+      return (
+        <span className="inline-block px-2 py-0.5 rounded-full text-[12px] md:text-[14px] font-semibold bg-red-100 text-red-700 whitespace-nowrap">
+          Erreur
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-2 py-0.5 rounded-full text-[12px] md:text-[14px] font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">
+        Aucun
+      </span>
+    );
+  }
+
   function getConformiteDetails(type, val, row) {
     if (getConformiteText(val) === "réussit") {
       return {
@@ -61,7 +82,6 @@ const DataInboundResults = () => {
     };
   }
 
-  // Filtrage par opérateur, pays, pourcentages ou commentaires
   const filteredData = data.filter(
     row =>
       (row.operateur && row.operateur.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -75,7 +95,6 @@ const DataInboundResults = () => {
 
   // Statistiques
   const total = filteredData.length;
-  // Compte chaque "réussit" dans chaque colonne
   const totalReussi = filteredData.reduce((acc, row) => {
     let count = 0;
     if (getConformiteText(row.pourcentage_conformite_ir21) === "réussit") count++;
@@ -146,29 +165,29 @@ const DataInboundResults = () => {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       {/* Buttons row */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => window.history.back()}
-          className="flex items-center bg-gray-900 hover:bg-gray-800 text-white font-medium px-4 py-2 rounded shadow transition text-sm"
+          className="flex items-center bg-gray-900 hover:bg-gray-800 text-white font-medium px-4 py-2 rounded shadow transition text-base"
         >
-          <FaArrowLeft className="mr-2" size={16} />
+          <FaArrowLeft className="mr-2" size={18} />
           <span>Retour aux tests</span>
         </button>
         <button
           onClick={handleExportTXT}
-          className="flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow transition text-sm"
+          className="flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow transition text-base"
         >
-          <FaChartBar className="mr-2" size={16} />
+          <FaChartBar className="mr-2" size={18} />
           <span>Générer un rapport</span>
         </button>
       </div>
 
       {/* Title and description */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Vérification Inbound Roaming</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Vérification Inbound Roaming</h1>
+        <p className="text-lg text-gray-600">
           Visualisation des opérateurs, conformité IPs et IMSI
         </p>
       </div>
@@ -176,20 +195,20 @@ const DataInboundResults = () => {
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Total des opérateurs</div>
-          <div className="text-3xl font-bold text-gray-800">{total}</div>
+          <div className="text-base text-gray-500">Total des opérateurs</div>
+          <div className="text-4xl font-bold text-gray-800">{total}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Tests réussis</div>
-          <div className="text-3xl font-bold text-green-600">{totalReussi}</div>
+          <div className="text-base text-gray-500">Tests réussis</div>
+          <div className="text-4xl font-bold text-green-600">{totalReussi}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Tests échoués</div>
-          <div className="text-3xl font-bold text-gray-800">{totalEchoue}</div>
+          <div className="text-base text-gray-500">Tests échoués</div>
+          <div className="text-4xl font-bold text-gray-800">{totalEchoue}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-sm text-gray-500">Taux de réussite</div>
-          <div className="text-3xl font-bold text-green-600">{tauxReussite}%</div>
+          <div className="text-base text-gray-500">Taux de réussite</div>
+          <div className="text-4xl font-bold text-green-600">{tauxReussite}%</div>
         </div>
       </div>
 
@@ -200,10 +219,11 @@ const DataInboundResults = () => {
           placeholder="Rechercher par opérateur, pays, conformité ou commentaire"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+          className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-base text-gray-700 bg-white"
         />
       </div>
 
+      {/* Table */}
       {loading && (
         <div className="flex justify-center items-center h-32">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
@@ -223,83 +243,81 @@ const DataInboundResults = () => {
       )}
 
       {!loading && filteredData.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto rounded-lg">
-            <table className="min-w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-gray-100">
-                <tr>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Opérateur</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Pays</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Conformité IR21</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Conformité IR85</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Conformité IMSI</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Commentaire IP</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-left">Commentaire IMSI</th>
-                  <th className="px-3 py-2 border-b font-semibold text-gray-700 text-center">Détails</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((row, idx) => (
-                  <React.Fragment key={row.operateur + row.pays}>
-                    <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-3 py-2 border-b font-medium">{row.operateur}</td>
-                      <td className="px-3 py-2 border-b">{row.pays}</td>
-                      <td className="px-3 py-2 border-b text-center">{getConformiteText(row.pourcentage_conformite_ir21)}</td>
-                      <td className="px-3 py-2 border-b text-center">{getConformiteText(row.pourcentage_conformite_ir85)}</td>
-                      <td className="px-3 py-2 border-b text-center">{getConformiteText(row.pourcentage_conformite_imsi)}</td>
-                      <td className="px-3 py-2 border-b">{row.commentaire_ip}</td>
-                      <td className="px-3 py-2 border-b">{row.commentaire_imsi}</td>
-                      <td className="px-3 py-2 border-b text-center">
-                        <button
-                          className="text-green-600 underline"
-                          onClick={() => setOpenDetail(openDetail === idx ? null : idx)}
-                        >
-                          {openDetail === idx ? 'Masquer' : 'Détails'}
-                        </button>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+          <table className="min-w-full text-[12px] md:text-[14px]">
+            <thead className="sticky top-0 z-10 bg-gray-100">
+              <tr>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Opérateur</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Pays</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Conformité IR21</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Conformité IR85</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Conformité IMSI</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Commentaire IP</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-left">Commentaire IMSI</th>
+                <th className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-semibold text-gray-700 text-center">Détails</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((row, idx) => (
+                <React.Fragment key={row.operateur + row.pays}>
+                  <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b font-medium">{row.operateur}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b">{row.pays}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">{getConformiteBadge(row.pourcentage_conformite_ir21)}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">{getConformiteBadge(row.pourcentage_conformite_ir85)}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">{getConformiteBadge(row.pourcentage_conformite_imsi)}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b">{row.commentaire_ip}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b">{row.commentaire_imsi}</td>
+                    <td className="px-2 md:px-3 py-1.5 md:py-2.5 border-b text-center">
+                      <button
+                        className="text-green-600 underline"
+                        onClick={() => setOpenDetail(openDetail === idx ? null : idx)}
+                      >
+                        {openDetail === idx ? 'Masquer' : 'Détails'}
+                      </button>
+                    </td>
+                  </tr>
+                  {openDetail === idx && (
+                    <tr>
+                      <td colSpan={8} className="bg-gray-50 px-2 md:px-3 py-2 border-b">
+                        <div>
+                          <strong>IPs Firewall :</strong>
+                          <div className="mb-2 text-xs break-all">{Array.isArray(row.adresses_ip_firewall) ? row.adresses_ip_firewall.join(', ') : ''}</div>
+                          <strong>IMSIs :</strong>
+                          <div className="mb-2 text-xs break-all">{Array.isArray(row.imsis_mme) ? row.imsis_mme.join(', ') : ''}</div>
+                          <strong>E212 IR21 :</strong>
+                          <div className="mb-2 text-xs break-all">{Array.isArray(row.e212_ir21) ? row.e212_ir21.join(', ') : ''}</div>
+                          {/* Affichage des problèmes et solutions pour chaque conformité */}
+                          <div className="mt-2">
+                            <strong>Détails conformité :</strong>
+                            <ul className="list-disc ml-5 text-xs">
+                              <li>
+                                <strong>IR21 :</strong> {getConformiteDetails("IR21", row.pourcentage_conformite_ir21, row).problem}
+                                <br />
+                                <span className="text-green-700">Solution : {getConformiteDetails("IR21", row.pourcentage_conformite_ir21, row).solution}</span>
+                              </li>
+                              <li>
+                                <strong>IR85 :</strong> {getConformiteDetails("IR85", row.pourcentage_conformite_ir85, row).problem}
+                                <br />
+                                <span className="text-green-700">Solution : {getConformiteDetails("IR85", row.pourcentage_conformite_ir85, row).solution}</span>
+                              </li>
+                              <li>
+                                <strong>IMSI :</strong> {getConformiteDetails("IMSI", row.pourcentage_conformite_imsi, row).problem}
+                                <br />
+                                <span className="text-green-700">Solution : {getConformiteDetails("IMSI", row.pourcentage_conformite_imsi, row).solution}</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
                       </td>
                     </tr>
-                    {openDetail === idx && (
-                      <tr>
-                        <td colSpan={8} className="bg-gray-50 px-3 py-2 border-b">
-                          <div>
-                            <strong>IPs Firewall :</strong>
-                            <div className="mb-2 text-xs break-all">{Array.isArray(row.adresses_ip_firewall) ? row.adresses_ip_firewall.join(', ') : ''}</div>
-                            <strong>IMSIs :</strong>
-                            <div className="mb-2 text-xs break-all">{Array.isArray(row.imsis_mme) ? row.imsis_mme.join(', ') : ''}</div>
-                            <strong>E212 IR21 :</strong>
-                            <div className="mb-2 text-xs break-all">{Array.isArray(row.e212_ir21) ? row.e212_ir21.join(', ') : ''}</div>
-                            {/* Affichage des problèmes et solutions pour chaque conformité */}
-                            <div className="mt-2">
-                              <strong>Détails conformité :</strong>
-                              <ul className="list-disc ml-5 text-xs">
-                                <li>
-                                  <strong>IR21 :</strong> {getConformiteDetails("IR21", row.pourcentage_conformite_ir21, row).problem}
-                                  <br />
-                                  <span className="text-green-700">Solution : {getConformiteDetails("IR21", row.pourcentage_conformite_ir21, row).solution}</span>
-                                </li>
-                                <li>
-                                  <strong>IR85 :</strong> {getConformiteDetails("IR85", row.pourcentage_conformite_ir85, row).problem}
-                                  <br />
-                                  <span className="text-green-700">Solution : {getConformiteDetails("IR85", row.pourcentage_conformite_ir85, row).solution}</span>
-                                </li>
-                                <li>
-                                  <strong>IMSI :</strong> {getConformiteDetails("IMSI", row.pourcentage_conformite_imsi, row).problem}
-                                  <br />
-                                  <span className="text-green-700">Solution : {getConformiteDetails("IMSI", row.pourcentage_conformite_imsi, row).solution}</span>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-            <div className="flex justify-between items-center mt-4 px-4">
-              <span className="text-sm text-gray-700">Total: {filteredData.length} groupe(s) opérateur/pays</span>
-            </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex justify-between items-center mt-4 px-4">
+            <span className="text-base text-gray-700">Total: {filteredData.length} groupe(s) opérateur/pays</span>
           </div>
         </div>
       )}
