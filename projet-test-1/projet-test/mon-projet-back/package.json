@@ -1,0 +1,43 @@
+{
+  "name": "mon-projet-back",
+  "version": "1.0.0",
+  "description": "Script d'importation Excel vers MySQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "build": "babel *.js -d dist",
+    "dev": "nodemon --exec babel-node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.0",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^4.21.2",
+    "leaflet": "^1.9.4",
+    "multer": "^1.4.5-lts.2",
+    "my": "^0.3.3",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.14.1",
+    "nodemailer": "^6.9.9",
+    "openai": "^4.103.0",
+    "pdf-parse": "^1.1.1",
+    "react-leaflet": "^5.0.0",
+    "sql": "^0.78.0",
+    "xlsx": "^0.18.5",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.23.9",
+    "@babel/core": "^7.23.9",
+    "@babel/node": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "nodemon": "^3.0.3"
+  }
+}
